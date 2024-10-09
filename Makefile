@@ -66,7 +66,7 @@ create_environment:
 ## Run Pipeline
 .PHONY: run_pipeline
 run_pipeline: requirements_quiet
-	$(PYTHON_INTERPRETER) rap_devices/rap_devices.py
+	$(PYTHON_INTERPRETER) rap_devices/pipeline.py
 
 ## Run all tests
 .PHONY: test
