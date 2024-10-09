@@ -56,10 +56,12 @@ For Visual Studio Code it is necessary that you change your default interpreter 
 There is a handy `Makefile` with commands form `make` to use to set up and run the environment:
 
 ``` bash
+make create-environment
+source .venv/bin/activate
 make requirements
 ```
 
-This command:
+These commands:
 
 1. Creates a virtual environment in `.venv`
 2. Activates the environment

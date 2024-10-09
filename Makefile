@@ -13,17 +13,13 @@ PYTHON_INTERPRETER = python
 
 ## Install Python Dependencies
 .PHONY: requirements
-requirements: create_environment
-	. .venv/bin/activate
-	which $(PYTHON_INTERPRETER)
+requirements: 
 	$(PYTHON_INTERPRETER) -m pip install -U pip
 	$(PYTHON_INTERPRETER) -m pip install -r requirements.txt
 
 ## Install Python Dependencies Quietly
 .PHONY: requirements_quiet
-requirements_quiet: create_environment
-	. .venv/bin/activate
-	which $(PYTHON_INTERPRETER)
+requirements_quiet: 
 	$(PYTHON_INTERPRETER) -m pip install -q -U pip
 	$(PYTHON_INTERPRETER) -m pip install -q -r requirements.txt
 
