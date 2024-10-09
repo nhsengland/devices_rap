@@ -11,6 +11,7 @@ numpy
 pandas
 pip
 python-dotenv
+pytest
 scikit-learn
 tqdm
 typer
