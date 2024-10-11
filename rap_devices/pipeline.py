@@ -1,28 +1,26 @@
-from pathlib import Path
+"""
+_summary_
+"""
 
 import typer
 from loguru import logger
 from tqdm import tqdm
 
-from rap_devices.config import PROCESSED_DATA_DIR, RAW_DATA_DIR
-
 app = typer.Typer()
 
 
 @app.command()
-def main(
-    # ---- REPLACE DEFAULT PATHS AS APPROPRIATE ----
-    input_path: Path = RAW_DATA_DIR / "dataset.csv",
-    output_path: Path = PROCESSED_DATA_DIR / "dataset.csv",
-    # ----------------------------------------------
-):
+def devices_pipeline():
+    """
+    _summary_
+    """
     # ---- REPLACE THIS WITH YOUR OWN CODE ----
-    logger.info("Processing dataset...")
+    logger.info("Starting the Devices Pipeline")
     for i in tqdm(range(10), total=10):
         if i == 5:
             logger.info("Something happened for iteration 5.")
-    logger.success("Processing dataset complete.")
-    # -----------------------------------------
+    
+    logger.success("Pipeline complete.")
 
 
 if __name__ == "__main__":

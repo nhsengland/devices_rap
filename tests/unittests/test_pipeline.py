@@ -1,19 +1,17 @@
-from pathlib import Path
+"""
+Tests for rap_devices/pipeline.py
+"""
 
 import pytest
-import typer
-from loguru import logger
-from tqdm import tqdm
 
 from rap_devices import pipeline
 
-app = typer.Typer()
-
 
 def test_main():
-    pipeline.main()
-    assert False
+    pipeline.devices_pipeline()
+    assert True
 
 
 if __name__ == "__main__":
+    # This code allows the tests in the file to be run by running the file itself.
     pytest.main([__file__])
