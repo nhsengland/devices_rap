@@ -5,6 +5,7 @@
 [![licence: MIT](https://img.shields.io/badge/Licence-MIT-yellow.svg)](https://opensource.org/licenses/MIT "MIT License")
 [![licence: OGL3](https://img.shields.io/badge/Licence-OGL3-darkgrey "licence: Open Government Licence 3")](https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/)
 [![JIRA EPIC: DC-477](https://img.shields.io/badge/JIRA-DC--477-purple?link=https%3A%2F%2Fnhsd-jira.digital.nhs.uk%2Fbrowse%2FDC-477)](https://nhsd-jira.digital.nhs.uk/browse/DC-477 "DC-477")
+[![Tests and Linting](https://github.com/nhsengland/devices_rap/actions/workflows/python-package.yml/badge.svg?branch=main)](https://github.com/nhsengland/devices_rap/actions/workflows/python-package.yml)
 
 This is the RAP rework of the Specialised Services Devices Programming (SSDP) reporting pipeline. 
 
