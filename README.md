@@ -101,7 +101,7 @@ pytest tests/unittests
 pytest tests/e2e_tests
 ```
 
-## Project Organization
+## Project Organisation
 
 ```text
 DEVICES_RAP
