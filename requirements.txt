@@ -10,6 +10,7 @@ notebook
 numpy
 pandas
 pip
+pre-commit
 python-dotenv
 pytest
 scikit-learn
