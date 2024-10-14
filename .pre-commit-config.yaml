@@ -3,3 +3,9 @@ repos:
     rev: v8.20.1
     hooks:
       - id: gitleaks
+  - repo: local
+    hooks: 
+      - id: run-make-lint
+        name: run-make-lint
+        entry: make lint
+        language: system

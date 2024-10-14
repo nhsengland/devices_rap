@@ -57,6 +57,12 @@ format:
 create_environment:
 	$(PYTHON_INTERPRETER) -m venv .venv
 
+## Set up pre-commits and run them on all files
+.PHONY: pre-commits
+pre-commits: requirements_quiet
+	pre-commit autoupdate
+	pre-commit install
+	pre-commit run --all-files
 
 
 #################################################################################

@@ -19,7 +19,7 @@ def devices_pipeline():
     for i in tqdm(range(10), total=10):
         if i == 5:
             logger.info("Something happened for iteration 5.")
-    
+
     logger.success("Pipeline complete.")
 
 

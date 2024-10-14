@@ -7,7 +7,7 @@
 [![JIRA EPIC: DC-477](https://img.shields.io/badge/JIRA-DC--477-purple?link=https%3A%2F%2Fnhsd-jira.digital.nhs.uk%2Fbrowse%2FDC-477)](https://nhsd-jira.digital.nhs.uk/browse/DC-477 "DC-477")
 [![Tests and Linting](https://github.com/nhsengland/devices_rap/actions/workflows/python-package.yml/badge.svg?branch=main)](https://github.com/nhsengland/devices_rap/actions/workflows/python-package.yml)
 
-This is the RAP rework of the Specialised Services Devices Programming (SSDP) reporting pipeline. 
+This is the RAP rework of the Specialised Services Devices Programming (SSDP) reporting pipeline.
 
 ## What is RAP?
 
@@ -27,15 +27,19 @@ It is recommended you have access to:
 
 ## Getting Started
 
-1. Clone the repository. To learn about what this means, and how to use Git, see the [Git guide](https://nhsdigital.github.io/rap-community-of-practice/training_resources/git/using-git-collaboratively/).
+### 1 Clone the repository
+
+To learn about what this means, and how to use Git, see the [Git guide](https://nhsdigital.github.io/rap-community-of-practice/training_resources/git/using-git-collaboratively/).
 
 ``` bash
 git clone https://github.com/nhsengland/devices_rap.git
 ```
 
-2. Set up your environment, _either_ using [pip](https://pypi.org/project/pip/) or make (if you are using a linux based development environment this will be already installed). For more information on how to use virtual environments and why they are important,. see the [virtual environments guide](https://nhsdigital.github.io/rap-community-of-practice/training_resources/python/virtual-environments/why-use-virtual-environments/).
+### 2 Set up your environment
 
-### Using pip
+_Either_ use [pip](https://pypi.org/project/pip/) or make (if you are using a linux based development environment this will be already installed). For more information on how to use virtual environments and why they are important,. see the [virtual environments guide](https://nhsdigital.github.io/rap-community-of-practice/training_resources/python/virtual-environments/why-use-virtual-environments/).
+
+#### Using pip
 
 If using Windows Powershell:
 
@@ -53,9 +57,7 @@ source .venv/bin/activate
 python -m pip install -r requirements.txt
 ```
 
-For Visual Studio Code it is necessary that you change your default interpreter to the virtual environment you just created .venv. To do this use the shortcut Ctrl-Shift-P, search for Python: Select interpreter and select .venv from the list. Sometimes it is nice as asks you once you create the environment, the eager to help thing.
-
-### Using make
+#### Using `make`
 
 There is a handy `Makefile` with commands form `make` to use to set up and run the environment:
 
@@ -74,13 +76,52 @@ These commands:
 
 Make can also do other stuff, which will be touched on later, in the meantime, use `make help` to see the commands that can be run.
 
+> For Visual Studio Code it is necessary that you change your default interpreter to the virtual environment you just created .venv. To do this use the shortcut Ctrl-Shift-P, search for Python: Select interpreter and select .venv from the list. Sometimes it is nice as asks you once you create the environment, the eager to help thing.
+
+### 3 Set up Pre-commits (Only needed for developers not users of the pipeline)
+
+Pre-commits allow us to automatically check our code before we commit changes. This can be important for ensuring security and quality in our code. Currently two hooks run:
+
+* [Gitleaks](https://github.com/gitleaks/gitleaks, "Gitleaks") - a SAST tool for detecting and preventing hardcoded secrets like passwords, API keys, and tokens in git repos.
+* Linting checks - runs the `make lint` command, which uses Flake8 and Black to ensure that the repository is maintaining expected coding standards, such as [PEP8](https://peps.python.org/pep-0008/).
+
+To set up the pre-commits run the following commands:
+
+* If using a shell with `make` installed:
+
+```bash
+make pre-commits
+```
+
+* Otherwise:
+
+```bash
+pre-commit autoupdate
+pre-commit install
+pre-commit run --all-files
+```
+
 ## Running the code
+
+Now the pipeline is set up and ready to run, use the following command to run the pipeline:
+
+If using a shell with `make` installed:
 
 ``` bash
 make run_pipeline
 ```
 
+Otherwise:
+
+```bash
+python rap_devices/pipeline.py
+```
+
 ### Testing the code
+
+When developing the code (or before you run the code), it is important to test the code to ensure it is working as expected. Regularly run the relevant commands.
+
+If using a shell with `make` installed:
 
 ``` bash
 make test
@@ -91,6 +132,8 @@ make unittest
 # To only run end-to-end tests
 make e2e
 ```
+
+Otherwise run `pytest` directly:
 
 ``` bash
 pytest
@@ -142,7 +185,7 @@ DEVICES_RAP
 ```
 
 > ### Update the project diagram
-> 
+>
 > To update the project diagram, run the following commands:
 >
 > ```bash
@@ -190,7 +233,6 @@ This contains the source code for use in this project. This is where the code to
 * pipeline.py - This is the main file containing function to run parts of pipeline (e.g. if only wanting to run one report) or all of the pipeline.
 
 There are other files in here, however, these should include information about what they contain at the top of the file as a module docstring.
-
 
 ### Testing framework - `tests`
 
