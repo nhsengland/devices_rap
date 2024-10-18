@@ -1,6 +1,7 @@
 """
 Tests for rap_devices/data_in.py
 """
+
 import pytest
 
 from rap_devices import data_in
