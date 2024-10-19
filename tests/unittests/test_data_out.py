@@ -1,10 +1,10 @@
 """
-Tests for rap_devices/data_out.py
+Tests for devices_rap/data_out.py
 """
 
 import pytest
 
-from rap_devices import data_out
+from devices_rap import data_out
 
 
 def test_():

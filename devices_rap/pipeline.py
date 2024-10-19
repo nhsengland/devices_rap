@@ -10,9 +10,9 @@ app = typer.Typer()
 
 
 @app.command()
-def devices_pipeline():
+def amber_report_pipeline():
     """
-    _summary_
+    Pipeline to create the monthly Amber Reports
     """
     # ---- REPLACE THIS WITH YOUR OWN CODE ----
     logger.info("Starting the Devices Pipeline")

@@ -1,14 +1,14 @@
 """
-Tests for rap_devices/pipeline.py
+Tests for devices_rap/pipeline.py
 """
 
 import pytest
 
-from rap_devices import pipeline
+from devices_rap import pipeline
 
 
 def test_main():
-    pipeline.devices_pipeline()
+    pipeline.amber_report_pipeline()
     assert True
 
 

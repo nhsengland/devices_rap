@@ -2,7 +2,7 @@
 # GLOBALS                                                                       #
 #################################################################################
 
-PROJECT_NAME = rap_devices
+PROJECT_NAME = devices_rap
 PYTHON_VERSION = 3.12.4
 PYTHON_INTERPRETER = python
 
@@ -43,14 +43,14 @@ nuke: clean
 ## Lint using flake8 and black (use `make format` to do formatting)
 .PHONY: lint
 lint:
-	flake8 rap_devices
-	isort --check --diff --profile black rap_devices
-	black --check --config pyproject.toml rap_devices
+	flake8 devices_rap
+	isort --check --diff --profile black devices_rap
+	black --check --config pyproject.toml devices_rap
 
 ## Format source code with black
 .PHONY: format
 format:
-	black --config pyproject.toml rap_devices
+	black --config pyproject.toml devices_rap
 
 ## Set up python interpreter environment
 .PHONY: create_environment
@@ -72,7 +72,7 @@ pre-commits: requirements_quiet
 ## Run Pipeline
 .PHONY: run_pipeline
 run_pipeline: requirements_quiet
-	$(PYTHON_INTERPRETER) rap_devices/pipeline.py
+	$(PYTHON_INTERPRETER) devices_rap/pipeline.py
 
 ## Run all tests
 .PHONY: test

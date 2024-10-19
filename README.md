@@ -114,7 +114,7 @@ make run_pipeline
 Otherwise:
 
 ```bash
-python rap_devices/pipeline.py
+python devices_rap/pipeline.py
 ```
 
 ### Testing the code
@@ -161,7 +161,7 @@ DEVICES_RAP
 ├── models
 ├── notebooks
 ├── pyproject.toml
-├── rap_devices
+├── devices_rap
 │   ├── __init__.py
 │   ├── config.py
 │   ├── data_in.py
@@ -224,11 +224,11 @@ The sub folders in the data folder include:
 * processed - The final, canonical data sets ready for output or modelling.
 * raw - The original, immutable data dump.
 
-### Source code - `rap_devices`
+### Source code - `devices_rap`
 
 This contains the source code for use in this project. This is where the code to do everything important should sit.
 
-* `__init__.py` - Makes rap_devices a Python module
+* `__init__.py` - Makes devices_rap a Python module
 * config.py - Stores useful variable and configuration settings (Note: should not contain sensitive or secret information, this should be stored in an .env file)
 * pipeline.py - This is the main file containing function to run parts of pipeline (e.g. if only wanting to run one report) or all of the pipeline.
 
