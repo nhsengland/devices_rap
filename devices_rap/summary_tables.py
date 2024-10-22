@@ -19,6 +19,10 @@ def create_device_summary_table():
     logger.info("Creating the device summary (pivot) table")
 
 
+# ? Could the following function have a generalised shared function that creates
+# ? a collection of table based off one column, with a dictionary of filtered results?
+
+
 def create_rag_summary_tables():
     """
     _summary_

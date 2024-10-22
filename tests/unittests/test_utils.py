@@ -4,12 +4,7 @@ Tests for devices_rap/utils.py
 
 import pytest
 
-from devices_rap import utils
-
-
-def test_():
-    utils
-    assert True
+# from devices_rap import utils
 
 
 if __name__ == "__main__":

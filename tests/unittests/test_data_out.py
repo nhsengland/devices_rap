@@ -4,12 +4,19 @@ Tests for devices_rap/data_out.py
 
 import pytest
 
-from devices_rap import data_out
+# from devices_rap import data_out
 
 
-def test_():
-    data_out
-    assert True
+class TestCreateExcelReports:
+    """
+    Test class for create_excel_reports
+    """
+
+    @pytest.mark.xfail()
+    def test_tbc(self):
+        """
+        Test to be confirmed
+        """
 
 
 if __name__ == "__main__":
