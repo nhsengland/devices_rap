@@ -7,6 +7,9 @@ import pytest
 # from devices_rap import summary_tables
 
 
+pytestmark = pytest.mark.no_data_needed
+
+
 class TestCreateDeviceCategorySummaryTable:
     """
     Test class for summary_tables.create_device_category_summary_table

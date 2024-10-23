@@ -7,6 +7,9 @@ import pytest
 # from devices_rap import clean_data
 
 
+pytestmark = pytest.mark.no_data_needed
+
+
 class TestCleanseMasterData:
     """
     Tests for clean_data.cleanse_master_data

@@ -8,6 +8,9 @@ import pytest
 # from devices_rap import processing
 
 
+pytestmark = pytest.mark.no_data_needed
+
+
 class TestTranslateHighLeveLDevicesType:
     """
     Tests for processing.translate_high_level_devices_type

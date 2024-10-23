@@ -8,6 +8,9 @@ import pytest
 from devices_rap.data_in import load_exceptions_data
 
 
+pytestmark = pytest.mark.data_needed
+
+
 class TestLoadExceptionsData:
     """
     Tests for load_data_master

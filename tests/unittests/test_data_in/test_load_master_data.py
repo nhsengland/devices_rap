@@ -8,6 +8,9 @@ import pytest
 from devices_rap.data_in import load_master_data
 
 
+pytestmark = pytest.mark.data_needed
+
+
 class TestLoadDataMaster:
     """
     Tests for load_data_master

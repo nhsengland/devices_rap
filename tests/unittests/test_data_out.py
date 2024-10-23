@@ -7,6 +7,9 @@ import pytest
 # from devices_rap import data_out
 
 
+ppytestmark = pytest.mark.no_data_needed
+
+
 class TestCreateExcelReports:
     """
     Test class for create_excel_reports
