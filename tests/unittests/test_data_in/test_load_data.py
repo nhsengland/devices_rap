@@ -16,7 +16,6 @@ class TestProviderCodesLookup:
     Tests for load_data_master
     """
 
-    # @pytest.mark.xfail()
     def test_loads_dataframe(self):
         """
         Tests if a dataframe is returned
