@@ -82,7 +82,7 @@ Make can also do other stuff, which will be touched on later, in the meantime, u
 
 Pre-commits allow us to automatically check our code before we commit changes. This can be important for ensuring security and quality in our code. Currently two hooks run:
 
-* [Gitleaks](https://github.com/gitleaks/gitleaks, "Gitleaks") - a SAST tool for detecting and preventing hardcoded secrets like passwords, API keys, and tokens in git repos.
+* [Gitleaks](https://github.com/gitleaks/gitleaks "Gitleaks") - a SAST tool for detecting and preventing hardcoded secrets like passwords, API keys, and tokens in git repos.
 * Linting checks - runs the `make lint` command, which uses Flake8 and Black to ensure that the repository is maintaining expected coding standards, such as [PEP8](https://peps.python.org/pep-0008/).
 
 To set up the pre-commits run the following commands:
