@@ -1,4 +1,4 @@
-# rap_devices documentation!
+# devices_rap documentation!
 
 ## Description
 

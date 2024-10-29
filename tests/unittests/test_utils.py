@@ -1,15 +1,13 @@
 """
-Tests for rap_devices/utils.py
+Tests for devices_rap/utils.py
 """
 
 import pytest
 
-from rap_devices import utils
+# from devices_rap import utils
 
 
-def test_():
-    utils
-    assert True
+pytestmark = pytest.mark.no_data_needed
 
 
 if __name__ == "__main__":

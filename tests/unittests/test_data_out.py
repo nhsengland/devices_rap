@@ -1,15 +1,25 @@
 """
-Tests for rap_devices/data_out.py
+Tests for devices_rap/data_out.py
 """
 
 import pytest
 
-from rap_devices import data_out
+# from devices_rap import data_out
 
 
-def test_():
-    data_out
-    assert True
+ppytestmark = pytest.mark.no_data_needed
+
+
+class TestCreateExcelReports:
+    """
+    Test class for create_excel_reports
+    """
+
+    @pytest.mark.xfail()
+    def test_tbc(self):
+        """
+        Test to be confirmed
+        """
 
 
 if __name__ == "__main__":

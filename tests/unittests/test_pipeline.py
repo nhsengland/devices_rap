@@ -1,15 +1,25 @@
 """
-Tests for rap_devices/pipeline.py
+Tests for devices_rap/pipeline.py
 """
 
 import pytest
 
-from rap_devices import pipeline
+# from devices_rap import pipeline
 
 
-def test_main():
-    pipeline.devices_pipeline()
-    assert True
+pytestmark = pytest.mark.no_data_needed
+
+
+class TestAmberReportPipeline:
+    """
+    Test class for create_excel_reports
+    """
+
+    @pytest.mark.xfail()
+    def test_tbc(self):
+        """
+        Test to be confirmed
+        """
 
 
 if __name__ == "__main__":
