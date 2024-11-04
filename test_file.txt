@@ -1,3 +1,0 @@
-password_test = "test"
-new change
-another change 
