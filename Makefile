@@ -60,9 +60,9 @@ create_environment:
 ## Set up pre-commits and run them on all files
 .PHONY: pre-commits
 pre-commits: requirements_quiet
-	pre-commit autoupdate
-	pre-commit install
-	pre-commit run --all-files
+	$(PYTHON_INTERPRETER) -m pre_commit autoupdate
+	$(PYTHON_INTERPRETER) -m pre_commit install
+	$(PYTHON_INTERPRETER) -m pre_commit run --all-files
 
 
 #################################################################################
