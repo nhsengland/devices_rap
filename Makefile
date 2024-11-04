@@ -43,14 +43,14 @@ nuke: clean
 ## Lint using flake8 and black (use `make format` to do formatting)
 .PHONY: lint
 lint:
-	flake8 devices_rap
-	isort --check --diff --profile black devices_rap
-	black --check --config pyproject.toml devices_rap
+	$(PYTHON_INTERPRETER) -m flake8 devices_rap
+	$(PYTHON_INTERPRETER) -m isort --check --diff --profile black devices_rap
+	$(PYTHON_INTERPRETER) -m black --check --config pyproject.toml devices_rap
 
 ## Format source code with black
 .PHONY: format
 format:
-	black --config pyproject.toml devices_rap
+	$(PYTHON_INTERPRETER) -m black --config pyproject.toml devices_rap
 
 ## Set up python interpreter environment
 .PHONY: create_environment
