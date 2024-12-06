@@ -13,6 +13,7 @@ pip
 pre-commit
 python-dotenv
 pytest
+pytest-cov
 scikit-learn
 tqdm
 typer
