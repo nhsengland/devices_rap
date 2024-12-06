@@ -35,7 +35,7 @@ clean:
 .PHONY: clear
 clear: clean
 
-## Delete the current python enviroment. Nuke it from orbit.
+## Delete the current python environment. Nuke it from orbit.
 .PHONY: nuke
 nuke: clean
 	find . -type d -name ".venv" -exec rm -rf {} +
