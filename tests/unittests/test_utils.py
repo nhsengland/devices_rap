@@ -2,12 +2,228 @@
 Tests for devices_rap/utils.py
 """
 
+from datetime import datetime
+import pandas as pd
 import pytest
 
-# from devices_rap import utils
-
+from devices_rap import utils
 
 pytestmark = pytest.mark.no_data_needed
+
+
+class TestNormaliseColumnNames:
+    """
+    Tests for the normalise_column_names function
+    """
+
+    @pytest.fixture()
+    def input_df(self) -> pd.DataFrame:
+        """
+        Returns a dataframe with messy column names
+        """
+        data = {
+            " Column A ": [1, 2],
+            "Column-B": [3, 4],
+            "Column(C)": [5, 6],
+            "Column/D": [7, 8],
+            "Column.E": [9, 10],
+            "Column F": [11, 12],
+        }
+        df = pd.DataFrame(data)
+        return df
+
+    @pytest.mark.parametrize(
+        "expected_columns, to_lower, strip, replace_values",
+        [
+            (
+                ["column_a", "columnb", "columnc", "column_d", "column_e", "column_f"],
+                True,
+                True,
+                None,
+            ),
+            (
+                ["Column_A", "ColumnB", "ColumnC", "Column_D", "Column_E", "Column_F"],
+                False,
+                True,
+                None,
+            ),
+            (
+                ["_column_a_", "columnb", "columnc", "column_d", "column_e", "column_f"],
+                True,
+                False,
+                None,
+            ),
+            (
+                ["column a", "column-b", "column(c)", "column/d", "column.e", "column f"],
+                True,
+                True,
+                {" ": " "},
+            ),
+        ],
+    )
+    def test_normalise_column_names(
+        self, input_df, expected_columns, to_lower, strip, replace_values
+    ):
+        """
+        Test the normalise_column_names function. Cases to test:
+            1. Check that the column names are normalised under default conditions
+            2. Check that the column names are not cast to lower case
+            3. Check that the column names are not stripped
+            4. Check that the column names are normalised with a custom replace_values dictionary
+        """
+        result_df = utils.normalise_column_names(
+            df=input_df, to_lower=to_lower, strip=strip, replace_values=replace_values
+        )
+        assert list(result_df.columns) == expected_columns
+
+
+class TestConvertValuesTo:
+    """
+    Tests for the convert_values_to function
+    """
+
+    @pytest.mark.parametrize(
+        "value, match, to, invert_match, expected",
+        [
+            ("DEV34", None, "DEV02", False, "DEV02"),
+            ("DEV35", None, "DEV02", False, "DEV02"),
+            ("DEV36", None, "DEV02", False, "DEV36"),
+            ("DEV36", ["DEV34", "DEV35"], "DEV02", False, "DEV36"),
+            ("DEV34", ["DEV34", "DEV35"], "DEV02", False, "DEV02"),
+            ("DEV36", ["DEV34", "DEV35"], "DEV02", True, "DEV02"),
+            ("DEV34", ["DEV34", "DEV35"], "DEV02", True, "DEV34"),
+        ],
+    )
+    def test_convert_values_to(self, value, match, to, invert_match, expected):
+        """
+        Test the convert_values_to function. Cases to test:
+            1. Default match list and conversion
+            2. Custom match list and conversion
+            3. Inverted match logic
+        """
+        result = utils.convert_values_to(
+            value=value, match=match, to=to, invert_match=invert_match
+        )
+        assert result == expected
+
+    @pytest.mark.parametrize(
+        "value, match, to, invert_match, expected",
+        [
+            (123, None, 456, False, 123),
+            (789, [123, 456], 101, False, 789),
+            (123, [123, 456], 101, False, 101),
+            ([1, 2, 3], None, [4, 5, 6], False, [1, 2, 3]),
+            ([1, 2, 3], [[1, 2, 3], [4, 5, 6]], [7, 8, 9], False, [7, 8, 9]),
+            ((1, 2), None, (3, 4), False, (1, 2)),
+            ((1, 2), [(1, 2), (3, 4)], (5, 6), False, (5, 6)),
+        ],
+    )
+    def test_convert_other_values_to(self, value, match, to, invert_match, expected):
+        """
+        Test the convert_values_to function with other data types. Cases to test:
+            1. Integer conversion
+            2. List conversion
+            3. Tuple conversion
+        """
+        result = utils.convert_values_to(
+            value=value, match=match, to=to, invert_match=invert_match
+        )
+        assert result == expected
+
+
+class TestConvertFinDates:
+    """
+    Tests for the convert_fin_dates function
+    """
+
+    @pytest.mark.parametrize(
+        "fin_month, fin_year, expected",
+        [
+            (1, 202425, pd.Timestamp("2024-04-01")),
+            (2, 202425, pd.Timestamp("2024-05-01")),
+            (3, 202425, pd.Timestamp("2024-06-01")),
+            (4, 202425, pd.Timestamp("2024-07-01")),
+            (5, 202425, pd.Timestamp("2024-08-01")),
+            (6, 202425, pd.Timestamp("2024-09-01")),
+            (7, 202425, pd.Timestamp("2024-10-01")),
+            (8, 202425, pd.Timestamp("2024-11-01")),
+            (9, 202425, pd.Timestamp("2024-12-01")),
+            (10, 202425, pd.Timestamp("2025-01-01")),
+            (11, 202425, pd.Timestamp("2025-02-01")),
+            (12, 202425, pd.Timestamp("2025-03-01")),
+        ],
+    )
+    def test_convert_fin_dates(self, fin_month, fin_year, expected):
+        """
+        Test the convert_fin_dates function. Tests all months in a financial year.
+        """
+        result = utils.convert_fin_dates(fin_month=fin_month, fin_year=fin_year)
+        assert result == expected
+
+    @pytest.mark.parametrize(
+        "fin_month, fin_year",
+        [
+            (0, 202425),
+            (13, 202425),
+            (-1, 202425),
+            (14, 202425),
+        ],
+    )
+    def test_convert_fin_dates_invalid_month(self, fin_month, fin_year):
+        """
+        Test the convert_fin_dates function with invalid months. Should raise a ValueError.
+        """
+        with pytest.raises(ValueError):
+            utils.convert_fin_dates(fin_month=fin_month, fin_year=fin_year)
+
+
+class TestParseDates:
+    """
+    Tests for the parse_dates function
+    """
+
+    @pytest.mark.parametrize(
+        "date_str, expected",
+        [
+            ("01/01/2020 12:30", pd.Timestamp("2020-01-01 12:30")),
+            ("31/12/2020 23:59", pd.Timestamp("2020-12-31 23:59")),
+            ("01/01/2020", pd.Timestamp("2020-01-01")),
+            ("31/12/2020", pd.Timestamp("2020-12-31")),
+            ("43831", datetime(2020, 1, 1)),  # Excel serial date for 2020-01-01
+            ("43830", datetime(2019, 12, 31)),  # Excel serial date for 2019-12-31
+            (
+                "43830.520833333336",
+                datetime(2019, 12, 31, 12, 30),
+            ),  # Excel serial date for 2020-01-01 12:30
+            (
+                "43830.99930555555",
+                datetime(2019, 12, 31, 23, 59),
+            ),  # Excel serial date for 2019-12-31 23:59
+        ],
+    )
+    def test_parse_dates_valid(self, date_str, expected):
+        """
+        Test the parse_dates function with valid date strings.
+        """
+        result = utils.parse_dates(date_str)
+        assert result == expected
+
+    @pytest.mark.parametrize(
+        "date_str",
+        [
+            "invalid date",
+            "32/01/2020",
+            "01/13/2020",
+            "01-01-2020",
+            "2020/01/01",
+        ],
+    )
+    def test_parse_dates_invalid(self, date_str):
+        """
+        Test the parse_dates function with invalid date strings. Should return pd.NaT.
+        """
+        result = utils.parse_dates(date_str)
+        assert pd.isna(result)
 
 
 if __name__ == "__main__":
