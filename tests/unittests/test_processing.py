@@ -4,7 +4,6 @@ Tests for devices_rap/processing.py
 
 import pytest
 
-
 # from devices_rap import processing
 
 

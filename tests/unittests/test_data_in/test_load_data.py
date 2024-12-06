@@ -7,7 +7,6 @@ import pytest
 
 from devices_rap.data_in import load_data
 
-
 pytestmark = pytest.mark.data_needed
 
 

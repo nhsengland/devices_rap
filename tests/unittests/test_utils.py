@@ -3,6 +3,7 @@ Tests for devices_rap/utils.py
 """
 
 from datetime import datetime
+
 import pandas as pd
 import pytest
 
