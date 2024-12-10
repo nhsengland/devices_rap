@@ -43,14 +43,14 @@ nuke: clean
 ## Lint using flake8 and black (use `make format` to do formatting)
 .PHONY: lint
 lint:
-	$(PYTHON_INTERPRETER) -m flake8 devices_rap
-	$(PYTHON_INTERPRETER) -m isort --check --diff --profile black devices_rap
-	$(PYTHON_INTERPRETER) -m black --check --config pyproject.toml devices_rap
+	$(PYTHON_INTERPRETER) -m flake8 $(PROJECT_NAME)
+	$(PYTHON_INTERPRETER) -m isort --check --diff --profile black $(PROJECT_NAME)
+	$(PYTHON_INTERPRETER) -m black --check --config pyproject.toml $(PROJECT_NAME)
 
 ## Format source code with black
 .PHONY: format
 format:
-	$(PYTHON_INTERPRETER) -m black --config pyproject.toml devices_rap
+	$(PYTHON_INTERPRETER) -m black --config pyproject.toml $(PROJECT_NAME)
 
 ## Set up python interpreter environment
 .PHONY: create_environment
@@ -72,7 +72,7 @@ pre-commits: requirements_quiet
 ## Run Pipeline
 .PHONY: run_pipeline
 run_pipeline: requirements_quiet
-	$(PYTHON_INTERPRETER) devices_rap/pipeline.py
+	$(PYTHON_INTERPRETER) $(PROJECT_NAME)/pipeline.py
 
 ## Run all tests
 .PHONY: test
