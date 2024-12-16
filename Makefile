@@ -35,27 +35,29 @@ clean:
 .PHONY: clear
 clear: clean
 
-## Delete the current python enviroment. Nuke it from orbit.
+## Delete the current python environment. Nuke it from orbit.
 .PHONY: nuke
 nuke: clean
-	find . -type d -name ".venv" -exec rm -rf {} +
+	find . -type d -name "*.venv" -exec rm -rf {} +
 
 ## Lint using flake8 and black (use `make format` to do formatting)
 .PHONY: lint
 lint:
-	$(PYTHON_INTERPRETER) -m flake8 devices_rap
-	$(PYTHON_INTERPRETER) -m isort --check --diff --profile black devices_rap
-	$(PYTHON_INTERPRETER) -m black --check --config pyproject.toml devices_rap
+	$(PYTHON_INTERPRETER) -m flake8 $(PROJECT_NAME)
+	$(PYTHON_INTERPRETER) -m isort --check --diff --profile black $(PROJECT_NAME)
+	$(PYTHON_INTERPRETER) -m black --check --config pyproject.toml $(PROJECT_NAME)
 
 ## Format source code with black
 .PHONY: format
 format:
-	$(PYTHON_INTERPRETER) -m black --config pyproject.toml devices_rap
+	$(PYTHON_INTERPRETER) -m isort --profile black $(PROJECT_NAME)
+	$(PYTHON_INTERPRETER) -m black --config pyproject.toml $(PROJECT_NAME)
 
 ## Set up python interpreter environment
 .PHONY: create_environment
 create_environment:
 	$(PYTHON_INTERPRETER) -m venv .venv
+
 
 ## Set up pre-commits and run them on all files
 .PHONY: pre-commits
@@ -64,15 +66,59 @@ pre-commits: requirements_quiet
 	$(PYTHON_INTERPRETER) -m pre_commit install
 	$(PYTHON_INTERPRETER) -m pre_commit run --all-files
 
+.PHONY: create_branch
+branch:
+	@read -p "Enter your name: " name; \
+	read -p "Enter JIRA ticket number: " ticket; \
+	read -p "Enter branch description: " desc; \
+	if [ -z "$$ticket" ]; then \
+		git checkout -b $$(echo "$$name/$$desc" | tr ' ' '-'); \
+	else \
+		git checkout -b $$(echo "$$name/$$ticket-$$desc" | tr ' ' '-'); \
+	fi
+
+
+## Create test files for all python files in the project
+.PHONY: create_tests
+create_tests:
+	@find code_your_own_pandas_pipeline -type f -name "*.py" | while read file; do \
+		if [ $$(basename $$file) != "__init__.py" ]; then \
+			new_path=tests/unittests/$$(echo $$file | sed 's|^[^/]*/||' | awk -F/ '{for(i=1;i<=NF;i++)$$i="test_"$$i; print}' OFS=/); \
+			mkdir -p $$(dirname $$new_path); \
+			if [ ! -f $$new_path ]; then \
+				touch $$new_path; \
+				echo "\"\"\"\nTests for $$(echo $$file | sed 's|/|.|g' | sed 's|\.py||')\n\"\"\"\nimport pytest\n" >> $$new_path; \
+				echo "import $$(echo $$file | sed 's|/|.|g' | sed 's|\.py||')" >> $$new_path; \
+				echo "\n\nclass TestExample:" >> $$new_path; \
+				echo "    \"\"\"Example test class\"\"\"" >> $$new_path; \
+				echo "    def test_example(self):" >> $$new_path; \
+				echo "        \"\"\"Example test case\"\"\"" >> $$new_path; \
+				echo "        assert True" >> $$new_path; \
+			fi \
+		fi \
+	done
+
+#################################################################################
+# PROJECT DATA                                                                  #
+#################################################################################
+
+## Downloads the data from the NHS Digital website
+.PHONY: get_data
+get_data:
+	mkdir -p data/raw
+	wget -O data/raw/_data.zip https://files.digital.nhs.uk/A5/B4AB19/Practice_Level_Crosstab_Sep_24.zip
+	unzip -o data/raw/_data.zip -d data/raw
+	rm data/raw/_data.zip
+
 
 #################################################################################
 # PROJECT RULES                                                                 #
 #################################################################################
 
 ## Run Pipeline
-.PHONY: run_pipeline
-run_pipeline: requirements_quiet
-	$(PYTHON_INTERPRETER) devices_rap/pipeline.py
+.PHONY: run
+run: requirements_quiet
+	$(PYTHON_INTERPRETER) $(PROJECT_NAME)/pipeline.py
 
 ## Run all tests
 .PHONY: test
