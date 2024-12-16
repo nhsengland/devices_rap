@@ -14,6 +14,7 @@ pre-commit
 python-dotenv
 pytest
 pytest-cov
+pytest-mock
 scikit-learn
 tqdm
 typer
