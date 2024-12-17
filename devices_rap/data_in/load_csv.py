@@ -28,8 +28,6 @@ from typing import Any, Dict
 import pandas as pd
 from loguru import logger
 
-from devices_rap.config import EXTERNAL_DATA_DIR, RAW_DATA_DIR
-
 NA_VALUES = [
     "(blank)",
     "tbc",
@@ -52,18 +50,6 @@ NA_VALUES = [
     "Not known",
     "***NOT LISTED/UNKNOWN/999999***",
 ]
-
-DATASETS = {
-    "master_devices": {
-        "filepath_or_buffer": RAW_DATA_DIR / "data_2425_master_m6.csv",
-        "low_memory": False,
-    },
-    "device_taxonomy": {"filepath_or_buffer": EXTERNAL_DATA_DIR / "device_taxonomy_2425.csv"},
-    "exceptions": {"filepath_or_buffer": RAW_DATA_DIR / "exception_report_m6.csv"},
-    "provider_codes_lookup": {
-        "filepath_or_buffer": EXTERNAL_DATA_DIR / "provider_codes_lookup.csv"
-    },
-}
 
 
 class NoFilePathProvidedError(Exception):
