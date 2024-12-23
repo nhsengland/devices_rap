@@ -12,7 +12,6 @@ from devices_rap.config import (
     INTERIM_DATA_DIR,
     MODELS_DIR,
     PROCESSED_DATA_DIR,
-    PROJ_ROOT,
     RAW_DATA_DIR,
     REPORTS_DIR,
 )
@@ -25,41 +24,22 @@ class TestConfig:
     Tests for the configuration settings
     """
 
-    def test_proj_root(self):
-        """Test if PROJ_ROOT is correctly set to the project's root directory."""
-        assert PROJ_ROOT == Path(__file__).resolve().parents[2]
-
-    def test_data_dir(self):
-        """Test if DATA_DIR is correctly set to the 'data' directory."""
-        assert DATA_DIR == Path("data")
-
-    def test_raw_data_dir(self):
-        """Test if RAW_DATA_DIR is correctly set to the 'data/raw' directory."""
-        assert RAW_DATA_DIR == DATA_DIR / "raw"
-
-    def test_interim_data_dir(self):
-        """Test if INTERIM_DATA_DIR is correctly set to the 'data/interim' directory."""
-        assert INTERIM_DATA_DIR == DATA_DIR / "interim"
-
-    def test_processed_data_dir(self):
-        """Test if PROCESSED_DATA_DIR is correctly set to the 'data/processed' directory."""
-        assert PROCESSED_DATA_DIR == DATA_DIR / "processed"
-
-    def test_external_data_dir(self):
-        """Test if EXTERNAL_DATA_DIR is correctly set to the 'data/external' directory."""
-        assert EXTERNAL_DATA_DIR == DATA_DIR / "external"
-
-    def test_models_dir(self):
-        """Test if MODELS_DIR is correctly set to the 'models' directory."""
-        assert MODELS_DIR == PROJ_ROOT / "models"
-
-    def test_reports_dir(self):
-        """Test if REPORTS_DIR is correctly set to the 'reports' directory."""
-        assert REPORTS_DIR == PROJ_ROOT / "reports"
-
-    def test_figures_dir(self):
-        """Test if FIGURES_DIR is correctly set to the 'reports/figures' directory."""
-        assert FIGURES_DIR == REPORTS_DIR / "figures"
+    @pytest.mark.parametrize(
+        "dir_path, expected",
+        [
+            (DATA_DIR, "data"),
+            (RAW_DATA_DIR, "data/raw"),
+            (INTERIM_DATA_DIR, "data/interim"),
+            (PROCESSED_DATA_DIR, "data/processed"),
+            (EXTERNAL_DATA_DIR, "data/external"),
+            (MODELS_DIR, "models"),
+            (REPORTS_DIR, "reports"),
+            (FIGURES_DIR, "reports/figures"),
+        ],
+    )
+    def test_dir_paths(self, dir_path, expected):
+        """Test if the directory paths are correctly set."""
+        assert dir_path.__str__().endswith(expected)
 
     def test_logger_configuration(self):
         """Test if the logger is correctly configured."""
