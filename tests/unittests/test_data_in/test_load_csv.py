@@ -7,9 +7,8 @@ from unittest.mock import patch
 import pandas as pd
 import pytest
 
+from devices_rap.errors import NoDatasetsProvidedError, NoFilePathProvidedError
 from devices_rap.data_in.load_csv import (
-    NoDatasetsProvidedError,
-    NoFilePathProvidedError,
     load_csv_data,
     load_devices_datasets,
 )
@@ -17,7 +16,7 @@ from devices_rap.data_in.load_csv import (
 
 @pytest.fixture
 def mock_read_csv():
-    with patch('devices_rap.data_in.load_csv.pd.read_csv') as mock:
+    with patch("devices_rap.data_in.load_csv.pd.read_csv") as mock:
         yield mock
 
 
@@ -25,6 +24,7 @@ class TestLoadCsvData:
     """
     Tests for load_csv_data
     """
+
     def test_read_csv_called_once(self, mock_read_csv):
         """
         Test that the read csv function is called once
@@ -36,11 +36,11 @@ class TestLoadCsvData:
         """
         Test that the read csv function is called with the expected arguments
         """
-        expected_na_values = ['']
+        expected_na_values = [""]
         expected_skip_blank_lines = True
         expected_filepath_or_buffer = "test"
 
-        mocker.patch('devices_rap.data_in.load_csv.NA_VALUES', new=expected_na_values)
+        mocker.patch("devices_rap.data_in.load_csv.NA_VALUES", new=expected_na_values)
 
         load_csv_data("test", filepath_or_buffer="test")
         mock_read_csv.assert_called_with(
@@ -53,7 +53,7 @@ class TestLoadCsvData:
         """
         Test that the function returns a pandas DataFrame
         """
-        mock_df = pd.DataFrame({'col1': [1, 2], 'col2': [3, 4]})
+        mock_df = pd.DataFrame({"col1": [1, 2], "col2": [3, 4]})
         mock_read_csv.return_value = mock_df
         result = load_csv_data("test", filepath_or_buffer="test")
         assert isinstance(result, pd.DataFrame)
@@ -62,7 +62,7 @@ class TestLoadCsvData:
         """
         Test that the function returns a DataFrame with the expected shape
         """
-        mock_df = pd.DataFrame({'col1': [1, 2], 'col2': [3, 4]})
+        mock_df = pd.DataFrame({"col1": [1, 2], "col2": [3, 4]})
         mock_read_csv.return_value = mock_df
         result = load_csv_data("test", filepath_or_buffer="test")
         assert result.shape == (2, 2)
@@ -87,6 +87,7 @@ class TestLoadDevicesDatasets:
     """
     Tests for load_devices_datasets
     """
+
     def test_load_devices_datasets(self, mocker):
         """
         Test that the function returns a dictionary with the expected keys
@@ -96,8 +97,8 @@ class TestLoadDevicesDatasets:
             "test2": {"filepath_or_buffer": "test2"},
         }
 
-        mock_df = pd.DataFrame({'col1': [1, 2], 'col2': [3, 4]})
-        mocker.patch('devices_rap.data_in.load_csv.pd.read_csv', return_value=mock_df)
+        mock_df = pd.DataFrame({"col1": [1, 2], "col2": [3, 4]})
+        mocker.patch("devices_rap.data_in.load_csv.pd.read_csv", return_value=mock_df)
 
         result = load_devices_datasets(datasets)
         assert set(result.keys()) == set(datasets.keys())
@@ -111,8 +112,8 @@ class TestLoadDevicesDatasets:
             "test2": {"filepath_or_buffer": "test2"},
         }
 
-        mock_df = pd.DataFrame({'col1': [1, 2], 'col2': [3, 4]})
-        mocker.patch('devices_rap.data_in.load_csv.pd.read_csv', return_value=mock_df)
+        mock_df = pd.DataFrame({"col1": [1, 2], "col2": [3, 4]})
+        mocker.patch("devices_rap.data_in.load_csv.pd.read_csv", return_value=mock_df)
 
         result = load_devices_datasets(datasets)
         for dataset in result.values():
@@ -127,8 +128,8 @@ class TestLoadDevicesDatasets:
             "test2": {"filepath_or_buffer": "test2"},
         }
 
-        mock_df = pd.DataFrame({'col1': [1, 2], 'col2': [3, 4]})
-        mocker.patch('devices_rap.data_in.load_csv.pd.read_csv', return_value=mock_df)
+        mock_df = pd.DataFrame({"col1": [1, 2], "col2": [3, 4]})
+        mocker.patch("devices_rap.data_in.load_csv.pd.read_csv", return_value=mock_df)
 
         result = load_devices_datasets(datasets)
         for dataset in result.values():
@@ -143,8 +144,8 @@ class TestLoadDevicesDatasets:
             "test2": {"filepath_or_buffer": "test2"},
         }
 
-        mock_df = pd.DataFrame({'col1': [1, 2], 'col2': [3, 4]})
-        mocker.patch('devices_rap.data_in.load_csv.pd.read_csv', return_value=mock_df)
+        mock_df = pd.DataFrame({"col1": [1, 2], "col2": [3, 4]})
+        mocker.patch("devices_rap.data_in.load_csv.pd.read_csv", return_value=mock_df)
 
         result = load_devices_datasets(datasets)
         for dataset in result.values():

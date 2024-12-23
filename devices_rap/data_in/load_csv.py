@@ -28,6 +28,8 @@ from typing import Any, Dict
 import pandas as pd
 from loguru import logger
 
+from devices_rap.errors import NoDatasetsProvidedError, NoFilePathProvidedError
+
 NA_VALUES = [
     "(blank)",
     "tbc",
@@ -50,28 +52,6 @@ NA_VALUES = [
     "Not known",
     "***NOT LISTED/UNKNOWN/999999***",
 ]
-
-
-class NoFilePathProvidedError(Exception):
-    """
-    Exception raised when no file path is provided to the `load_csv_data` function.
-    """
-
-    def __init__(self, message="No file path provided."):
-        self.message = message
-        logger.error(self.message)
-        super().__init__(self.message)
-
-
-class NoDatasetsProvidedError(Exception):
-    """
-    Exception raised when no datasets are provided to the `load_devices_datasets` function.
-    """
-
-    def __init__(self, message="No datasets provided."):
-        self.message = message
-        logger.error(self.message)
-        super().__init__(self.message)
 
 
 def load_csv_data(dataset_name: str, **read_csv_kwargs) -> pd.DataFrame:
