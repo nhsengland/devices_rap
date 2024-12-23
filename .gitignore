@@ -172,3 +172,6 @@ cython_debug/
 #.idea/
 
 .vscode/
+
+# Prototyping notebooks and potential data leaking .ipynb files are ignored
+notebooks/
