@@ -110,7 +110,7 @@ def load_csv_data(dataset_name: str, **read_csv_kwargs) -> pd.DataFrame:
         na_values=NA_VALUES,
         skip_blank_lines=True,
         **read_csv_kwargs,
-    )
+    ).dropna(how="all")
 
     return data_df
 

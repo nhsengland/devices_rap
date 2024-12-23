@@ -2,7 +2,6 @@
 Tests for devices_rap/data_in/load_csv.py
 """
 
-import warnings
 from unittest.mock import patch
 
 import pandas as pd
@@ -14,8 +13,6 @@ from devices_rap.data_in.load_csv import (
     load_csv_data,
     load_devices_datasets,
 )
-
-warnings.filterwarnings("ignore", category=DeprecationWarning, message=".*platformdirs.*")
 
 
 @pytest.fixture
