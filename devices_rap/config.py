@@ -1,5 +1,5 @@
 """
-_summary_
+Configuration file for the project.
 """
 
 from pathlib import Path
