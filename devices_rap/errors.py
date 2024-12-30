@@ -36,6 +36,12 @@ class NoDataProvidedError(LoggedException):
     """
 
 
+class ColumnsNotFoundError(LoggedException):
+    """
+    Exception raised when the columns are not found in the dataset. Used to fast-fail the process.
+    """
+
+
 class LoggedWarning(Warning):
     """
     Custom exception class that logs the warning message using the logger.

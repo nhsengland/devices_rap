@@ -12,6 +12,7 @@ from devices_rap.errors import (
     NoFilePathProvidedError,
     NoDatasetsProvidedError,
     NoDataProvidedError,
+    ColumnsNotFoundError,
     MergeWarning,
 )
 
@@ -23,6 +24,7 @@ class TestCustomExceptions:
     - NoFilePathProvidedError
     - NoDatasetsProvidedError
     - NoDataProvidedError
+    - ColumnsNotFoundError
     """
 
     @pytest.mark.parametrize(
@@ -32,6 +34,7 @@ class TestCustomExceptions:
             (NoFilePathProvidedError, "No file path provided"),
             (NoDatasetsProvidedError, "No datasets provided"),
             (NoDataProvidedError, "No data provided"),
+            (ColumnsNotFoundError, "Columns not found"),
         ],
     )
     def test_error(self, mocker, exception_class, message):
