@@ -2,6 +2,7 @@
 Tests for devices_rap/processing.py
 """
 
+import re
 import warnings
 import pandas as pd
 import pytest
@@ -9,7 +10,7 @@ from loguru import logger
 import test
 
 from devices_rap import processing
-from devices_rap.errors import MergeWarning
+from devices_rap.errors import ColumnsNotFoundError, MergeWarning
 
 # from devices_rap import processing
 
@@ -243,7 +244,7 @@ class TestJoinDatasets:
         Cases not included:
         - left as it is the default and tested in test_default_merge
         """
-        actual = processing.join_datasets(left, right, left_on="col1", right_on="col3", how=how)
+        actual = processing.join_datasets(left, right, left_on="col1", right_on="col3", how=how, check_merge=False)
 
         actual = actual.sort_values(by=["col1", "col2", "col3", "col4"]).reset_index(drop=True)
         expected = expected.sort_values(by=["col1", "col2", "col3", "col4"]).reset_index(drop=True)
@@ -361,6 +362,34 @@ class TestJoinDatasets:
 
         mock_logger.assert_called_once_with("Joining the datasets on col1 and col3")
 
+    @pytest.mark.parametrize(
+        "left_on, right_on, expected_message",
+        [
+            (
+                "col1",
+                "test",
+                "The column(s) {'left': [], 'right': ['test']} were not found in the respective datasets",
+            ),
+            (
+                "test",
+                "col3",
+                "The column(s) {'left': ['test'], 'right': []} were not found in the respective datasets",
+            ),
+            (
+                ["test", "test2"],
+                ["col3", "col4"],
+                "The column(s) {'left': ['test', 'test2'], 'right': []} were not found in the respective datasets",
+            ),
+        ],
+    )
+    def test_error_when_no_on_columns(self, left, right, left_on, right_on, expected_message):
+        """
+        Test that the function raises a ValueError when the left_on or right_on columns are not in
+        their respective DataFrames.
+        """
+        with pytest.raises(ColumnsNotFoundError, match=re.escape(expected_message)):
+            processing.join_datasets(left, right, left_on=left_on, right_on=right_on)
+
 
 class TestLookupProviderCodes:
     """
@@ -387,5 +416,4 @@ class TestLookupTaxonomyTariff:
 
 
 if __name__ == "__main__":
-    # pytest.main([__file__])
-    print(pd.DataFrame(columns=["col1", "col2", "_merge"]))
+    pytest.main([__file__])

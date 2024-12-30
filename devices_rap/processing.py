@@ -8,7 +8,7 @@ from typing import Literal, Optional
 import pandas as pd
 from loguru import logger
 
-from devices_rap.errors import MergeWarning
+from devices_rap.errors import ColumnsNotFoundError, MergeWarning
 
 MergeHow = Literal["left", "right", "outer", "inner"]
 
@@ -65,6 +65,7 @@ def join_datasets(
     how: MergeHow = "left",
     check_merge: bool | Literal["keep"] = True,
     indicator_override: Optional[str] = None,
+    **merge_kwargs,
 ) -> pd.DataFrame:
     """
     Join two datasets together.
@@ -75,9 +76,9 @@ def join_datasets(
         The left dataset to join.
     right : pd.DataFrame
         The right dataset to join.
-    left_on : str
+    left_on : str | list[str]
         The column to join on in the left dataset.
-    right_on : str
+    right_on : str | list[str]
         The column to join on in the right dataset.
     how : MergeHow, optional
         The type of join to perform, by default "inner"
@@ -86,21 +87,49 @@ def join_datasets(
         column will be kept in the merged DataFrame.
     indicator_override : Optional[str], optional
         Override the indicator parameter in the merge function, by default None
+    merge_kwargs : dict
+        Additional keyword arguments to pass to the pandas.merge function.
 
     Returns
     -------
     pd.DataFrame
         The joined dataset.
     """
+    # if left_on not in left.columns:
+    #     raise ColumnsNotFoundError(f"The column, {left_on}, was not found in the left dataset")
+    # if right_on not in right.columns:
+    #     raise ColumnsNotFoundError(f"The column, {right_on}, was not found in the right dataset")
+
     logger.info(f"Joining the datasets on {left_on} and {right_on}")
 
     indicator = False
     if check_merge:
         indicator = indicator_override or True
 
-    merged_data = pd.merge(
-        left=left, right=right, left_on=left_on, right_on=right_on, how=how, indicator=indicator
-    )
+    try:
+        merged_data = pd.merge(
+            left=left,
+            right=right,
+            left_on=left_on,
+            right_on=right_on,
+            how=how,
+            indicator=indicator,
+            **merge_kwargs,
+        )
+    except KeyError as e:
+        # TODO - could this be done in ColumnsNotFoundError?
+        bad_columns = {"left": [], "right": []}
+        for side, column_set in {"left": left_on, "right": right_on}.items():
+            if isinstance(column_set, str):
+                column_set = [column_set]
+            for column in column_set:
+                if side == "left" and column not in left.columns:
+                    bad_columns["left"].append(column)
+                if side == "right" and column not in right.columns:
+                    bad_columns["right"].append(column)
+        raise ColumnsNotFoundError(
+            f"The column(s) {bad_columns} were not found in the respective datasets"
+        ) from e
 
     if check_merge:
         keep_merge = check_merge == "keep"
@@ -150,4 +179,25 @@ def lookup_taxonomy_tariff(master_df: pd.DataFrame, taxonomy_tariff: pd.DataFram
     """
     logger.info("Joining the taxonomy_tariff table onto the master_df table")
     assert taxonomy_tariff.empty
+    return master_df
+
+
+def merge_exceptions_data(master_df: pd.DataFrame, exceptions: pd.DataFrame) -> pd.DataFrame:
+    """
+    _summary_
+
+    Parameters
+    ----------
+    master_df : pd.DataFrame
+        _description_
+    exceptions : pd.DataFrame
+        _description_
+
+    Returns
+    -------
+    pd.DataFrame
+        _description_
+    """
+    logger.info("Joining the exceptions table onto the master_df table")
+    assert exceptions.empty
     return master_df
