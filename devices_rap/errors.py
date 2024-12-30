@@ -2,6 +2,8 @@
 Defines custom exceptions for the devices_rap package.
 """
 
+import warnings
+
 from loguru import logger
 
 
@@ -32,3 +34,22 @@ class NoDataProvidedError(LoggedException):
     """
     Exception raised when no data is provided to the `batch_normalise_column_names` function.
     """
+
+
+class LoggedWarning(Warning):
+    """
+    Custom exception class that logs the warning message using the logger.
+    """
+
+    def __init__(self, message):
+        self.message = message
+        logger.warning(self.message)
+        super().__init__(self.message)
+
+
+class MergeWarning(LoggedWarning):
+    """Custom warning for merge validation"""
+
+
+if __name__ == "__main__":
+    warnings.warn("Test warning message", LoggedWarning)
