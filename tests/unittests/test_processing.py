@@ -2,12 +2,11 @@
 Tests for devices_rap/processing.py
 """
 
-import re
-import warnings
+from contextlib import nullcontext
+
 import pandas as pd
 import pytest
 from loguru import logger
-import test
 
 from devices_rap import processing
 from devices_rap.errors import ColumnsNotFoundError, MergeWarning
@@ -316,9 +315,7 @@ class TestJoinDatasets:
         """
         mock_check_merge = mocker.spy(processing, "check_merge_health")
 
-        processing.join_datasets(
-            left, right, left_on="col1", right_on="col3", check_merge=False
-        )
+        processing.join_datasets(left, right, left_on="col1", right_on="col3", check_merge=False)
 
         mock_check_merge.assert_not_called()
 
@@ -345,18 +342,24 @@ class TestJoinDatasets:
     ):
         """
         Test that the function uses the specified merge column when `indicator_override` is provided.
+
+        Note: We only check for the MergeWarning when check_merge is True or "keep". This is because
+        the warning is raised in the check_merge_health function, which is not called when
+        check_merge is False. `nullcontext` is used to skip the warning check in the conditional
+        context statement.
         """
         mock_merge = mocker.spy(pd, "merge")
         mock_check_merge = mocker.spy(processing, "check_merge_health")
 
-        processing.join_datasets(
-            left,
-            right,
-            left_on="col1",
-            right_on="col3",
-            check_merge=check_merge,
-            indicator_override=indicator_override,
-        )
+        with pytest.warns(MergeWarning) if check_merge else nullcontext():
+            processing.join_datasets(
+                left,
+                right,
+                left_on="col1",
+                right_on="col3",
+                check_merge=check_merge,
+                indicator_override=indicator_override,
+            )
 
         actual_merge_kwargs = mock_merge.call_args.kwargs
         assert actual_merge_kwargs["indicator"] == expected_merge
@@ -387,28 +390,128 @@ class TestJoinDatasets:
             processing.join_datasets(left, right, left_on=["test"], right_on=["test"])
 
 
-class TestLookupProviderCodes:
+class TestJoinWrapperFunctions:
     """
-    Tests for processing.lookup_provider_codes
-    """
+    Tests for processing.join_provider_codes_lookup, processing.join_device_taxonomy,
+    and processing.join_exceptions.
 
-    @pytest.mark.xfail()
-    def test_empty_input(self):
-        """
-        _summary_
-        """
-
-
-class TestLookupTaxonomyTariff:
-    """
-    Tests for processing.lookup_taxonomy_tariff
+    Note: These tests are not exhaustive as the functions are wrappers around join_datasets.
+    End-to-end tests are required to ensure that the functions work as expected.
     """
 
-    @pytest.mark.xfail()
-    def test_empty_input(self):
+    functions = [
+        processing.join_provider_codes_lookup,
+        processing.join_device_taxonomy,
+        processing.join_exceptions,
+    ]
+
+    @pytest.mark.parametrize("func", functions)
+    def test_returns_dataframe(self, mocker, func):
         """
-        _summary_
+        Test that the function returns a DataFrame.
         """
+        mocker.patch("devices_rap.processing.join_datasets", return_value=pd.DataFrame())
+        actual = func(pd.DataFrame(), pd.DataFrame())
+        assert isinstance(actual, pd.DataFrame)
+
+    expected_messages = [
+        "Joining the provider_codes_lookup table onto the master_devices table",
+        "Joining the device_taxonomy table onto the master_devices table",
+        "Joining the exceptions table onto the master_devices table",
+    ]
+
+    @pytest.mark.parametrize("func, expected_message", zip(functions, expected_messages))
+    def test_logging(self, mocker, func, expected_message):
+        """
+        Test that the function logs the correct message.
+        """
+        mock_logger = mocker.spy(logger, "info")
+        mocker.patch("devices_rap.processing.join_datasets")
+
+        func(pd.DataFrame(), pd.DataFrame())
+
+        mock_logger.assert_called_once_with(expected_message)
+
+    @pytest.mark.parametrize("func", functions)
+    def test_calls_join_datasets(self, mocker, func):
+        """
+        Test that the function calls join_datasets.
+        """
+        mock_join_datasets = mocker.patch("devices_rap.processing.join_datasets")
+
+        func(pd.DataFrame(), pd.DataFrame())
+
+        mock_join_datasets.assert_called_once()
+
+    expected_kwargs = [
+        {
+            "left": pd.DataFrame({"left": [1, 2, 3]}),
+            "right": pd.DataFrame({"right": [1, 2, 3]}),
+            "left_on": "der_provider_code",
+            "right_on": "org_code",
+            "validate": "many_to_one",
+        },
+        {
+            "left": pd.DataFrame({"left": [1, 2, 3]}),
+            "right": pd.DataFrame({"right": [1, 2, 3]}),
+            "left_on": "upd_high_level_device_type",
+            "right_on": "dev_code",
+            "validate": "many_to_one",
+        },
+        {
+            "left": pd.DataFrame({"left": [1, 2, 3]}),
+            "right": pd.DataFrame({"right": [1, 2, 3]}),
+            "left_on": ["upd_high_level_device_type", "der_provider_code"],
+            "right_on": ["dev_code", "provider_code"],
+            "validate": "many_to_many",
+        },
+    ]
+
+    @pytest.mark.parametrize("func, expected_kwargs", zip(functions, expected_kwargs))
+    @pytest.mark.parametrize(
+        "kwarg",
+        [
+            "left",
+            "right",
+            "left_on",
+            "right_on",
+            "validate",
+        ],
+    )
+    def test_calls_join_datasets_correctly(self, mocker, func, expected_kwargs, kwarg):
+        """
+        Test that the function calls join_datasets with the correct arguments.
+        """
+        mock_join_datasets = mocker.patch("devices_rap.processing.join_datasets")
+
+        func(pd.DataFrame({"left": [1, 2, 3]}), pd.DataFrame({"right": [1, 2, 3]}))
+
+        actual = mock_join_datasets.call_args.kwargs[kwarg]
+        expected = expected_kwargs[kwarg]
+
+        if isinstance(expected, pd.DataFrame):
+            assert isinstance(actual, pd.DataFrame)
+            pd.testing.assert_frame_equal(actual, expected)
+        else:
+            assert actual == expected
+
+    def test_call_join_exceptions_strict(self, mocker):
+        """
+        Test that the function calls join_datasets with the correct arguments when strict_validate
+        is True.
+        """
+        mock_join_datasets = mocker.patch("devices_rap.processing.join_datasets")
+
+        processing.join_exceptions(
+            pd.DataFrame({"left": [1, 2, 3]}),
+            pd.DataFrame({"right": [1, 2, 3]}),
+            strict_validate=True,
+        )
+
+        actual = mock_join_datasets.call_args.kwargs["validate"]
+        expected = "many_to_one"
+
+        assert actual == expected
 
 
 if __name__ == "__main__":

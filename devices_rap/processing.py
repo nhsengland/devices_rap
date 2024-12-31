@@ -94,6 +94,11 @@ def join_datasets(
     -------
     pd.DataFrame
         The joined dataset.
+
+    Raises
+    ------
+    ColumnsNotFoundError
+        If the columns to join on are not found in the datasets. Reports which columns are missing.
     """
     logger.info(f"Joining the datasets on {left_on} and {right_on}")
 
@@ -123,64 +128,119 @@ def join_datasets(
     return merged_data
 
 
-def lookup_provider_codes(master_df: pd.DataFrame, provider_codes: pd.DataFrame) -> pd.DataFrame:
+def join_provider_codes_lookup(
+    master_devices: pd.DataFrame, provider_codes_lookup: pd.DataFrame
+) -> pd.DataFrame:
     """
-    _summary_
+    This function is a wrapper around the join_datasets function. It joins on the
+    'der_provider_code' column in the master_devices dataset and the 'org_code' column in the
+    provider_codes_lookup dataset. The join type is a 'many_to_one' left join.
+
+    join_datasets by defaults checks the merge health to ensure that there is not a 'left_only' or
+    'right_only' merge. If there are any 'left_only' or 'right_only' merges, a MergeWarning is
+    raised. The merge column is dropped from the merged DataFrame by default.
 
     Parameters
     ----------
-    master_df : pd.DataFrame
-        _description_
-    provider_codes : pd.DataFrame
-        _description_
+    master_devices : pd.DataFrame
+        The master_devices table. Must have the "der_provider_code" column.
+    provider_codes_lookup : pd.DataFrame
+        The provider_codes_lookup table. Must have the "org_code" column.
 
     Returns
     -------
     pd.DataFrame
-        _description_
+        The master_devices table with the provider_codes_lookup table joined on.
     """
-    logger.info("Joining the provider_codes table onto the master_df table")
-    assert provider_codes.empty
-    return master_df
+    logger.info("Joining the provider_codes_lookup table onto the master_devices table")
+
+    merged_master_devices = join_datasets(
+        left=master_devices,
+        right=provider_codes_lookup,
+        left_on="der_provider_code",
+        right_on="org_code",
+        validate="many_to_one",
+    )
+
+    return merged_master_devices
 
 
-def lookup_taxonomy_tariff(master_df: pd.DataFrame, taxonomy_tariff: pd.DataFrame) -> pd.DataFrame:
+def join_device_taxonomy(
+    master_devices: pd.DataFrame, device_taxonomy: pd.DataFrame
+) -> pd.DataFrame:
     """
-    _summary_
+    This function is a wrapper around the join_datasets function. It joins on the
+    'upd_high_level_device_type' column in the master_devices dataset and the 'dev_code' column in
+    the device_taxonomy dataset. The join type is a 'many_to_one' left join.
+
+    join_datasets by defaults checks the merge health to ensure that there is not a 'left_only' or
+    'right_only' merge. If there are any 'left_only' or 'right_only' merges, a MergeWarning is
+    raised. The merge column is dropped from the merged DataFrame by default.
 
     Parameters
     ----------
-    master_df : pd.DataFrame
-        _description_
-    taxonomy_tariff : pd.DataFrame
-        _description_
+    master_devices : pd.DataFrame
+        The master_devices table. Must have the "upd_high_level_device_type" column.
+    device_taxonomy : pd.DataFrame
+        The device_taxonomy table. Must have the "device_type" column.
 
     Returns
     -------
     pd.DataFrame
-        _description_
+        The master_devices table with the device_taxonomy table joined on.
     """
-    logger.info("Joining the taxonomy_tariff table onto the master_df table")
-    assert taxonomy_tariff.empty
-    return master_df
+    logger.info("Joining the device_taxonomy table onto the master_devices table")
+
+    merged_master_devices = join_datasets(
+        left=master_devices,
+        right=device_taxonomy,
+        left_on="upd_high_level_device_type",
+        right_on="dev_code",
+        validate="many_to_one",
+    )
+
+    return merged_master_devices
 
 
-def merge_exceptions_data(master_df: pd.DataFrame, exceptions: pd.DataFrame) -> pd.DataFrame:
+def join_exceptions(
+    master_devices: pd.DataFrame, exceptions: pd.DataFrame, strict_validate: bool = False
+) -> pd.DataFrame:
     """
-    _summary_
+    This function is a wrapper around the join_datasets function. It joins on the
+    'upd_high_level_device_type' and 'der_provider_code' columns in the master_devices dataset and
+    the 'dev_code' and 'provider_code' column in the exceptions data. The join type is a
+    'many_to_many' left join (if strict_validate is false).
+
+    join_datasets by defaults checks the merge health to ensure that there is not a 'left_only' or
+    'right_only' merge. If there are any 'left_only' or 'right_only' merges, a MergeWarning is
+    raised. The merge column is dropped from the merged DataFrame by default.
+
+    The strict_validate setting should be used when we are more confident in the exceptions data and
+    want to validate a 'many-to-one' merge instead of a 'many-to-many' merge.
 
     Parameters
     ----------
-    master_df : pd.DataFrame
-        _description_
+    master_devices : pd.DataFrame
+        The master_devices table. Must have the ["upd_high_level_device_type", "der_provider_code"]
+        columns.
     exceptions : pd.DataFrame
-        _description_
+        The exceptions table. Must have the ["dev_code", "provider_code"] columns.
 
     Returns
     -------
     pd.DataFrame
-        _description_
+        The master_devices table with the exceptions table joined on.
     """
-    logger.info("Joining the exceptions table onto the master_df table")
-    assert exceptions.empty
-    return master_df
+    logger.info("Joining the exceptions table onto the master_devices table")
+
+    validate = "many_to_one" if strict_validate else "many_to_many"
+
+    merged_master_devices = join_datasets(
+        left=master_devices,
+        right=exceptions,
+        left_on=["upd_high_level_device_type", "der_provider_code"],
+        right_on=["dev_code", "provider_code"],
+        validate=validate,
+    )
+
+    return merged_master_devices
