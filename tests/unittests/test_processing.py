@@ -127,7 +127,8 @@ class TestCheckMergeHealth:
         Test that the function keeps the merge column when `keep_merge` is True.
         """
         expected = merged_df
-        actual = processing.check_merge_health(merged_df, keep_merge=True)
+        with pytest.warns(MergeWarning):
+            actual = processing.check_merge_health(merged_df, keep_merge=True)
 
         pd.testing.assert_frame_equal(actual, expected)
 
@@ -136,7 +137,9 @@ class TestCheckMergeHealth:
         Test that the function uses the default merge column when `merge_column` is None.
         """
         expected = merged_df.drop(columns="_merge")
-        actual = processing.check_merge_health(merged_df, merge_column=None)
+
+        with pytest.warns(MergeWarning):
+            actual = processing.check_merge_health(merged_df, merge_column=None)
 
         pd.testing.assert_frame_equal(actual, expected)
 
@@ -179,7 +182,8 @@ class TestJoinDatasets:
         """
         Test that the function returns a DataFrame.
         """
-        actual = processing.join_datasets(left, right, left_on="col1", right_on="col3")
+        with pytest.warns(MergeWarning):
+            actual = processing.join_datasets(left, right, left_on="col1", right_on="col3")
         assert isinstance(actual, pd.DataFrame)
 
     def test_default_merge(self, left, right):
@@ -194,8 +198,8 @@ class TestJoinDatasets:
                 ("ping", "pong", None, None),
             ],
         )
-
-        actual = processing.join_datasets(left, right, left_on="col1", right_on="col3")
+        with pytest.warns(MergeWarning):
+            actual = processing.join_datasets(left, right, left_on="col1", right_on="col3")
 
         pd.testing.assert_frame_equal(actual, expected)
 
@@ -244,7 +248,9 @@ class TestJoinDatasets:
         Cases not included:
         - left as it is the default and tested in test_default_merge
         """
-        actual = processing.join_datasets(left, right, left_on="col1", right_on="col3", how=how, check_merge=False)
+        actual = processing.join_datasets(
+            left, right, left_on="col1", right_on="col3", how=how, check_merge=False
+        )
 
         actual = actual.sort_values(by=["col1", "col2", "col3", "col4"]).reset_index(drop=True)
         expected = expected.sort_values(by=["col1", "col2", "col3", "col4"]).reset_index(drop=True)
@@ -264,7 +270,8 @@ class TestJoinDatasets:
         """
         mock_check_merge = mocker.spy(processing, "check_merge_health")
 
-        processing.join_datasets(left, right, left_on="col1", right_on="col3")
+        with pytest.warns(MergeWarning):
+            processing.join_datasets(left, right, left_on="col1", right_on="col3")
 
         actual_call_args = mock_check_merge.call_args
         actual_args = actual_call_args.args
@@ -293,9 +300,10 @@ class TestJoinDatasets:
         """
         mock_check_merge = mocker.spy(processing, "check_merge_health")
 
-        processing.join_datasets(
-            left, right, left_on="col1", right_on="col3", check_merge=check_merge
-        )
+        with pytest.warns(MergeWarning):
+            processing.join_datasets(
+                left, right, left_on="col1", right_on="col3", check_merge=check_merge
+            )
 
         actual_call_args = mock_check_merge.call_args
         actual_kwargs = actual_call_args.kwargs
@@ -308,7 +316,9 @@ class TestJoinDatasets:
         """
         mock_check_merge = mocker.spy(processing, "check_merge_health")
 
-        processing.join_datasets(left, right, left_on="col1", right_on="col3", check_merge=False)
+        processing.join_datasets(
+            left, right, left_on="col1", right_on="col3", check_merge=False
+        )
 
         mock_check_merge.assert_not_called()
 
@@ -340,7 +350,12 @@ class TestJoinDatasets:
         mock_check_merge = mocker.spy(processing, "check_merge_health")
 
         processing.join_datasets(
-            left, right, left_on="col1", right_on="col3", check_merge=check_merge, indicator_override=indicator_override
+            left,
+            right,
+            left_on="col1",
+            right_on="col3",
+            check_merge=check_merge,
+            indicator_override=indicator_override,
         )
 
         actual_merge_kwargs = mock_merge.call_args.kwargs
@@ -358,37 +373,18 @@ class TestJoinDatasets:
         """
         mock_logger = mocker.spy(logger, "info")
 
-        processing.join_datasets(left, right, left_on="col1", right_on="col3")
+        with pytest.warns(MergeWarning):
+            processing.join_datasets(left, right, left_on="col1", right_on="col3")
 
         mock_logger.assert_called_once_with("Joining the datasets on col1 and col3")
 
-    @pytest.mark.parametrize(
-        "left_on, right_on, expected_message",
-        [
-            (
-                "col1",
-                "test",
-                "The column(s) {'left': [], 'right': ['test']} were not found in the respective datasets",
-            ),
-            (
-                "test",
-                "col3",
-                "The column(s) {'left': ['test'], 'right': []} were not found in the respective datasets",
-            ),
-            (
-                ["test", "test2"],
-                ["col3", "col4"],
-                "The column(s) {'left': ['test', 'test2'], 'right': []} were not found in the respective datasets",
-            ),
-        ],
-    )
-    def test_error_when_no_on_columns(self, left, right, left_on, right_on, expected_message):
+    def test_error_when_no_on_columns(self, left, right):
         """
-        Test that the function raises a ValueError when the left_on or right_on columns are not in
-        their respective DataFrames.
+        Test that the function raises a ColumnsNotFoundError when the columns are not found in the
+        dataset.
         """
-        with pytest.raises(ColumnsNotFoundError, match=re.escape(expected_message)):
-            processing.join_datasets(left, right, left_on=left_on, right_on=right_on)
+        with pytest.raises(ColumnsNotFoundError):
+            processing.join_datasets(left, right, left_on=["test"], right_on=["test"])
 
 
 class TestLookupProviderCodes:

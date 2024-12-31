@@ -95,11 +95,6 @@ def join_datasets(
     pd.DataFrame
         The joined dataset.
     """
-    # if left_on not in left.columns:
-    #     raise ColumnsNotFoundError(f"The column, {left_on}, was not found in the left dataset")
-    # if right_on not in right.columns:
-    #     raise ColumnsNotFoundError(f"The column, {right_on}, was not found in the right dataset")
-
     logger.info(f"Joining the datasets on {left_on} and {right_on}")
 
     indicator = False
@@ -117,19 +112,7 @@ def join_datasets(
             **merge_kwargs,
         )
     except KeyError as e:
-        # TODO - could this be done in ColumnsNotFoundError?
-        bad_columns = {"left": [], "right": []}
-        for side, column_set in {"left": left_on, "right": right_on}.items():
-            if isinstance(column_set, str):
-                column_set = [column_set]
-            for column in column_set:
-                if side == "left" and column not in left.columns:
-                    bad_columns["left"].append(column)
-                if side == "right" and column not in right.columns:
-                    bad_columns["right"].append(column)
-        raise ColumnsNotFoundError(
-            f"The column(s) {bad_columns} were not found in the respective datasets"
-        ) from e
+        raise ColumnsNotFoundError(left.columns, right.columns, left_on, right_on) from e
 
     if check_merge:
         keep_merge = check_merge == "keep"
