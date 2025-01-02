@@ -41,3 +41,10 @@ markers = [
     "no_data_needed: marks tests that do not require datafiles (deselect with '-m \"not no_data_needed\"')",
     "data_needed: marks tests that do require datafiles (deselect with '-m \"not data_needed\"')",
 ]
+
+[tool.coverage.run]
+omit = [
+    "*/tests/*",
+    "*/__init__.py",
+    "*/_version.py",
+]
