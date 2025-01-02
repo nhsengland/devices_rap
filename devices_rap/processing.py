@@ -8,7 +8,7 @@ from typing import Literal, Optional
 import pandas as pd
 from loguru import logger
 
-from devices_rap.errors import ColumnsNotFoundError, MergeWarning
+from devices_rap.errors import MergeColumnsNotFoundError, MergeWarning
 
 MergeHow = Literal["left", "right", "outer", "inner"]
 
@@ -97,7 +97,7 @@ def join_datasets(
 
     Raises
     ------
-    ColumnsNotFoundError
+    MergeColumnsNotFoundError
         If the columns to join on are not found in the datasets. Reports which columns are missing.
     """
     logger.info(f"Joining the datasets on {left_on} and {right_on}")
@@ -117,7 +117,7 @@ def join_datasets(
             **merge_kwargs,
         )
     except KeyError as e:
-        raise ColumnsNotFoundError(left.columns, right.columns, left_on, right_on) from e
+        raise MergeColumnsNotFoundError(left.columns, right.columns, left_on, right_on) from e
 
     if check_merge:
         keep_merge = check_merge == "keep"

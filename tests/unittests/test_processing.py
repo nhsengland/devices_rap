@@ -9,7 +9,7 @@ import pytest
 from loguru import logger
 
 from devices_rap import processing
-from devices_rap.errors import ColumnsNotFoundError, MergeWarning
+from devices_rap.errors import MergeColumnsNotFoundError, MergeWarning
 
 # from devices_rap import processing
 
@@ -383,10 +383,10 @@ class TestJoinDatasets:
 
     def test_error_when_no_on_columns(self, left, right):
         """
-        Test that the function raises a ColumnsNotFoundError when the columns are not found in the
+        Test that the function raises a MergeColumnsNotFoundError when the columns are not found in the
         dataset.
         """
-        with pytest.raises(ColumnsNotFoundError):
+        with pytest.raises(MergeColumnsNotFoundError):
             processing.join_datasets(left, right, left_on=["test"], right_on=["test"])
 
 
