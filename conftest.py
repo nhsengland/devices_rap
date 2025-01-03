@@ -69,11 +69,31 @@ def mock_error(mocker):
 
 
 @pytest.fixture
-def mock_log_levels(mock_info, mock_error):
+def mock_warning(mocker):
     """
-    Fixture to mock the loguru.logger.info and loguru.logger.error methods
+    Fixture to mock the loguru.logger.warning method
     """
-    return mock_info, mock_error
+    return mocker.spy(loguru.logger, "warning")
+
+
+@pytest.fixture
+def mock_success(mocker):
+    """
+    Fixture to mock the loguru.logger.success method
+    """
+    return mocker.spy(loguru.logger, "success")
+
+
+@pytest.fixture
+def mock_log_levels(mock_info, mock_error, mock_warning, mock_success):
+    """
+    Fixture to mock the loguru.logger methods:
+    - info
+    - error
+    - warning
+    - success
+    """
+    return mock_info, mock_error, mock_warning, mock_success
 
 
 @pytest.fixture
