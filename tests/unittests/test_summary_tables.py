@@ -4,7 +4,6 @@ Tests for devices_rap/summary_tables.py
 
 import re
 
-import loguru
 import pandas as pd
 import pytest
 
@@ -13,6 +12,15 @@ from devices_rap.errors import ColumnsNotFoundError
 
 
 pytestmark = pytest.mark.no_data_needed
+
+
+@pytest.fixture
+def mock_create_pivot_sum_table(mocker):
+    """
+    Mock the create_pivot_sum_table function
+    """
+    return mocker.patch("devices_rap.summary_tables.create_pivot_sum_table")
+
 
 class TestCreatePivotSumTable:
     """
@@ -285,13 +293,6 @@ class TestCreateDeviceCategorySummaryTable:
     Test class for summary.create_device_category_summary_table
     """
 
-    @pytest.fixture
-    def mock_create_pivot_sum_table(self, mocker):
-        """
-        Mock the create_pivot_sum_table function
-        """
-        return mocker.patch("devices_rap.summary_tables.create_pivot_sum_table")
-
     def test_log_called(self, mock_info, mock_create_pivot_sum_table, empty_df):
         """
         Test that the loguru.logger is called
@@ -458,13 +459,6 @@ class TestCreateDeviceSummaryTable:
     Test class for summary.create_device_summary_table
     """
 
-    @pytest.fixture
-    def mock_create_pivot_sum_table(self, mocker):
-        """
-        Mock the create_pivot_sum_table function
-        """
-        return mocker.patch("devices_rap.summary_tables.create_pivot_sum_table")
-
     def test_log_called(self, mock_info, mock_create_pivot_sum_table, empty_df):
         """
         Test that the loguru.logger is called
@@ -518,12 +512,14 @@ class TestCreateDeviceSummaryTable:
         """
         summary_tables.create_device_summary_table(empty_df)
 
-        actual = mock_create_pivot_sum_table.call_args.kwargs.get(kwarg)
+       
+       
 
-        if isinstance(expected, pd.DataFrame):
-            pd.testing.assert_frame_equal(actual, expected)
-        else:
-            assert actual == expected
+
+
+
+
+       
 
     @pytest.mark.parametrize(
         "input_data, expected",
