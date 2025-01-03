@@ -62,15 +62,20 @@ def create_table_cuts(
     return dict(cut_data_dict)
 
 
-def create_rag_summary_tables_cuts():
+def create_regional_rag_summary_tables_cuts(
+    pivoted_master_data: pd.DataFrame,
+) -> Dict[str, pd.DataFrame]:
     """
     _summary_
     """
-    logger.info("Creating the RAG summary tables")
+    logger.info("Creating the Regional RAG summary tables")
 
+    rag_summary_tables = create_table_cuts(
+        data=pivoted_master_data, cut_columns=["nhs_england_region", "rag_status"]
+    )
 
-def create_regional_data_cuts():
-    """
-    _summary_
-    """
-    logger.info("Creating the Regional summary tables")
+    logger.success(
+        f"Created the collection of {len(rag_summary_tables.keys())} Regional RAG summary tables"
+    )
+
+    return rag_summary_tables
