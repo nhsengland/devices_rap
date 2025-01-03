@@ -5,6 +5,7 @@ Functions for cleaning and cleansing datasets
 from typing import Any, Dict
 
 import pandas as pd
+import tqdm
 from loguru import logger
 
 from devices_rap.errors import NoDataProvidedError, NoDatasetsProvidedError
@@ -32,7 +33,9 @@ def batch_normalise_column_names(datasets: Dict[str, Dict[str, Any]]) -> Dict[st
     if not datasets:
         raise NoDatasetsProvidedError("No datasets provided.")
 
-    for name, df in datasets.items():
+    dataset_items = tqdm.tqdm(datasets.items(), desc="Normalising column names")
+
+    for name, df in dataset_items:
         logger.info(f"Normalising column names for the {name} dataset")
         try:
             df = datasets[name]["data"]
@@ -64,18 +67,20 @@ def cleanse_master_data(master_df: pd.DataFrame) -> pd.DataFrame:
     """
     logger.info("Cleaning the master dataset ready for processing")
 
+    tqdm.tqdm.pandas()
+
     logger.info("Converting high level device type values")
-    master_df["upd_high_level_device_type"] = master_df["der_high_level_device_type"].apply(
-        convert_values_to
-    )
+    master_df["upd_high_level_device_type"] = master_df[
+        "der_high_level_device_type"
+    ].progress_apply(convert_values_to)
 
     logger.info("Converting activity year values without century")
-    master_df["upd_activity_year"] = master_df["cln_activity_year"].apply(
+    master_df["upd_activity_year"] = master_df["cln_activity_year"].progress_apply(
         convert_values_to, match=[2425], to=202425
     )
 
     logger.info("Converting activity date values to datetime")
-    master_df["activity_date"] = master_df.apply(
+    master_df["activity_date"] = master_df.progress_apply(
         lambda df: convert_fin_dates(df["cln_activity_month"], df["upd_activity_year"]), axis=1
     )
 

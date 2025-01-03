@@ -26,6 +26,7 @@ DATASETS : dict
 from typing import Any, Dict
 
 import pandas as pd
+import tqdm
 from loguru import logger
 
 from devices_rap.errors import NoDatasetsProvidedError, NoFilePathProvidedError
@@ -124,7 +125,9 @@ def load_devices_datasets(datasets: Dict[str, Dict[str, Any]]) -> Dict[str, Dict
     if not datasets:
         raise NoDatasetsProvidedError("No datasets provided.")
 
-    for dataset_name, dataset_kwargs in datasets.items():
+    dataset_items = tqdm.tqdm(datasets.items(), desc="Loading datasets")
+
+    for dataset_name, dataset_kwargs in dataset_items:
         dataset_df = load_csv_data(dataset_name, **dataset_kwargs)
         datasets[dataset_name]["data"] = dataset_df
 

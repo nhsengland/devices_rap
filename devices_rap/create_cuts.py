@@ -14,6 +14,7 @@ create_regional_rag_summary_tables_cuts(pivoted_master_data)
 from typing import Any, Dict, List
 
 import pandas as pd
+import tqdm
 from loguru import logger
 
 from devices_rap.errors import ColumnsNotFoundError
@@ -62,7 +63,7 @@ def create_table_cuts(
 
         cut_data_dict = {}
 
-        for index in cut_data.index.unique():
+        for index in tqdm.tqdm(cut_data.index.unique(), desc="Creating cut tables"):
             cut_data_dict[index] = cut_data.loc[index].reset_index(drop=True)
 
     except KeyError as e:
