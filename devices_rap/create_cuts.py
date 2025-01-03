@@ -66,7 +66,18 @@ def create_regional_rag_summary_tables_cuts(
     pivoted_master_data: pd.DataFrame,
 ) -> Dict[str, pd.DataFrame]:
     """
-    _summary_
+    Create a collection of Regional RAG summary tables by cutting the pivoted master data by the
+    NHS England Region, `nhs_england_region`, and RAG Status, `rag_status`.
+
+    Parameters
+    ----------
+    pivoted_master_data : pd.DataFrame
+        The pivoted master data to cut into Regional RAG summary tables
+
+    Returns
+    -------
+    dict
+        A dictionary of DataFrames with the unique values in the cut_columns as the keys
     """
     logger.info("Creating the Regional RAG summary tables")
 
