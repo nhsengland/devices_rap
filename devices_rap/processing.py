@@ -140,6 +140,8 @@ def join_provider_codes_lookup(
     'right_only' merge. If there are any 'left_only' or 'right_only' merges, a MergeWarning is
     raised. The merge column is dropped from the merged DataFrame by default.
 
+    ! WARNING: This function is highly coupled to the join_datasets function.
+
     Parameters
     ----------
     master_devices : pd.DataFrame
@@ -176,6 +178,8 @@ def join_device_taxonomy(
     join_datasets by defaults checks the merge health to ensure that there is not a 'left_only' or
     'right_only' merge. If there are any 'left_only' or 'right_only' merges, a MergeWarning is
     raised. The merge column is dropped from the merged DataFrame by default.
+
+    ! WARNING: This function is highly coupled to the join_datasets function.
 
     Parameters
     ----------
@@ -217,6 +221,8 @@ def join_exceptions(
 
     The strict_validate setting should be used when we are more confident in the exceptions data and
     want to validate a 'many-to-one' merge instead of a 'many-to-many' merge.
+
+    ! WARNING: This function is highly coupled to the join_datasets function.
 
     Parameters
     ----------
