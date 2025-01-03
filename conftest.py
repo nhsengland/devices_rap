@@ -5,6 +5,7 @@ This module contains fixtures that are used by the test modules in the tests/ di
 import warnings
 import pandas as pd
 import pytest
+import loguru
 
 from devices_rap.config import DATA_DIR
 from devices_rap.data_in.load_csv import NA_VALUES
@@ -15,7 +16,10 @@ TEST_DATA_DIR = DATA_DIR / "_test"
 
 @pytest.fixture
 def create_temp_csv_file():
-
+    """
+    Fixture to create a temporary CSV file with test data, returning the file path, and then
+    deleting the file and the _test directory after the test has run.
+    """
     # Create the _test directory if it doesn't exist
     TEST_DATA_DIR.mkdir(parents=True, exist_ok=False)
 
@@ -46,3 +50,36 @@ def create_temp_csv_file():
 
     assert not test_csv_file_path.exists()
     assert not TEST_DATA_DIR.exists()
+
+
+@pytest.fixture
+def mock_info(mocker):
+    """
+    Fixture to mock the loguru.logger.info method
+    """
+    return mocker.spy(loguru.logger, "info")
+
+
+@pytest.fixture
+def mock_error(mocker):
+    """
+    Fixture to mock the loguru.logger.error method
+    """
+    return mocker.spy(loguru.logger, "error")
+
+
+@pytest.fixture
+def mock_log_levels(mock_info, mock_error):
+    """
+    Fixture to mock the loguru.logger.info and loguru.logger.error methods
+    """
+    return mock_info, mock_error
+
+
+@pytest.fixture
+def empty_df():
+    """
+    Fixture to return an empty DataFrame
+    """
+    return pd.DataFrame()
+
