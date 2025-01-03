@@ -11,51 +11,8 @@ import pytest
 from devices_rap import summary_tables
 from devices_rap.errors import ColumnsNotFoundError
 
-# from devices_rap import summary_tables
-
 
 pytestmark = pytest.mark.no_data_needed
-
-
-@pytest.fixture
-def mock_info(mocker):
-    """
-    Fixture to mock the loguru.logger.info method
-    """
-    return mocker.spy(loguru.logger, "info")
-
-
-@pytest.fixture
-def mock_error(mocker):
-    """
-    Fixture to mock the loguru.logger.error method
-    """
-    return mocker.spy(loguru.logger, "error")
-
-
-@pytest.fixture
-def mock_log_levels(mock_info, mock_error):
-    """
-    Fixture to mock the loguru.logger.info and loguru.logger.error methods
-    """
-    return mock_info, mock_error
-
-
-# @pytest.fixture()
-# def mock_pivot_table(mocker):
-#     """
-#     Fixture to mock the pd.pivot_table method
-#     """
-#     return mocker.spy(pd, "pivot_table")
-
-
-@pytest.fixture
-def empty_df():
-    """
-    Fixture to return an empty DataFrame
-    """
-    return pd.DataFrame()
-
 
 class TestCreatePivotSumTable:
     """
@@ -323,227 +280,355 @@ class TestCreatePivotSumTable:
         mock_info.assert_called_once_with(expected_message)
 
 
-class TestCreateTableCuts:
+class TestCreateDeviceCategorySummaryTable:
     """
-    Test class for summary.create_table_cuts
+    Test class for summary.create_device_category_summary_table
     """
 
     @pytest.fixture
-    def test_input(self):
+    def mock_create_pivot_sum_table(self, mocker):
         """
-        Fixture to return a test dataframe
+        Mock the create_pivot_sum_table function
         """
-        columns = ["A", "B", "C", "D"]
-        data = [
-            (1, 1, 1, 1),
-            (1, 1, 2, 2),
-            (1, 2, 1, 3),
-            (1, 2, 2, 4),
-            (1, 1, 1, 5),
-            (1, 1, 2, 6),
-            (1, 2, 1, 7),
-            (1, 2, 2, 8),
-        ]
-        return pd.DataFrame(columns=columns, data=data)
+        return mocker.patch("devices_rap.summary_tables.create_pivot_sum_table")
 
-    def test_returns_dict(self, test_input):
-        """
-        Test that the function returns a dictionary
-        """
-        result = summary_tables.create_table_cuts(test_input, "A")
-        assert isinstance(result, dict)
-
-    def test_returns_dict_of_dataframes(self, test_input):
-        """
-        Test that the function returns a dictionary of DataFrames
-        """
-        result = summary_tables.create_table_cuts(test_input, "A")
-        assert all(isinstance(value, pd.DataFrame) for value in result.values())
-
-    @pytest.mark.parametrize(
-        "cut_columns, expected",
-        [
-            (
-                "A",
-                {
-                    1: pd.DataFrame(
-                        columns=["A", "B", "C", "D"],
-                        data=[
-                            (1, 1, 1, 1),
-                            (1, 1, 2, 2),
-                            (1, 2, 1, 3),
-                            (1, 2, 2, 4),
-                            (1, 1, 1, 5),
-                            (1, 1, 2, 6),
-                            (1, 2, 1, 7),
-                            (1, 2, 2, 8),
-                        ],
-                    )
-                },
-            ),
-            (
-                "B",
-                {
-                    1: pd.DataFrame(
-                        columns=["A", "B", "C", "D"],
-                        data=[
-                            (1, 1, 1, 1),
-                            (1, 1, 2, 2),
-                            (1, 1, 1, 5),
-                            (1, 1, 2, 6),
-                        ],
-                    ),
-                    2: pd.DataFrame(
-                        columns=["A", "B", "C", "D"],
-                        data=[
-                            (1, 2, 1, 3),
-                            (1, 2, 2, 4),
-                            (1, 2, 1, 7),
-                            (1, 2, 2, 8),
-                        ],
-                    ),
-                },
-            ),
-            (
-                ["A", "B"],
-                {
-                    (1, 1): pd.DataFrame(
-                        columns=["A", "B", "C", "D"],
-                        data=[
-                            (1, 1, 1, 1),
-                            (1, 1, 2, 2),
-                            (1, 1, 1, 5),
-                            (1, 1, 2, 6),
-                        ],
-                    ),
-                    (1, 2): pd.DataFrame(
-                        columns=["A", "B", "C", "D"],
-                        data=[
-                            (1, 2, 1, 3),
-                            (1, 2, 2, 4),
-                            (1, 2, 1, 7),
-                            (1, 2, 2, 8),
-                        ],
-                    ),
-                },
-            ),
-        ],
-    )
-    def test_cuts(self, test_input, cut_columns, expected):
-        """
-        Test that the function can create the cuts correctly
-        """
-        actual = summary_tables.create_table_cuts(test_input, cut_columns)
-        assert actual.keys() == expected.keys()
-
-        failures = []
-        for key, value in actual.items():
-            try:
-                actual_df = value.sort_values(by=value.columns.tolist()).reset_index(drop=True)
-                expected_df = (
-                    expected[key]
-                    .sort_values(by=expected[key].columns.tolist())
-                    .reset_index(drop=True)
-                )
-                pd.testing.assert_frame_equal(actual_df, expected_df)
-            except AssertionError as fail:
-                failures.append(fail)
-
-        if failures:
-            raise ExceptionGroup("Test failures", failures)
-
-    def test_drop_cut_columns(self, test_input):
-        """
-        Test that the function can drop the cut columns from the DataFrame
-        """
-        actual = summary_tables.create_table_cuts(test_input, "A", drop_cut_columns=True)
-        expected = {
-            1: pd.DataFrame(
-                columns=["B", "C", "D"],
-                data=[
-                    (1, 1, 1),
-                    (1, 2, 2),
-                    (2, 1, 3),
-                    (2, 2, 4),
-                    (1, 1, 5),
-                    (1, 2, 6),
-                    (2, 1, 7),
-                    (2, 2, 8),
-                ],
-            )
-        }
-
-        failures = []
-        for key, value in actual.items():
-            try:
-                actual_df = value.sort_values(by=value.columns.tolist()).reset_index(drop=True)
-                expected_df = (
-                    expected[key]
-                    .sort_values(by=expected[key].columns.tolist())
-                    .reset_index(drop=True)
-                )
-                pd.testing.assert_frame_equal(actual_df, expected_df)
-            except AssertionError as fail:
-                failures.append(fail)
-
-        if failures:
-            raise ExceptionGroup("Test failures", failures)
-
-    @pytest.mark.parametrize(
-        "cut_columns, expected_message",
-        [
-            ("E", "Columns were not found in the dataset. MISSING COLUMNS: CUT_COLUMNS: ['E']"),
-            (
-                ["A", "E"],
-                "Columns were not found in the dataset. MISSING COLUMNS: CUT_COLUMNS: ['E']",
-            ),
-            (
-                ["E", "F"],
-                "Columns were not found in the dataset. MISSING COLUMNS: CUT_COLUMNS: ['E', 'F']",
-            ),
-        ],
-    )
-    def test_columns_not_found_error_raised(
-        self, mock_log_levels, test_input, cut_columns, expected_message
-    ):
-        """
-        Test that the ColumnsNotFoundError is raised when the columns are not found in the dataset
-        """
-        mock_info, mock_error = mock_log_levels
-
-        with pytest.raises(ColumnsNotFoundError, match=re.escape(expected_message)):
-            summary_tables.create_table_cuts(test_input, cut_columns)
-
-        mock_info.assert_called_once()
-        mock_error.assert_called_once_with(expected_message)
-
-    @pytest.mark.parametrize(
-        "input_cut_columns, expected_message",
-        [
-            (
-                "A",
-                "Creating a collection of tables based on the unique values in the cut_columns. "
-                "CUT COLUMNS: A",
-            ),
-            (
-                ["A"],
-                "Creating a collection of tables based on the unique values in the cut_columns. "
-                "CUT COLUMNS: ['A']",
-            ),
-            (
-                ["A", "B"],
-                "Creating a collection of tables based on the unique values in the cut_columns. "
-                "CUT COLUMNS: ['A', 'B']",
-            ),
-        ],
-    )
-    def test_log_called(self, mock_info, test_input, input_cut_columns, expected_message):
+    def test_log_called(self, mock_info, mock_create_pivot_sum_table, empty_df):
         """
         Test that the loguru.logger is called
         """
-        summary_tables.create_table_cuts(test_input, input_cut_columns)
+        mock_create_pivot_sum_table.return_value = empty_df
 
-        mock_info.assert_called_once_with(expected_message)
+        summary_tables.create_device_category_summary_table(empty_df)
+
+        mock_info.assert_called_once_with("Creating the device category summary (pivot) table")
+
+    def test_return_dataframe(self, mock_create_pivot_sum_table, empty_df):
+        """
+        Test that the function returns a DataFrame
+        """
+        mock_create_pivot_sum_table.return_value = empty_df
+
+        result = summary_tables.create_device_category_summary_table(empty_df)
+
+        assert isinstance(result, pd.DataFrame)
+
+    def test_calls_create_pivot_sum_table(self, mock_create_pivot_sum_table, empty_df):
+        """
+        Test that the function calls the create_pivot_sum_table function
+        """
+        expected = pd.DataFrame(columns=["A", "B"], data=[(1, 1)])
+        mock_create_pivot_sum_table.return_value = expected
+
+        actual = summary_tables.create_device_category_summary_table(empty_df)
+
+        mock_create_pivot_sum_table.assert_called_once()
+
+        pd.testing.assert_frame_equal(actual, expected)
+
+    @pytest.mark.parametrize(
+        "kwarg, expected",
+        [
+            ("data", pd.DataFrame()),
+            ("values", None),
+            ("columns", None),
+            ("base_index", None),
+            ("extended_index", None),
+        ],
+    )
+    def test_empty_input_create_sum_table_call(
+        self, mock_create_pivot_sum_table, empty_df, kwarg, expected
+    ):
+        """
+        Test that the function handle an empty input correctly, passing only the data argument to
+        create_pivot_sum_table and leaving the rest as None (allowing the function to use the
+        default argument values).
+        """
+        summary_tables.create_device_category_summary_table(empty_df)
+
+        actual = mock_create_pivot_sum_table.call_args.kwargs.get(kwarg)
+
+        if isinstance(expected, pd.DataFrame):
+            pd.testing.assert_frame_equal(actual, expected)
+        else:
+            assert actual == expected
+
+    @pytest.mark.parametrize(
+        "input_data, expected",
+        [
+            (
+                [("test", "test", "test", "test", "test", 1)],
+                pd.DataFrame(
+                    columns=[
+                        "nhs_england_region",
+                        "der_provider_code",
+                        "der_high_level_device_type",
+                        "rag_status",
+                        "test",
+                    ],
+                    data=[["test", "test", "test", "test", 1]],
+                ),
+            ),
+            (
+                [
+                    ("test", "test", "test", "test", "test1", 1),
+                    ("test", "test", "test", "test", "test2", 2),
+                ],
+                pd.DataFrame(
+                    columns=[
+                        "nhs_england_region",
+                        "der_provider_code",
+                        "der_high_level_device_type",
+                        "rag_status",
+                        "test1",
+                        "test2",
+                    ],
+                    data=[["test", "test", "test", "test", 1, 2]],
+                ),
+            ),
+            (
+                [
+                    ("test", "test", "test", "test", "test1", 1),
+                    ("test", "test", "test", "test", "test1", 2),
+                ],
+                pd.DataFrame(
+                    columns=[
+                        "nhs_england_region",
+                        "der_provider_code",
+                        "der_high_level_device_type",
+                        "rag_status",
+                        "test1",
+                    ],
+                    data=[["test", "test", "test", "test", 3]],
+                ),
+            ),
+            (
+                [
+                    ("test", "test", "test", "test", "test1", 1),
+                    ("test", "test", "test", "test", "test1", 2),
+                    ("test", "test", "test", "test", "test2", 3),
+                    ("test", "test", "test", "test", "test2", 4),
+                ],
+                pd.DataFrame(
+                    columns=[
+                        "nhs_england_region",
+                        "der_provider_code",
+                        "der_high_level_device_type",
+                        "rag_status",
+                        "test1",
+                        "test2",
+                    ],
+                    data=[["test", "test", "test", "test", 3, 7]],
+                ),
+            ),
+        ],
+    )
+    def test_happy_path(self, input_data, expected):
+        """
+        Test that the function can handle normal inputs and return the output in the expected
+        format.
+
+        This technically repeats the tests from create_pivot_sum_table, but it is useful to ensure
+        that the function works as expected and is well integrated with the create_pivot_sum_table.
+
+        Cases include:
+        - Single row with a single value to pivot
+        - Multiple rows with different values to pivot
+        - Multiple rows with the same value to pivot
+        - Multiple rows with multiple values to pivot
+        """
+        input_df = pd.DataFrame(
+            columns=[
+                "nhs_england_region",
+                "der_provider_code",
+                "der_high_level_device_type",
+                "rag_status",
+                "activity_date",
+                "cln_total_cost",
+            ],
+            data=input_data,
+        )
+
+        actual = summary_tables.create_device_category_summary_table(input_df)
+
+        pd.testing.assert_frame_equal(actual, expected)
+
+
+class TestCreateDeviceSummaryTable:
+    """
+    Test class for summary.create_device_summary_table
+    """
+
+    @pytest.fixture
+    def mock_create_pivot_sum_table(self, mocker):
+        """
+        Mock the create_pivot_sum_table function
+        """
+        return mocker.patch("devices_rap.summary_tables.create_pivot_sum_table")
+
+    def test_log_called(self, mock_info, mock_create_pivot_sum_table, empty_df):
+        """
+        Test that the loguru.logger is called
+        """
+        mock_create_pivot_sum_table.return_value = empty_df
+
+        summary_tables.create_device_summary_table(empty_df)
+
+        mock_info.assert_called_once_with("Creating the device summary (pivot) table")
+
+    def test_return_dataframe(self, mock_create_pivot_sum_table, empty_df):
+        """
+        Test that the function returns a DataFrame
+        """
+        mock_create_pivot_sum_table.return_value = empty_df
+
+        result = summary_tables.create_device_summary_table(empty_df)
+
+        assert isinstance(result, pd.DataFrame)
+
+    def test_calls_create_pivot_sum_table(self, mock_create_pivot_sum_table, empty_df):
+        """
+        Test that the function calls the create_pivot_sum_table function
+        """
+        expected = pd.DataFrame(columns=["A", "B"], data=[(1, 1)])
+        mock_create_pivot_sum_table.return_value = expected
+
+        actual = summary_tables.create_device_summary_table(empty_df)
+
+        mock_create_pivot_sum_table.assert_called_once()
+
+        pd.testing.assert_frame_equal(actual, expected)
+
+    @pytest.mark.parametrize(
+        "kwarg, expected",
+        [
+            ("data", pd.DataFrame()),
+            ("values", None),
+            ("columns", None),
+            ("base_index", None),
+            ("extended_index", "cln_manufacturer_device_name"),
+        ],
+    )
+    def test_empty_input_create_sum_table_call(
+        self, mock_create_pivot_sum_table, empty_df, kwarg, expected
+    ):
+        """
+        Test that the function handle an empty input correctly, passing only the data argument to
+        create_pivot_sum_table and leaving the rest as None (allowing the function to use the
+        default argument values).
+        """
+        summary_tables.create_device_summary_table(empty_df)
+
+        actual = mock_create_pivot_sum_table.call_args.kwargs.get(kwarg)
+
+        if isinstance(expected, pd.DataFrame):
+            pd.testing.assert_frame_equal(actual, expected)
+        else:
+            assert actual == expected
+
+    @pytest.mark.parametrize(
+        "input_data, expected",
+        [
+            (
+                [("test", "test", "test", "test", "test", "test", 1)],
+                pd.DataFrame(
+                    columns=[
+                        "nhs_england_region",
+                        "der_provider_code",
+                        "der_high_level_device_type",
+                        "rag_status",
+                        "cln_manufacturer_device_name",
+                        "test",
+                    ],
+                    data=[["test", "test", "test", "test", "test", 1]],
+                ),
+            ),
+            (
+                [
+                    ("test", "test", "test", "test", "test", "test1", 1),
+                    ("test", "test", "test", "test", "test", "test2", 2),
+                ],
+                pd.DataFrame(
+                    columns=[
+                        "nhs_england_region",
+                        "der_provider_code",
+                        "der_high_level_device_type",
+                        "rag_status",
+                        "cln_manufacturer_device_name",
+                        "test1",
+                        "test2",
+                    ],
+                    data=[["test", "test", "test", "test", "test", 1, 2]],
+                ),
+            ),
+            (
+                [
+                    ("test", "test", "test", "test", "test", "test1", 1),
+                    ("test", "test", "test", "test", "test", "test1", 2),
+                ],
+                pd.DataFrame(
+                    columns=[
+                        "nhs_england_region",
+                        "der_provider_code",
+                        "der_high_level_device_type",
+                        "rag_status",
+                        "cln_manufacturer_device_name",
+                        "test1",
+                    ],
+                    data=[["test", "test", "test", "test", "test", 3]],
+                ),
+            ),
+            (
+                [
+                    ("test", "test", "test", "test", "test", "test1", 1),
+                    ("test", "test", "test", "test", "test", "test1", 2),
+                    ("test", "test", "test", "test", "test", "test2", 3),
+                    ("test", "test", "test", "test", "test", "test2", 4),
+                ],
+                pd.DataFrame(
+                    columns=[
+                        "nhs_england_region",
+                        "der_provider_code",
+                        "der_high_level_device_type",
+                        "rag_status",
+                        "cln_manufacturer_device_name",
+                        "test1",
+                        "test2",
+                    ],
+                    data=[["test", "test", "test", "test", "test", 3, 7]],
+                ),
+            ),
+        ],
+    )
+    def test_happy_path(self, input_data, expected):
+        """
+        Test that the function can handle normal inputs and return the output in the expected
+        format.
+
+        This technically repeats the tests from create_pivot_sum_table, but it is useful to ensure
+        that the function works as expected and is well integrated with the create_pivot_sum_table.
+
+        Cases include:
+        - Single row with a single value to pivot
+        - Multiple rows with different values to pivot
+        - Multiple rows with the same value to pivot
+        - Multiple rows with multiple values to pivot
+        """
+        input_df = pd.DataFrame(
+            columns=[
+                "nhs_england_region",
+                "der_provider_code",
+                "der_high_level_device_type",
+                "rag_status",
+                "cln_manufacturer_device_name",
+                "activity_date",
+                "cln_total_cost",
+            ],
+            data=input_data,
+        )
+
+        actual = summary_tables.create_device_summary_table(input_df)
+
+        pd.testing.assert_frame_equal(actual, expected)
 
 
 if __name__ == "__main__":
