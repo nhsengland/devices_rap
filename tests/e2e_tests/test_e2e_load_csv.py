@@ -2,15 +2,15 @@
 Perform end-to-end tests for the load_csv module.
 """
 
-# %%
-import time
 import pytest
 
 from devices_rap.data_in.load_csv import NA_VALUES, load_csv_data
 
 
 def test_fixture_create_temp_csv_file(create_temp_csv_file):
-    # time.sleep(10)
+    """
+    Test that the create_temp_csv_file fixture creates a temporary CSV file.
+    """
     assert create_temp_csv_file.exists()
 
 
