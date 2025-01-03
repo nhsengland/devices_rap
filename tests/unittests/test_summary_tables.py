@@ -247,7 +247,7 @@ class TestCreatePivotSumTable:
         """
         Test that the ColumnsNotFoundError is raised when the columns are not found in the dataset
         """
-        mock_info, mock_error = mock_log_levels
+        mock_info, mock_error, _, _ = mock_log_levels
 
         input_df = pd.DataFrame(columns=input_columns)
 
@@ -511,15 +511,6 @@ class TestCreateDeviceSummaryTable:
         default argument values).
         """
         summary_tables.create_device_summary_table(empty_df)
-
-       
-       
-
-
-
-
-
-       
 
     @pytest.mark.parametrize(
         "input_data, expected",
