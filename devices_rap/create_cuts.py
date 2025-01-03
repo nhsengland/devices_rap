@@ -1,5 +1,14 @@
 """
+Functions to create tables by cutting the data based on unique values in specified columns.
 
+Functions
+---------
+create_table_cuts(data, cut_columns, drop_cut_columns=False)
+    Create a collection of tables based on the unique values in the cut_columns.
+
+create_regional_rag_summary_tables_cuts(pivoted_master_data)
+    Create a collection of Regional RAG summary tables by cutting the pivoted master data by the
+    NHS England Region, `nhs_england_region`, and RAG Status, `rag_status`.
 """
 
 from typing import Any, Dict, List
