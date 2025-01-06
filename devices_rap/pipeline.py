@@ -15,7 +15,7 @@ from devices_rap.clean_data import (
 from devices_rap.config import DATASETS
 from devices_rap.data_in.load_csv import load_devices_datasets
 from devices_rap.data_out import create_excel_reports
-from devices_rap.processing import (
+from devices_rap.joins import (
     lookup_provider_codes,
     lookup_taxonomy_tariff,
     translate_high_level_devices_type,

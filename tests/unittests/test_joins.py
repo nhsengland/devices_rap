@@ -8,7 +8,7 @@ import pandas as pd
 import pytest
 from loguru import logger
 
-from devices_rap import processing
+from devices_rap import joins
 from devices_rap.errors import MergeColumnsNotFoundError, MergeWarning
 
 # from devices_rap import processing
@@ -49,7 +49,7 @@ class TestCheckMergeHealth:
         """
         input_df = merged_df.drop(columns="_merge")
         mock_logger = mocker.spy(logger, "info")
-        actual = processing.check_merge_health(input_df)
+        actual = joins.check_merge_health(input_df)
 
         pd.testing.assert_frame_equal(actual, input_df)
         mock_logger.assert_called_once_with(
@@ -66,7 +66,7 @@ class TestCheckMergeHealth:
         expected_df = pd.DataFrame(columns=["col1", "col2"])
         mock_logger = mocker.spy(logger, "info")
 
-        actual = processing.check_merge_health(input_df)
+        actual = joins.check_merge_health(input_df)
 
         pd.testing.assert_frame_equal(actual, expected_df)
         mock_logger.assert_called_once_with("The merge was healthy.")
@@ -95,7 +95,7 @@ class TestCheckMergeHealth:
         """
         input_df = merged_df.iloc[[keep_index], :].copy(deep=True).reset_index(drop=True)
         with pytest.warns(MergeWarning, match=bad_merge_message):
-            actual = processing.check_merge_health(input_df)
+            actual = joins.check_merge_health(input_df)
 
         pd.testing.assert_frame_equal(actual, expected)
 
@@ -106,7 +106,7 @@ class TestCheckMergeHealth:
         """
         mock_warn = mocker.patch("devices_rap.processing.warnings.warn")
 
-        processing.check_merge_health(merged_df)
+        joins.check_merge_health(merged_df)
 
         assert mock_warn.call_count == 2
 
@@ -117,7 +117,7 @@ class TestCheckMergeHealth:
         mock_info = mocker.spy(logger, "info")
 
         with pytest.warns(MergeWarning):
-            processing.check_merge_health(merged_df)
+            joins.check_merge_health(merged_df)
 
         mock_info.assert_not_called()
 
@@ -127,7 +127,7 @@ class TestCheckMergeHealth:
         """
         expected = merged_df
         with pytest.warns(MergeWarning):
-            actual = processing.check_merge_health(merged_df, keep_merge=True)
+            actual = joins.check_merge_health(merged_df, keep_merge=True)
 
         pd.testing.assert_frame_equal(actual, expected)
 
@@ -138,7 +138,7 @@ class TestCheckMergeHealth:
         expected = merged_df.drop(columns="_merge")
 
         with pytest.warns(MergeWarning):
-            actual = processing.check_merge_health(merged_df, merge_column=None)
+            actual = joins.check_merge_health(merged_df, merge_column=None)
 
         pd.testing.assert_frame_equal(actual, expected)
 
@@ -149,7 +149,7 @@ class TestCheckMergeHealth:
         input_df = empty_merged_df.rename(columns={"_merge": "test"})
         expected = pd.DataFrame(columns=["col1", "col2"])
 
-        actual = processing.check_merge_health(input_df, merge_column="test")
+        actual = joins.check_merge_health(input_df, merge_column="test")
 
         pd.testing.assert_frame_equal(actual, expected)
 
@@ -182,7 +182,7 @@ class TestJoinDatasets:
         Test that the function returns a DataFrame.
         """
         with pytest.warns(MergeWarning):
-            actual = processing.join_datasets(left, right, left_on="col1", right_on="col3")
+            actual = joins.join_datasets(left, right, left_on="col1", right_on="col3")
         assert isinstance(actual, pd.DataFrame)
 
     def test_default_merge(self, left, right):
@@ -198,7 +198,7 @@ class TestJoinDatasets:
             ],
         )
         with pytest.warns(MergeWarning):
-            actual = processing.join_datasets(left, right, left_on="col1", right_on="col3")
+            actual = joins.join_datasets(left, right, left_on="col1", right_on="col3")
 
         pd.testing.assert_frame_equal(actual, expected)
 
@@ -247,7 +247,7 @@ class TestJoinDatasets:
         Cases not included:
         - left as it is the default and tested in test_default_merge
         """
-        actual = processing.join_datasets(
+        actual = joins.join_datasets(
             left, right, left_on="col1", right_on="col3", how=how, check_merge=False
         )
 
@@ -267,10 +267,10 @@ class TestJoinDatasets:
         """
         Test that the function checks the merge health by default with the correct args.
         """
-        mock_check_merge = mocker.spy(processing, "check_merge_health")
+        mock_check_merge = mocker.spy(joins, "check_merge_health")
 
         with pytest.warns(MergeWarning):
-            processing.join_datasets(left, right, left_on="col1", right_on="col3")
+            joins.join_datasets(left, right, left_on="col1", right_on="col3")
 
         actual_call_args = mock_check_merge.call_args
         actual_args = actual_call_args.args
@@ -297,10 +297,10 @@ class TestJoinDatasets:
         - False - check_merge_health function should not be called and is tested in
         test_check_merge_not_called
         """
-        mock_check_merge = mocker.spy(processing, "check_merge_health")
+        mock_check_merge = mocker.spy(joins, "check_merge_health")
 
         with pytest.warns(MergeWarning):
-            processing.join_datasets(
+            joins.join_datasets(
                 left, right, left_on="col1", right_on="col3", check_merge=check_merge
             )
 
@@ -313,9 +313,9 @@ class TestJoinDatasets:
         """
         Test that the function does not call check_merge_health when `check_merge` is False.
         """
-        mock_check_merge = mocker.spy(processing, "check_merge_health")
+        mock_check_merge = mocker.spy(joins, "check_merge_health")
 
-        processing.join_datasets(left, right, left_on="col1", right_on="col3", check_merge=False)
+        joins.join_datasets(left, right, left_on="col1", right_on="col3", check_merge=False)
 
         mock_check_merge.assert_not_called()
 
@@ -349,10 +349,10 @@ class TestJoinDatasets:
         context statement.
         """
         mock_merge = mocker.spy(pd, "merge")
-        mock_check_merge = mocker.spy(processing, "check_merge_health")
+        mock_check_merge = mocker.spy(joins, "check_merge_health")
 
         with pytest.warns(MergeWarning) if check_merge else nullcontext():
-            processing.join_datasets(
+            joins.join_datasets(
                 left,
                 right,
                 left_on="col1",
@@ -377,7 +377,7 @@ class TestJoinDatasets:
         mock_logger = mocker.spy(logger, "info")
 
         with pytest.warns(MergeWarning):
-            processing.join_datasets(left, right, left_on="col1", right_on="col3")
+            joins.join_datasets(left, right, left_on="col1", right_on="col3")
 
         mock_logger.assert_called_once_with("Joining the datasets on col1 and col3")
 
@@ -387,7 +387,7 @@ class TestJoinDatasets:
         dataset.
         """
         with pytest.raises(MergeColumnsNotFoundError):
-            processing.join_datasets(left, right, left_on=["test"], right_on=["test"])
+            joins.join_datasets(left, right, left_on=["test"], right_on=["test"])
 
 
 class TestJoinWrapperFunctions:
@@ -400,9 +400,9 @@ class TestJoinWrapperFunctions:
     """
 
     functions = [
-        processing.join_provider_codes_lookup,
-        processing.join_device_taxonomy,
-        processing.join_exceptions,
+        joins.join_provider_codes_lookup,
+        joins.join_device_taxonomy,
+        joins.join_exceptions,
     ]
 
     @pytest.mark.parametrize("func", functions)
@@ -502,7 +502,7 @@ class TestJoinWrapperFunctions:
         """
         mock_join_datasets = mocker.patch("devices_rap.processing.join_datasets")
 
-        processing.join_exceptions(
+        joins.join_exceptions(
             pd.DataFrame({"left": [1, 2, 3]}),
             pd.DataFrame({"right": [1, 2, 3]}),
             strict_validate=True,
