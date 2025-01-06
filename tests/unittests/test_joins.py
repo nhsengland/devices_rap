@@ -1,5 +1,5 @@
 """
-Tests for devices_rap/processing.py
+Tests for devices_rap/joins.py
 """
 
 from contextlib import nullcontext
@@ -19,7 +19,7 @@ pytestmark = pytest.mark.no_data_needed
 
 class TestCheckMergeHealth:
     """
-    Tests for processing.check_merge
+    Tests for joins.check_merge
     """
 
     @pytest.fixture
@@ -104,7 +104,7 @@ class TestCheckMergeHealth:
         Test that the function raises a warning the correct number of times when a bad merge is
         found.
         """
-        mock_warn = mocker.patch("devices_rap.processing.warnings.warn")
+        mock_warn = mocker.patch("devices_rap.joins.warnings.warn")
 
         joins.check_merge_health(merged_df)
 
@@ -156,7 +156,7 @@ class TestCheckMergeHealth:
 
 class TestJoinDatasets:
     """
-    Tests for processing.join_datasets
+    Tests for joins.join_datasets
     """
 
     @pytest.fixture
@@ -392,8 +392,8 @@ class TestJoinDatasets:
 
 class TestJoinWrapperFunctions:
     """
-    Tests for processing.join_provider_codes_lookup, processing.join_device_taxonomy,
-    and processing.join_exceptions.
+    Tests for joins.join_provider_codes_lookup, joins.join_device_taxonomy,
+    and joins.join_exceptions.
 
     Note: These tests are not exhaustive as the functions are wrappers around join_datasets.
     End-to-end tests are required to ensure that the functions work as expected.
@@ -410,7 +410,7 @@ class TestJoinWrapperFunctions:
         """
         Test that the function returns a DataFrame.
         """
-        mocker.patch("devices_rap.processing.join_datasets", return_value=pd.DataFrame())
+        mocker.patch("devices_rap.joins.join_datasets", return_value=pd.DataFrame())
         actual = func(pd.DataFrame(), pd.DataFrame())
         assert isinstance(actual, pd.DataFrame)
 
@@ -426,7 +426,7 @@ class TestJoinWrapperFunctions:
         Test that the function logs the correct message.
         """
         mock_logger = mocker.spy(logger, "info")
-        mocker.patch("devices_rap.processing.join_datasets")
+        mocker.patch("devices_rap.joins.join_datasets")
 
         func(pd.DataFrame(), pd.DataFrame())
 
@@ -437,7 +437,7 @@ class TestJoinWrapperFunctions:
         """
         Test that the function calls join_datasets.
         """
-        mock_join_datasets = mocker.patch("devices_rap.processing.join_datasets")
+        mock_join_datasets = mocker.patch("devices_rap.joins.join_datasets")
 
         func(pd.DataFrame(), pd.DataFrame())
 
@@ -482,7 +482,7 @@ class TestJoinWrapperFunctions:
         """
         Test that the function calls join_datasets with the correct arguments.
         """
-        mock_join_datasets = mocker.patch("devices_rap.processing.join_datasets")
+        mock_join_datasets = mocker.patch("devices_rap.joins.join_datasets")
 
         func(pd.DataFrame({"left": [1, 2, 3]}), pd.DataFrame({"right": [1, 2, 3]}))
 
@@ -500,7 +500,7 @@ class TestJoinWrapperFunctions:
         Test that the function calls join_datasets with the correct arguments when strict_validate
         is True.
         """
-        mock_join_datasets = mocker.patch("devices_rap.processing.join_datasets")
+        mock_join_datasets = mocker.patch("devices_rap.joins.join_datasets")
 
         joins.join_exceptions(
             pd.DataFrame({"left": [1, 2, 3]}),
