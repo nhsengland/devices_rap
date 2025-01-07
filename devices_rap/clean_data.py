@@ -82,6 +82,6 @@ def cleanse_master_data(master_df: pd.DataFrame) -> pd.DataFrame:
     logger.info("Converting activity date values to datetime")
     master_df["activity_date"] = master_df.progress_apply(
         lambda df: convert_fin_dates(df["cln_activity_month"], df["upd_activity_year"]), axis=1
-    )
+    )  # type: ignore
 
     return master_df
