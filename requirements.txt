@@ -18,4 +18,5 @@ pytest-mock
 scikit-learn
 tqdm
 typer
+xlsxwriter
 -e .
