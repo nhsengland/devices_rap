@@ -3,11 +3,13 @@ Tests for devices_rap/utils.py
 """
 
 from datetime import datetime
+import re
 
 import pandas as pd
 import pytest
 
 from devices_rap import utils
+from devices_rap.errors import InvalidMonthError
 
 pytestmark = pytest.mark.no_data_needed
 
@@ -208,6 +210,59 @@ class TestConvertFinDates:
             InvalidMonthError, match=re.escape(expected_message)
         ):
             utils.convert_fin_dates(fin_month=fin_month, fin_year=fin_year)
+        mock_error.assert_called_with(expected_message)
+
+
+class TestConvertFinDatesVectorised:
+    """
+    Tests for the utils.convert_fin_dates_vectorised function
+    """
+    @pytest.mark.parametrize(
+        "fin_month, fin_year, expected",
+        [
+            (1, 202425, pd.to_datetime(pd.Series("2024-04-01"))),
+            (2, 202425, pd.to_datetime(pd.Series("2024-05-01"))),
+            (3, 202425, pd.to_datetime(pd.Series("2024-06-01"))),
+            (4, 202425, pd.to_datetime(pd.Series("2024-07-01"))),
+            (5, 202425, pd.to_datetime(pd.Series("2024-08-01"))),
+            (6, 202425, pd.to_datetime(pd.Series("2024-09-01"))),
+            (7, 202425, pd.to_datetime(pd.Series("2024-10-01"))),
+            (8, 202425, pd.to_datetime(pd.Series("2024-11-01"))),
+            (9, 202425, pd.to_datetime(pd.Series("2024-12-01"))),
+            (10, 202425, pd.to_datetime(pd.Series("2025-01-01"))),
+            (11, 202425, pd.to_datetime(pd.Series("2025-02-01"))),
+            (12, 202425, pd.to_datetime(pd.Series("2025-03-01"))),
+        ],
+    )
+    def test_all_months(self, fin_month, fin_year, expected):
+        """
+        Tests all months in a financial year.
+        """
+        input_df = pd.DataFrame({"fin_month": [fin_month], "fin_year": [fin_year]})
+        actual = utils.convert_fin_dates_vectorised(input_df, "fin_month", "fin_year")
+        
+        pd.testing.assert_series_equal(actual, expected)
+
+    @pytest.mark.parametrize(
+        "fin_month, fin_year",
+        [
+            (0, 202425),
+            (13, 202425),
+            (-1, 202425),
+            (14, 202425),
+        ],
+    )
+    def test_invalid_month(self, mock_error, fin_month, fin_year):
+        """
+        Tests that the function raises an InvalidMonthError when the month is invalid.
+        """
+        expected_message = "Invalid month. Month should be between 1 and 12."
+
+        input_df = pd.DataFrame({"fin_month": [fin_month], "fin_year": [fin_year]})
+
+        with pytest.raises(InvalidMonthError, match=re.escape(expected_message)):
+            utils.convert_fin_dates_vectorised(input_df, "fin_month", "fin_year")
+            
         mock_error.assert_called_with(expected_message)
 
 

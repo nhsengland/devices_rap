@@ -5,6 +5,7 @@ Miscellaneous helper functions that can be used over multiple modules.
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Union
 
+import numpy as np
 import pandas as pd
 
 from devices_rap.errors import InvalidMonthError
@@ -153,6 +154,49 @@ def convert_fin_dates(fin_month: int, fin_year: int) -> pd.Timestamp:
         month = str(fin_month - 9)
 
     return pd.to_datetime(f"{month}, {year}")
+
+
+def convert_fin_dates_vectorised(
+    df: pd.DataFrame,
+    fin_month_col: Optional[str] = "cln_activity_month",
+    fin_year_col: Optional[str] = "upd_activity_year",
+) -> pd.Series:
+    """
+    Convert financial dates in a DataFrame to a pandas datetime, assuming the financial year starts
+    in April and the year is given in the form of CCYY1YY2 so 2024-2025 will be 202425.
+
+    This is a more efficient vectorised version of the `convert_fin_dates` function that take in a
+    whole dataframe.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        DataFrame containing financial month and year columns
+    fin_month_col : str, optional
+        Name of the column containing financial months, assumes 1 is April and 12 is March, by
+        default "cln_activity_month"
+    fin_year_col : str
+        Name of the column containing financial years, in the format CCYY1YY2, e.g. 202425 is
+        equivalent to 2024-2025, by default "upd_activity_year"
+
+    Returns
+    -------
+    pd.Series
+        Series of corresponding datetimes
+    """
+    fin_year_str = df[fin_year_col].astype(str)
+    century = fin_year_str.str[:2]
+    year_1 = fin_year_str.str[2:4]
+    year_2 = fin_year_str.str[4:]
+
+    month = df[fin_month_col]
+    if month.min() < 1 or month.max() > 12:
+        raise InvalidMonthError("Invalid month. Month should be between 1 and 12.")
+
+    year = pd.Series(np.where(month <= 9, century + year_1, century + year_2))
+    month = pd.Series(np.where(month <= 9, month + 3, month - 9))
+
+    return pd.to_datetime(year + "-" + month.astype(str) + "-01")
 
 
 def parse_dates(date_str: str) -> Union[pd.Timestamp, pd.NaT, datetime]:  # type: ignore
