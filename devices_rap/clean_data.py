@@ -10,7 +10,7 @@ from loguru import logger
 
 from devices_rap.errors import NoDataProvidedError, NoDatasetsProvidedError
 from devices_rap.utils import (
-    convert_fin_dates,
+    convert_fin_dates_vectorised,
     convert_values_to,
     normalise_column_names,
 )
@@ -80,8 +80,6 @@ def cleanse_master_data(master_df: pd.DataFrame) -> pd.DataFrame:
     )
 
     logger.info("Converting activity date values to datetime")
-    master_df["activity_date"] = master_df.progress_apply(
-        lambda df: convert_fin_dates(df["cln_activity_month"], df["upd_activity_year"]), axis=1
-    )  # type: ignore
+    master_df["activity_date"] = convert_fin_dates_vectorised(master_df)
 
     return master_df

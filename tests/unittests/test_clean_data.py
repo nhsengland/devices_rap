@@ -84,7 +84,7 @@ class TestCleanseMasterData:
         Fixture to mock the functions called by cleanse_master_data
         """
         mock_convert_fin_dates = mocker.patch(
-            "devices_rap.clean_data.convert_fin_dates", return_value="foo", autospec=True
+            "devices_rap.clean_data.convert_fin_dates_vectorised", return_value="foo", autospec=True
         )
         mock_convert_values_to = mocker.patch(
             "devices_rap.clean_data.convert_values_to", return_value="bar", autospec=True
