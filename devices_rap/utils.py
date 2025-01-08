@@ -71,6 +71,25 @@ def normalise_column_names(
     return df
 
 
+def un_normalise_column_names(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Takes a DataFrame, removes any underscores from the column names, and converts them to title
+    case, getting them ready for human friendly presentation.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        The input DataFrame with normalised column names (lower case, underscores)
+
+    Returns
+    -------
+    pd.DataFrame
+        The DataFrame with un-normalised column names (title case, spaces)
+    """
+    df.columns = df.columns.str.replace("_", " ").str.title()
+    return df
+
+
 def convert_values_to(
     value: Any, match: Optional[List[Any]] = None, to: Any = "DEV02", invert_match: bool = False
 ) -> Any:

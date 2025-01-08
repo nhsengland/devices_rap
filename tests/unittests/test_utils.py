@@ -14,7 +14,7 @@ pytestmark = pytest.mark.no_data_needed
 
 class TestNormaliseColumnNames:
     """
-    Tests for the normalise_column_names function
+    Tests for the utils.normalise_column_names function
     """
 
     @pytest.fixture()
@@ -78,9 +78,38 @@ class TestNormaliseColumnNames:
         assert list(result_df.columns) == expected_columns
 
 
+class TestUnNormaliseColumnNames:
+    """
+    Tests for the utils.un_normalise_column_names function
+    """
+
+    @pytest.mark.parametrize(
+        "input_columns, expected_columns",
+        [
+            (["column_a"], ["Column A"]),
+            (["Column B"], ["Column B"]),
+            ([""], [""]),
+            (["column_c", "column_d"], ["Column C", "Column D"]),
+            (["column__e"], ["Column  E"]),
+        ]
+    )
+    def test_un_normalise_column_names(self, input_columns, expected_columns):
+        """
+        Tests the un_normalise_column_names function. Cases to test:
+            1. Single column name
+            2. Already un-normalised column name
+            3. Empty column name
+            4. Multiple column names
+            5. Column name with multiple underscores
+        """
+        input_df = pd.DataFrame(columns=input_columns)
+        result_df = utils.un_normalise_column_names(input_df)
+        assert list(result_df.columns) == expected_columns
+
+
 class TestConvertValuesTo:
     """
-    Tests for the convert_values_to function
+    Tests for the utils.convert_values_to function
     """
 
     @pytest.mark.parametrize(
@@ -134,7 +163,7 @@ class TestConvertValuesTo:
 
 class TestConvertFinDates:
     """
-    Tests for the convert_fin_dates function
+    Tests for the utils.convert_fin_dates function
     """
 
     @pytest.mark.parametrize(
@@ -170,7 +199,7 @@ class TestConvertFinDates:
             (14, 202425),
         ],
     )
-    def test_convert_fin_dates_invalid_month(self, fin_month, fin_year):
+    def test_convert_fin_dates_invalid_month(self, mock_error, fin_month, fin_year):
         """
         Test the convert_fin_dates function with invalid months. Should raise a ValueError.
         """
@@ -180,7 +209,7 @@ class TestConvertFinDates:
 
 class TestParseDates:
     """
-    Tests for the parse_dates function
+    Tests for the utils.parse_dates function
     """
 
     @pytest.mark.parametrize(
