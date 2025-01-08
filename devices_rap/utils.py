@@ -3,10 +3,11 @@ Miscellaneous helper functions that can be used over multiple modules.
 """
 
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import pandas as pd
-from pandas._libs.tslibs.nattype import NaTType
+
+from devices_rap.errors import InvalidMonthError
 
 
 def normalise_column_names(
@@ -139,7 +140,7 @@ def convert_fin_dates(fin_month: int, fin_year: int) -> pd.Timestamp:
         Corresponding datetime
     """
     if fin_month < 1 or fin_month > 12:
-        raise ValueError("Invalid month. Month should be between 1 and 12.")
+        raise InvalidMonthError("Invalid month. Month should be between 1 and 12.")
     fin_year_str = str(fin_year)
     century = fin_year_str[:2]
     year_1 = fin_year_str[2:4]
@@ -154,7 +155,7 @@ def convert_fin_dates(fin_month: int, fin_year: int) -> pd.Timestamp:
     return pd.to_datetime(f"{month}, {year}")
 
 
-def parse_dates(date_str: str) -> pd.Timestamp | NaTType | datetime:
+def parse_dates(date_str: str) -> Union[pd.Timestamp, pd.NaT, datetime]:  # type: ignore
     """
     Parses a date string into a pandas Timestamp, NaT, or datetime object.
     The function attempts to parse the input date string using the following formats:

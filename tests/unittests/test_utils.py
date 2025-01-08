@@ -203,8 +203,12 @@ class TestConvertFinDates:
         """
         Test the convert_fin_dates function with invalid months. Should raise a ValueError.
         """
-        with pytest.raises(ValueError):
+        expected_message = "Invalid month. Month should be between 1 and 12."
+        with pytest.raises(
+            InvalidMonthError, match=re.escape(expected_message)
+        ):
             utils.convert_fin_dates(fin_month=fin_month, fin_year=fin_year)
+        mock_error.assert_called_with(expected_message)
 
 
 class TestParseDates:
