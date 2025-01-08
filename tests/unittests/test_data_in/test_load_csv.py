@@ -158,6 +158,22 @@ class TestLoadDevicesDatasets:
         with pytest.raises(NoDatasetsProvidedError):
             load_devices_datasets({})
 
+    def test_removes_data(self, mocker):
+        """
+        Test that the function removes the "data" key from the datasets dictionary
+        and then overwrites it with the loaded DataFrame
+        """
+        datasets = {
+            "test1": {"filepath_or_buffer": "test1", "data": "test_data"},
+        }
+
+        mock_df = pd.DataFrame({"col1": [1, 2], "col2": [3, 4]})
+        mocker.patch("devices_rap.data_in.load_csv.pd.read_csv", return_value=mock_df)
+
+        result = load_devices_datasets(datasets)
+        dataset = result["test1"]
+        assert str(dataset["data"]) != "test_data"
+
 
 if __name__ == "__main__":
     pytest.main([__file__])
