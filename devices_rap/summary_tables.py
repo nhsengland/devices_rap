@@ -35,7 +35,7 @@ def create_pivot_sum_table(
     Amber Summary table:
     - values: ["cln_total_cost"]
     - columns: ["activity_date"]
-    - base_index: ["nhs_england_region", "der_provider_code", "der_high_level_device_type",
+    - base_index: ["nhs_england_region", "der_provider_code", "upd_high_level_device_type",
     "rag_status"]
     - extended_index: []
 
@@ -46,7 +46,7 @@ def create_pivot_sum_table(
     ----------
     data : pd.DataFrame
         The data to pivot. By default should include the columns: ["nhs_england_region",
-        "der_provider_code", "der_high_level_device_type", "rag_status", "cln_total_cost",
+        "der_provider_code", "upd_high_level_device_type", "rag_status", "cln_total_cost",
         "activity_date"]
 
     values : list, optional
@@ -57,7 +57,7 @@ def create_pivot_sum_table(
 
     base_index : list, optional
         The base index columns, by default ["nhs_england_region", "der_provider_code",
-        "der_high_level_device_type", "rag_status"]
+        "upd_high_level_device_type", "rag_status"]
 
     extended_index : list, optional
         The extended index columns, by default []
@@ -77,7 +77,7 @@ def create_pivot_sum_table(
     base_index = base_index or [
         "nhs_england_region",
         "der_provider_code",
-        "der_high_level_device_type",
+        "upd_high_level_device_type",
         "rag_status",
     ]
     extended_index = extended_index or []

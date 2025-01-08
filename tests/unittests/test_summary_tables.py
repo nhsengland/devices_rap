@@ -46,7 +46,7 @@ class TestCreatePivotSumTable:
                 [
                     "nhs_england_region",
                     "der_provider_code",
-                    "der_high_level_device_type",
+                    "upd_high_level_device_type",
                     "rag_status",
                 ],
             ),
@@ -81,7 +81,7 @@ class TestCreatePivotSumTable:
                 [
                     "nhs_england_region",
                     "der_provider_code",
-                    "der_high_level_device_type",
+                    "upd_high_level_device_type",
                     "rag_status",
                     "test",
                 ],
@@ -108,7 +108,7 @@ class TestCreatePivotSumTable:
                     columns=[
                         "nhs_england_region",
                         "der_provider_code",
-                        "der_high_level_device_type",
+                        "upd_high_level_device_type",
                         "rag_status",
                         "test",
                     ],
@@ -124,7 +124,7 @@ class TestCreatePivotSumTable:
                     columns=[
                         "nhs_england_region",
                         "der_provider_code",
-                        "der_high_level_device_type",
+                        "upd_high_level_device_type",
                         "rag_status",
                         "test1",
                         "test2",
@@ -141,7 +141,7 @@ class TestCreatePivotSumTable:
                     columns=[
                         "nhs_england_region",
                         "der_provider_code",
-                        "der_high_level_device_type",
+                        "upd_high_level_device_type",
                         "rag_status",
                         "test1",
                     ],
@@ -159,7 +159,7 @@ class TestCreatePivotSumTable:
                     columns=[
                         "nhs_england_region",
                         "der_provider_code",
-                        "der_high_level_device_type",
+                        "upd_high_level_device_type",
                         "rag_status",
                         "test1",
                         "test2",
@@ -184,7 +184,7 @@ class TestCreatePivotSumTable:
             columns=[
                 "nhs_england_region",
                 "der_provider_code",
-                "der_high_level_device_type",
+                "upd_high_level_device_type",
                 "rag_status",
                 "activity_date",
                 "cln_total_cost",
@@ -203,14 +203,14 @@ class TestCreatePivotSumTable:
                 ["cln_total_cost", "activity_date"],
                 "Columns were not found in the dataset. "
                 "MISSING COLUMNS: "
-                "BASE_INDEX: ['der_high_level_device_type', 'der_provider_code', "
-                "'nhs_england_region', 'rag_status']",
+                "BASE_INDEX: ['der_provider_code', 'nhs_england_region', 'rag_status', "
+                "'upd_high_level_device_type']",
             ),
             (
                 [
                     "nhs_england_region",
                     "der_provider_code",
-                    "der_high_level_device_type",
+                    "upd_high_level_device_type",
                     "rag_status",
                     "activity_date",
                 ],
@@ -222,7 +222,7 @@ class TestCreatePivotSumTable:
                 [
                     "nhs_england_region",
                     "der_provider_code",
-                    "der_high_level_device_type",
+                    "upd_high_level_device_type",
                     "rag_status",
                     "cln_total_cost",
                 ],
@@ -236,8 +236,8 @@ class TestCreatePivotSumTable:
                 "MISSING COLUMNS: "
                 "VALUES: ['cln_total_cost'] "
                 "COLUMNS: ['activity_date'] "
-                "BASE_INDEX: ['der_high_level_device_type', 'der_provider_code', "
-                "'nhs_england_region', 'rag_status']",
+                "BASE_INDEX: ['der_provider_code', 'nhs_england_region', 'rag_status', "
+                "'upd_high_level_device_type']",
             ),
         ],
     )
@@ -264,7 +264,7 @@ class TestCreatePivotSumTable:
                 {},
                 "Creating a pivot table with the sum of the values for the given columns."
                 "VALUES: cln_total_cost, COLUMNS: activity_date, INDEX: "
-                "['nhs_england_region', 'der_provider_code', 'der_high_level_device_type', 'rag_status']",
+                "['nhs_england_region', 'der_provider_code', 'upd_high_level_device_type', 'rag_status']",
             ),
             (
                 {
@@ -362,7 +362,7 @@ class TestCreateDeviceCategorySummaryTable:
                     columns=[
                         "nhs_england_region",
                         "der_provider_code",
-                        "der_high_level_device_type",
+                        "upd_high_level_device_type",
                         "rag_status",
                         "test",
                     ],
@@ -378,7 +378,7 @@ class TestCreateDeviceCategorySummaryTable:
                     columns=[
                         "nhs_england_region",
                         "der_provider_code",
-                        "der_high_level_device_type",
+                        "upd_high_level_device_type",
                         "rag_status",
                         "test1",
                         "test2",
@@ -395,7 +395,7 @@ class TestCreateDeviceCategorySummaryTable:
                     columns=[
                         "nhs_england_region",
                         "der_provider_code",
-                        "der_high_level_device_type",
+                        "upd_high_level_device_type",
                         "rag_status",
                         "test1",
                     ],
@@ -413,7 +413,7 @@ class TestCreateDeviceCategorySummaryTable:
                     columns=[
                         "nhs_england_region",
                         "der_provider_code",
-                        "der_high_level_device_type",
+                        "upd_high_level_device_type",
                         "rag_status",
                         "test1",
                         "test2",
@@ -441,7 +441,7 @@ class TestCreateDeviceCategorySummaryTable:
             columns=[
                 "nhs_england_region",
                 "der_provider_code",
-                "der_high_level_device_type",
+                "upd_high_level_device_type",
                 "rag_status",
                 "activity_date",
                 "cln_total_cost",
@@ -521,7 +521,7 @@ class TestCreateDeviceSummaryTable:
                     columns=[
                         "nhs_england_region",
                         "der_provider_code",
-                        "der_high_level_device_type",
+                        "upd_high_level_device_type",
                         "rag_status",
                         "cln_manufacturer_device_name",
                         "test",
@@ -538,7 +538,7 @@ class TestCreateDeviceSummaryTable:
                     columns=[
                         "nhs_england_region",
                         "der_provider_code",
-                        "der_high_level_device_type",
+                        "upd_high_level_device_type",
                         "rag_status",
                         "cln_manufacturer_device_name",
                         "test1",
@@ -556,7 +556,7 @@ class TestCreateDeviceSummaryTable:
                     columns=[
                         "nhs_england_region",
                         "der_provider_code",
-                        "der_high_level_device_type",
+                        "upd_high_level_device_type",
                         "rag_status",
                         "cln_manufacturer_device_name",
                         "test1",
@@ -575,7 +575,7 @@ class TestCreateDeviceSummaryTable:
                     columns=[
                         "nhs_england_region",
                         "der_provider_code",
-                        "der_high_level_device_type",
+                        "upd_high_level_device_type",
                         "rag_status",
                         "cln_manufacturer_device_name",
                         "test1",
@@ -604,7 +604,7 @@ class TestCreateDeviceSummaryTable:
             columns=[
                 "nhs_england_region",
                 "der_provider_code",
-                "der_high_level_device_type",
+                "upd_high_level_device_type",
                 "rag_status",
                 "cln_manufacturer_device_name",
                 "activity_date",
