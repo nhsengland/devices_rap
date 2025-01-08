@@ -2,13 +2,14 @@
 Miscellaneous helper functions that can be used over multiple modules.
 """
 
+import warnings
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 import pandas as pd
 
-from devices_rap.errors import InvalidMonthError
+from devices_rap.errors import DataTypeNotFoundWarning, InvalidMonthError
 
 
 def normalise_column_names(
@@ -223,3 +224,61 @@ def parse_dates(date_str: str) -> Union[pd.Timestamp, pd.NaT, datetime]:  # type
                 return datetime(1899, 12, 30) + timedelta(days=float(date_str))
             except ValueError:
                 return pd.NaT
+
+
+def convert_datetime_column_headers(
+    data: pd.DataFrame, output_format: str = "%b %Y"
+) -> pd.DataFrame:
+    """
+    Convert datetime column headers to string with a specified format.
+
+    Parameters
+    ----------
+    data : pd.DataFrame
+        The input DataFrame with some datetime column headers
+    output_format : str, optional
+        The output format to convert the datetime column headers to using the pandas strftime,
+        defaults to "%b %Y" which will yield "Jan 2021" from pd.Timestamp("2021-01-01")
+    """
+    if not any(isinstance(col, pd.Timestamp) for col in data.columns):
+        warnings.warn("No datetime columns found in the DataFrame.", DataTypeNotFoundWarning)
+    else:
+        data.columns = data.columns.map(
+            lambda x: x.strftime(output_format) if isinstance(x, pd.Timestamp) else x
+        )
+    return data
+
+
+def sort_string_list_with_dates(list_of_strings: List[str], format: str = "%b %Y") -> List[str]:
+    """
+    Sort a list of strings that may contain dates in the format specified by the format parameter.
+    The function will attempt to parse the date strings using the specified format and sort the
+    list in ascending order based on the parsed dates. If a string cannot be parsed as a date, it
+    will be sorted based on the original string.
+
+    Date string will be sorted after the non-date strings.
+
+    Parameters
+    ----------
+    list_of_strings : List[str]
+        The list of strings to be sorted
+    format : str, optional
+        The format of the date strings, by default "%b %Y", e.g. "Jan 2021"
+
+    Returns
+    -------
+    List[str]
+        The sorted list of strings
+    """
+
+    def parse_date(date_string):
+        try:
+            return datetime.strptime(date_string, format)
+        except ValueError:
+            return None
+
+    def sort_key(string):
+        date = parse_date(string)
+        return (date is not None, date or string)
+
+    return sorted(list_of_strings, key=sort_key)

@@ -9,6 +9,7 @@ from loguru import logger
 
 from devices_rap.errors import (
     ColumnsNotFoundError,
+    DataTypeNotFoundWarning,
     ExceptionRaisedIncorrectlyError,
     LoggedException,
     LoggedWarning,
@@ -221,6 +222,7 @@ class TestCustomWarnings:
         [
             (LoggedWarning, "Test warning message"),
             (MergeWarning, "Merge warning message"),
+            (DataTypeNotFoundWarning, "Data type not found warning message"),
         ],
     )
     def test_warning(self, mock_warning, warning_class, message):

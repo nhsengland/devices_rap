@@ -161,3 +161,7 @@ class LoggedWarning(Warning):
 
 class MergeWarning(LoggedWarning):
     """Custom warning for merge validation"""
+
+
+class DataTypeNotFoundWarning(LoggedWarning):
+    """Custom warning for when a data type is not found in a collection"""
