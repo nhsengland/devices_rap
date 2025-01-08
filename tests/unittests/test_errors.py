@@ -16,6 +16,7 @@ from devices_rap.errors import (
     NoDatasetsProvidedError,
     NoDataProvidedError,
     MergeColumnsNotFoundError,
+    InvalidMonthError,
     MergeWarning,
 )
 
@@ -30,6 +31,7 @@ class TestCustomExceptions:
     - ExceptionRaisedIncorrectlyError
     - ColumnsNotFoundError
     - MergeColumnsNotFoundError
+    - InvalidMonthError
     """
 
     @pytest.mark.parametrize(
@@ -40,16 +42,16 @@ class TestCustomExceptions:
             (NoDatasetsProvidedError, "No datasets provided"),
             (NoDataProvidedError, "No data provided"),
             (ExceptionRaisedIncorrectlyError, "Exception raised incorrectly"),
+            (InvalidMonthError, "Invalid month provided"),
         ],
     )
-    def test_error(self, mocker, exception_class, message):
+    def test_error(self, mock_error, exception_class, message):
         """
         Test that the LoggedException logs the error message.
         """
-        mock_logger = mocker.spy(logger, "error")
         with pytest.raises(exception_class, match=message):
             raise exception_class(message)
-        mock_logger.assert_called_with(message)
+        mock_error.assert_called_with(message)
 
     @pytest.mark.parametrize(
         "kwargs_dicts, expected_message",
@@ -70,9 +72,13 @@ class TestCustomExceptions:
                 {"column_set1": ["test1", "test2"], "column_set2": ["columnA", "columnB"]},
                 "Test base message. MISSING COLUMNS: COLUMN_SET1: ['test1', 'test2']",
             ),
+            (
+                {"column_set1": "test1"},
+                "Test base message. MISSING COLUMNS: COLUMN_SET1: ['test1']",
+            )
         ],
     )
-    def test_columns_not_found_error(self, mocker, kwargs_dicts, expected_message):
+    def test_columns_not_found_error(self, mock_error, kwargs_dicts, expected_message):
         """
         Test that the ColumnsNotFoundError raises the correct message. Cases include:
         - One column set with all values not found in the dataset_columns
@@ -81,7 +87,6 @@ class TestCustomExceptions:
         - Multiple column sets with some set with all values found in the dataset_columns and some
         sets with all values not found in the dataset_columns
         """
-        mock_logger = mocker.patch.object(logger, "error")
         with pytest.raises(ColumnsNotFoundError, match=re.escape(expected_message)):
             raise ColumnsNotFoundError(
                 base_message="Test base message.",
@@ -91,7 +96,7 @@ class TestCustomExceptions:
                 ],
                 **kwargs_dicts,
             )
-        mock_logger.assert_called_with(expected_message)
+        mock_error.assert_called_with(expected_message)
 
     @pytest.mark.parametrize(
         "kwargs_dicts",
@@ -101,7 +106,7 @@ class TestCustomExceptions:
             {"column_set1": ["columnA"], "column_set2": ["columnB"]},
         ],
     )
-    def test_columns_not_found_error_bad_raise(self, mocker, kwargs_dicts):
+    def test_columns_not_found_error_bad_raise(self, mock_error, kwargs_dicts):
         """
         Tests that the ColumnsNotFoundError itself raises the ExceptionRaisedIncorrectlyError when
         there are no missing columns. Cases include:
@@ -112,8 +117,6 @@ class TestCustomExceptions:
         Note: These tests are to ensure that the ColumnsNotFoundError is raising correctly when
         there are no missing columns.
         """
-        mock_logger = mocker.spy(logger, "error")
-
         # We only check for the ExceptionRaisedIncorrectlyError here as we haven't found a way for
         # pytest to check for the ColumnsNotFoundError being raised correctly when it is raising
         # the ExceptionRaisedIncorrectlyError.
@@ -132,13 +135,13 @@ class TestCustomExceptions:
 
         # Instead we rely on the logger mock to check that ColumnsNotFoundError was raised with the
         # correct message as it is a child of the LoggedException error class.
-        assert mock_logger.call_count == 2
+        assert mock_error.call_count == 2
         assert (
-            mock_logger.call_args_list[0].args[0]
+            mock_error.call_args_list[0].args[0]
             == "No missing columns found. This error might have raised in error."
         )
         assert (
-            mock_logger.call_args_list[1].args[0]
+            mock_error.call_args_list[1].args[0]
             == "ColumnsNotFoundError was potentially raised incorrectly."
         )
 
@@ -190,7 +193,7 @@ class TestCustomExceptions:
         ],
     )
     def test_merge_columns_not_found_error(
-        self, mocker, left_columns, right_columns, left_on, right_on, expected_message
+        self, mock_error, left_columns, right_columns, left_on, right_on, expected_message
     ):
         """
         Test that the MergeColumnsNotFoundError raises the correct message. Cases include:
@@ -201,10 +204,9 @@ class TestCustomExceptions:
         - One column as a string not found in the left columns
         - One column in a list not found in the left columns and one column in a list not found in the right columns
         """
-        mock_logger = mocker.patch.object(logger, "error")
         with pytest.raises(MergeColumnsNotFoundError, match=re.escape(expected_message)):
             raise MergeColumnsNotFoundError(left_columns, right_columns, left_on, right_on)
-        mock_logger.assert_called_with(expected_message)
+        mock_error.assert_called_with(expected_message)
 
 
 class TestCustomWarnings:
@@ -221,14 +223,13 @@ class TestCustomWarnings:
             (MergeWarning, "Merge warning message"),
         ],
     )
-    def test_warning(self, mocker, warning_class, message):
+    def test_warning(self, mock_warning, warning_class, message):
         """
         Test that the LoggedWarning logs the warning message.
         """
-        mock_logger = mocker.spy(logger, "warning")
         with pytest.warns(warning_class, match=message):
             warnings.warn(message, warning_class)
-        mock_logger.assert_called_with(message)
+        mock_warning.assert_called_with(message)
 
 
 if __name__ == "__main__":

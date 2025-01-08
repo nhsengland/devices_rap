@@ -142,6 +142,12 @@ class MergeColumnsNotFoundError(LoggedException):
         super().__init__(self.message)
 
 
+class InvalidMonthError(LoggedException):
+    """
+    Exception raised when an invalid month is provided.
+    """
+
+
 class LoggedWarning(Warning):
     """
     Custom exception class that logs the warning message using the logger.
