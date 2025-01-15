@@ -64,10 +64,13 @@ def column_summary_notes(
             dataset_columns=row.index, match_columns=columns_to_summarise.keys()
         ) from e
 
-    return pd.Series([summary], index=["summary"])
+    if not summary:
+        summary = None
+
+    return pd.Series(summary, index=["summary"], dtype="string")
 
 
-def create_exception_notes(exceptions: pd.DataFrame) -> pd.DataFrame:
+def create_exception_notes(exceptions: pd.DataFrame, drop_columns: bool = True) -> pd.DataFrame:
     """
     Function to create a summary of the exception columns in the exceptions DataFrame. The function
     is a wrapper apply function that calls the column_summary_notes function to generate the
@@ -117,5 +120,8 @@ def create_exception_notes(exceptions: pd.DataFrame) -> pd.DataFrame:
         columns_to_summarise=columns_to_summarise,
         match_summaries=match_summaries,
     )  # type: ignore
+
+    if drop_columns:
+        exceptions = exceptions.drop(columns=list(columns_to_summarise.keys()))
 
     return exceptions

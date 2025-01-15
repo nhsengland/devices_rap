@@ -45,7 +45,7 @@ class TestColumnSummaryNotes:
         match_summaries = {"Group 1": "Y", "Group 2": "Ceased"}
 
         actual = exception_notes.column_summary_notes(row, columns_to_summarise, match_summaries)
-        expected = pd.Series(["Group 1: Note 1. Group 2: Note 3."], index=["summary"])
+        expected = pd.Series(["Group 1: Note 1. Group 2: Note 3."], index=["summary"], dtype="string")
 
         pd.testing.assert_series_equal(actual, expected)
 
@@ -58,7 +58,7 @@ class TestColumnSummaryNotes:
         match_summaries = {"Group 1": "Y", "Group 2": "Ceased"}
 
         actual = exception_notes.column_summary_notes(row, columns_to_summarise, match_summaries)
-        expected = pd.Series([""], index=["summary"])
+        expected = pd.Series([None], index=["summary"], dtype="string")
 
         pd.testing.assert_series_equal(actual, expected)
 
@@ -71,7 +71,7 @@ class TestColumnSummaryNotes:
         match_summaries = {"Group 1": "Y", "Group 2": "Ceased"}
 
         actual = exception_notes.column_summary_notes(row, columns_to_summarise, match_summaries)
-        expected = pd.Series(["Group 1: Note 1."], index=["summary"])
+        expected = pd.Series(["Group 1: Note 1."], index=["summary"], dtype="string")
 
         pd.testing.assert_series_equal(actual, expected)
 
@@ -176,24 +176,30 @@ class TestCreateExceptionsNotes:
         actual = exception_notes.create_exception_notes(input_exceptions)
         assert isinstance(actual, pd.DataFrame)
 
-    def test_returns_correct_columns(self, input_exceptions):
+    @pytest.mark.parametrize(
+        "drop_columns, expected_columns",
+        [
+            (True, ["exception_notes"]),
+            (
+                False,
+                [
+                    "exception_status_legacy_list",
+                    "exception_status_planned_migration",
+                    "exception_status_category_list",
+                    "exception_status_product_list",
+                    "exception_status_hcted_category",
+                    "exception_status_stock_<180_days",
+                    "exception_notes",
+                ],
+            ),
+        ],
+    )
+    def test_returns_correct_columns(self, input_exceptions, drop_columns, expected_columns):
         """
         Tests that the function returns a DataFrame with the correct columns.
         """
 
-        actual = exception_notes.create_exception_notes(input_exceptions)
-        expected_columns = [
-            "exception_status_legacy_list",
-            "exception_status_planned_migration",
-            "exception_status_category_list",
-            "exception_status_product_list",
-            "exception_status_hcted_category",
-            "exception_status_stock_<180_days",
-            "exception_notes"
-        ]
-
-        print(actual.columns.tolist())
-        print(expected_columns)
+        actual = exception_notes.create_exception_notes(input_exceptions, drop_columns=drop_columns)
         assert actual.columns.tolist() == expected_columns
 
     def test_returns_correct_values(self, input_exceptions):
@@ -204,13 +210,13 @@ class TestCreateExceptionsNotes:
         expected_values = [
             "Exceptions: Legacy List, Planned Migration, Category List, Product List, Hcted Category, Stock <180 Days.",
             "Ceased: Legacy List, Planned Migration, Category List, Product List, Hcted Category, Stock <180 Days.",
-            "",
+            None,
             "Exceptions: Legacy List. Ceased: Planned Migration.",
             "Exceptions: Legacy List, Planned Migration. Ceased: Category List, Product List.",
         ]
 
         actual = result["exception_notes"]
-        expected = pd.Series(expected_values, name="exception_notes")
+        expected = pd.Series(expected_values, name="exception_notes", dtype="string")
 
         pd.testing.assert_series_equal(actual, expected)
 

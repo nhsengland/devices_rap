@@ -125,9 +125,9 @@ def load_devices_datasets(datasets: Dict[str, Dict[str, Any]]) -> Dict[str, Dict
     if not datasets:
         raise NoDatasetsProvidedError("No datasets provided.")
 
-    dataset_items = tqdm.tqdm(datasets.items(), desc="Loading datasets")
-
-    for dataset_name, dataset_kwargs in dataset_items:
+    for dataset_name, dataset_kwargs in tqdm.tqdm(datasets.items(), desc="Loading datasets"):
+        if "data" in dataset_kwargs:
+            dataset_kwargs.pop("data")
         dataset_df = load_csv_data(dataset_name, **dataset_kwargs)
         datasets[dataset_name]["data"] = dataset_df
 

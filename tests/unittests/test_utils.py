@@ -3,18 +3,20 @@ Tests for devices_rap/utils.py
 """
 
 from datetime import datetime
+import re
 
 import pandas as pd
 import pytest
 
 from devices_rap import utils
+from devices_rap.errors import DataTypeNotFoundWarning, InvalidMonthError
 
 pytestmark = pytest.mark.no_data_needed
 
 
 class TestNormaliseColumnNames:
     """
-    Tests for the normalise_column_names function
+    Tests for the utils.normalise_column_names function
     """
 
     @pytest.fixture()
@@ -78,9 +80,38 @@ class TestNormaliseColumnNames:
         assert list(result_df.columns) == expected_columns
 
 
+class TestUnNormaliseColumnNames:
+    """
+    Tests for the utils.un_normalise_column_names function
+    """
+
+    @pytest.mark.parametrize(
+        "input_columns, expected_columns",
+        [
+            (["column_a"], ["Column A"]),
+            (["Column B"], ["Column B"]),
+            ([""], [""]),
+            (["column_c", "column_d"], ["Column C", "Column D"]),
+            (["column__e"], ["Column  E"]),
+        ],
+    )
+    def test_un_normalise_column_names(self, input_columns, expected_columns):
+        """
+        Tests the un_normalise_column_names function. Cases to test:
+            1. Single column name
+            2. Already un-normalised column name
+            3. Empty column name
+            4. Multiple column names
+            5. Column name with multiple underscores
+        """
+        input_df = pd.DataFrame(columns=input_columns)
+        result_df = utils.un_normalise_column_names(input_df)
+        assert list(result_df.columns) == expected_columns
+
+
 class TestConvertValuesTo:
     """
-    Tests for the convert_values_to function
+    Tests for the utils.convert_values_to function
     """
 
     @pytest.mark.parametrize(
@@ -134,7 +165,7 @@ class TestConvertValuesTo:
 
 class TestConvertFinDates:
     """
-    Tests for the convert_fin_dates function
+    Tests for the utils.convert_fin_dates function
     """
 
     @pytest.mark.parametrize(
@@ -170,17 +201,73 @@ class TestConvertFinDates:
             (14, 202425),
         ],
     )
-    def test_convert_fin_dates_invalid_month(self, fin_month, fin_year):
+    def test_convert_fin_dates_invalid_month(self, mock_error, fin_month, fin_year):
         """
         Test the convert_fin_dates function with invalid months. Should raise a ValueError.
         """
-        with pytest.raises(ValueError):
+        expected_message = "Invalid month. Month should be between 1 and 12."
+        with pytest.raises(InvalidMonthError, match=re.escape(expected_message)):
             utils.convert_fin_dates(fin_month=fin_month, fin_year=fin_year)
+        mock_error.assert_called_with(expected_message)
+
+
+class TestConvertFinDatesVectorised:
+    """
+    Tests for the utils.convert_fin_dates_vectorised function
+    """
+
+    @pytest.mark.parametrize(
+        "fin_month, fin_year, expected",
+        [
+            (1, 202425, pd.to_datetime(pd.Series("2024-04-01"))),
+            (2, 202425, pd.to_datetime(pd.Series("2024-05-01"))),
+            (3, 202425, pd.to_datetime(pd.Series("2024-06-01"))),
+            (4, 202425, pd.to_datetime(pd.Series("2024-07-01"))),
+            (5, 202425, pd.to_datetime(pd.Series("2024-08-01"))),
+            (6, 202425, pd.to_datetime(pd.Series("2024-09-01"))),
+            (7, 202425, pd.to_datetime(pd.Series("2024-10-01"))),
+            (8, 202425, pd.to_datetime(pd.Series("2024-11-01"))),
+            (9, 202425, pd.to_datetime(pd.Series("2024-12-01"))),
+            (10, 202425, pd.to_datetime(pd.Series("2025-01-01"))),
+            (11, 202425, pd.to_datetime(pd.Series("2025-02-01"))),
+            (12, 202425, pd.to_datetime(pd.Series("2025-03-01"))),
+        ],
+    )
+    def test_all_months(self, fin_month, fin_year, expected):
+        """
+        Tests all months in a financial year.
+        """
+        input_df = pd.DataFrame({"fin_month": [fin_month], "fin_year": [fin_year]})
+        actual = utils.convert_fin_dates_vectorised(input_df, "fin_month", "fin_year")
+
+        pd.testing.assert_series_equal(actual, expected)
+
+    @pytest.mark.parametrize(
+        "fin_month, fin_year",
+        [
+            (0, 202425),
+            (13, 202425),
+            (-1, 202425),
+            (14, 202425),
+        ],
+    )
+    def test_invalid_month(self, mock_error, fin_month, fin_year):
+        """
+        Tests that the function raises an InvalidMonthError when the month is invalid.
+        """
+        expected_message = "Invalid month. Month should be between 1 and 12."
+
+        input_df = pd.DataFrame({"fin_month": [fin_month], "fin_year": [fin_year]})
+
+        with pytest.raises(InvalidMonthError, match=re.escape(expected_message)):
+            utils.convert_fin_dates_vectorised(input_df, "fin_month", "fin_year")
+
+        mock_error.assert_called_with(expected_message)
 
 
 class TestParseDates:
     """
-    Tests for the parse_dates function
+    Tests for the utils.parse_dates function
     """
 
     @pytest.mark.parametrize(
@@ -225,6 +312,120 @@ class TestParseDates:
         """
         result = utils.parse_dates(date_str)
         assert pd.isna(result)
+
+
+class TestConvertDatetimeColumnHeaders:
+    """
+    Tests for the utils.convert_datetime_column_headers function
+    """
+
+    @pytest.mark.parametrize(
+        "output_format, expected",
+        [
+            ("%b %Y", ["Jan 2020", "Feb 2020", "Mar 2020"]),
+            ("%B %Y", ["January 2020", "February 2020", "March 2020"]),
+            ("%m/%Y", ["01/2020", "02/2020", "03/2020"]),
+            ("%Y-%m", ["2020-01", "2020-02", "2020-03"]),
+        ],
+    )
+    def test_only_datetime_column_headers(self, output_format, expected):
+        """
+        Test the convert_datetime_column_headers function with different output formats.
+        """
+        input_df = pd.DataFrame(
+            columns=[
+                pd.Timestamp("2020-01-01"),
+                pd.Timestamp("2020-02-01"),
+                pd.Timestamp("2020-03-01"),
+            ]
+        )
+        result_df = utils.convert_datetime_column_headers(input_df, output_format)
+        assert list(result_df.columns) == expected
+
+    def test_mixed_column_headers(self):
+        """
+        Test the convert_datetime_column_headers function with a mix of datetime and non-datetime column headers.
+        """
+        input_df = pd.DataFrame(
+            columns=[
+                pd.Timestamp("2020-01-01"),
+                "non_datetime_col",
+                pd.Timestamp("2020-02-01"),
+                "another_non_datetime_col",
+            ]
+        )
+        result_df = utils.convert_datetime_column_headers(input_df)
+        assert list(result_df.columns) == [
+            "Jan 2020",
+            "non_datetime_col",
+            "Feb 2020",
+            "another_non_datetime_col",
+        ]
+
+    def test_no_datetime_column_headers_warning(self, mock_warning):
+        """
+        Test the convert_datetime_column_headers function with no datetime column headers. Should log a warning.
+        """
+        input_df = pd.DataFrame(columns=["col1", "col2", "col3"])
+        expected_message = "No datetime columns found in the DataFrame."
+
+        with pytest.warns(DataTypeNotFoundWarning, match=re.escape(expected_message)):
+            utils.convert_datetime_column_headers(input_df)
+        mock_warning.assert_called_with(expected_message)
+
+
+class TestSortStringListWithDates:
+    """
+    Tests for the utils.sort_string_list_with_dates function
+    """
+
+    def test_empty_string_list(self):
+        """
+        Test the sort_string_list_with_dates function with an empty string list.
+        """
+        result = utils.sort_string_list_with_dates([])
+        assert not result
+
+    def test_returns_list_of_strings(self):
+        """
+        Test the sort_string_list_with_dates function returns a list of strings.
+        """
+        result = utils.sort_string_list_with_dates(["Jan 2020", "Feb 2020", "Mar 2020"])
+        assert isinstance(result, list)
+        assert all(isinstance(item, str) for item in result)
+
+    @pytest.mark.parametrize(
+        "list_of_strings, format, expected",
+        [
+            (["test1", "test3", "test2"], "%b %Y", ["test1", "test2", "test3"]),
+            (
+                ["Mar 2020", "Jan 2020", "Feb 2020"],
+                "%b %Y",
+                ["Jan 2020", "Feb 2020", "Mar 2020"],
+            ),
+            (
+                ["2020-03", "2020-01", "2020-02"],
+                "%Y-%m",
+                ["2020-01", "2020-02", "2020-03"],
+            ),
+            (
+                ["2020-01", "not_date", "2020-02"],
+                "%Y-%m",
+                ["not_date", "2020-01", "2020-02"],
+            ),
+            (
+                ["2020-01", "Jan 2020", "2020-02"],
+                "%Y-%m",
+                ["Jan 2020", "2020-01", "2020-02"],
+            ),
+        ],
+    )
+    def test_sort_string_list_with_dates(self, list_of_strings, format, expected):
+        """
+        Test the sort_string_list_with_dates function with different date formats.
+        """
+        result = utils.sort_string_list_with_dates(list_of_strings, format)
+        assert result == expected
 
 
 if __name__ == "__main__":
