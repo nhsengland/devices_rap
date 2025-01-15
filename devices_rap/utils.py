@@ -1,5 +1,5 @@
 """
-Miscellaneous helper functions that can be used over multiple modules.
+
 """
 
 import warnings
@@ -9,7 +9,11 @@ from typing import Any, Dict, List, Optional, Union
 import numpy as np
 import pandas as pd
 
-from devices_rap.errors import DataTypeNotFoundWarning, InvalidMonthError
+from devices_rap.errors import (
+    ColumnsNotFoundError,
+    DataTypeNotFoundWarning,
+    InvalidMonthError,
+)
 
 
 def normalise_column_names(
@@ -91,6 +95,76 @@ def un_normalise_column_names(df: pd.DataFrame) -> pd.DataFrame:
     """
     df.columns = df.columns.str.replace("_", " ").str.title()
     return df
+
+
+def order_columns(df: pd.DataFrame, column_order: List[str]) -> pd.DataFrame:
+    """
+    Wrapper function to order the columns in a DataFrame based on a provided list of column names.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Input DataFrame
+    column_order : List[str]
+        List of column names in the desired order
+
+    Returns
+    """
+    try:
+        ordered_df = df.reindex(columns=column_order, axis=1)
+    except KeyError as e:
+        raise ColumnsNotFoundError(
+            dataset_columns=df.columns,
+            column_order=column_order,
+        ) from e
+
+    return ordered_df
+
+
+def rename_columns(
+    df: pd.DataFrame, column_mapping: Dict[str, str], convert_datetimes: str | bool = True
+) -> pd.DataFrame:
+    """
+    Wrapper function to rename columns in a DataFrame based on a provided mapping of old to new
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Input DataFrame
+    column_mapping : Dict[str, str]
+        Dictionary mapping old column names to new column names. Keys are old column names and
+        values are new column names
+    convert_datetimes : Optional[str | bool], optional
+        If a string is provided, the function will convert the column headers to datetime objects
+        using the provided format. If True, the function will convert the column headers to datetime
+        objects using the default format "%b %Y". If False, the function will not convert the column
+        headers to datetime objects, by default True.
+
+    Returns
+    -------
+    pd.DataFrame
+        DataFrame with columns renamed as per the provided mapping
+
+    Raises
+    ------
+    ColumnsNotFoundError
+        If any of the old column names are not found in the DataFrame
+    """
+    try:
+        renamed_df = df.rename(columns=column_mapping)
+    except KeyError as e:
+        raise ColumnsNotFoundError(
+            dataset_columns=df.columns,
+            column_mapping=column_mapping.keys(),
+        ) from e
+
+    if convert_datetimes:
+        if isinstance(convert_datetimes, str):
+            renamed_df = convert_datetime_column_headers(renamed_df, convert_datetimes)
+        else:
+            renamed_df = convert_datetime_column_headers(renamed_df)
+
+    return renamed_df
 
 
 def convert_values_to(
@@ -207,12 +281,14 @@ def parse_dates(date_str: str) -> Union[pd.Timestamp, pd.NaT, datetime]:  # type
         1. "%d/%m/%Y %H:%M" - Day/Month/Year Hour:Minute
         2. "%d/%m/%Y" - Day/Month/Year
         3. Excel serial date format - Days since 1899-12-30
-    If the input string cannot be parsed using any of these formats, the function returns pandas NaT.
+    If the input string cannot be parsed using any of these formats, the function returns pandas
+    NaT.
 
     Parameters:
         date_str (str): The date string to be parsed.
     Returns:
-        pd.Timestamp | NaTType | datetime: The parsed date as a pandas Timestamp, NaT, or datetime object.
+        pd.Timestamp | NaTType | datetime: The parsed date as a pandas Timestamp, NaT, or datetime
+        object.
     """
     try:
         return pd.to_datetime(date_str, format="%d/%m/%Y %H:%M")
