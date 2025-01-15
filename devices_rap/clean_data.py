@@ -8,7 +8,11 @@ import pandas as pd
 import tqdm
 from loguru import logger
 
-from devices_rap.errors import NoDataProvidedError, NoDatasetsProvidedError
+from devices_rap.errors import (
+    ColumnsNotFoundError,
+    NoDataProvidedError,
+    NoDatasetsProvidedError,
+)
 from devices_rap.utils import (
     convert_fin_dates_vectorised,
     convert_values_to,
@@ -58,28 +62,116 @@ def cleanse_master_data(master_df: pd.DataFrame) -> pd.DataFrame:
     Parameters
     ----------
     master_df : pd.DataFrame
-        The master dataset to be cleaned
+        The master dataset to be cleaned. Must contain the following columns:
+        - der_high_level_device_type
+        - cln_activity_year
 
     Returns
     -------
     pd.DataFrame
         The cleaned master dataset
+
+    Raises
+    ------
+    ColumnsNotFoundError
+        If the required columns are not present in the dataset
     """
     logger.info("Cleaning the master dataset ready for processing")
 
     tqdm.tqdm.pandas()
 
-    logger.info("Converting high level device type values")
-    master_df["upd_high_level_device_type"] = master_df[
-        "der_high_level_device_type"
-    ].progress_apply(convert_values_to)
+    try:
+        logger.info("Converting high level device type values")
+        master_df["upd_high_level_device_type"] = master_df[
+            "der_high_level_device_type"
+        ].progress_apply(convert_values_to)
 
-    logger.info("Converting activity year values without century")
-    master_df["upd_activity_year"] = master_df["cln_activity_year"].progress_apply(
-        convert_values_to, match=[2425], to=202425
-    )
+        logger.info("Converting activity year values without century")
+        master_df["upd_activity_year"] = master_df["cln_activity_year"].progress_apply(
+            convert_values_to, match=[2425], to=202425
+        )
 
-    logger.info("Converting activity date values to datetime")
-    master_df["activity_date"] = convert_fin_dates_vectorised(master_df)
+        logger.info("Converting activity date values to datetime")
+        master_df["activity_date"] = convert_fin_dates_vectorised(master_df)
+    except KeyError as e:
+        raise ColumnsNotFoundError(
+            dataset_columns=master_df.columns,
+            clean_columns=["der_high_level_device_type", "cln_activity_year"],
+        ) from e
 
     return master_df
+
+
+def cleanse_master_joined_dataset(master_joined_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Clean the joined dataset ready for pivoting. This function will:
+    - Consolidate region columns into a single column
+    - Fill missing 'rag_status' values with 'RED' where 'upd_high_level_device_type' is missing
+    - Fill missing values with 'NULL' in the columns:
+        - rag_status
+        - upd_high_level_device
+        - cln_manufacturer
+        - cln_manufacturer_device_name
+
+    Parameters
+    ----------
+    master_df : pd.DataFrame
+        The joined dataset to be cleaned. Must contain the following columns:
+        - region
+        - nhs_england_region
+        - rag_status
+        - upd_high_level_device_type
+        - cln_manufacturer
+        - cln_manufacturer_device_name
+
+    Returns
+    -------
+    pd.DataFrame
+        The cleaned joined dataset
+
+    Raises
+    ------
+    ColumnsNotFoundError
+        If the required columns are not present in the dataset
+    """
+
+    logger.info("Cleaning the joined dataset ready for pivoting")
+
+    try:
+        logger.info(
+            "Consolidating region columns into a single column, preferring 'region' over 'nhs_england_region'"
+        )
+        master_joined_df["upd_region"] = master_joined_df["region"].combine_first(
+            master_joined_df["nhs_england_region"]
+        )
+        master_joined_df = master_joined_df.drop(columns=["region", "nhs_england_region"])
+
+        logger.info(
+            "Filling missing 'rag_status' values with 'RED' where 'upd_high_level_device_type' is missing"
+        )
+        master_joined_df.loc[
+            master_joined_df["upd_high_level_device_type"].isna()
+            & master_joined_df["rag_status"].isna(),
+            "rag_status",
+        ] = "RED"
+
+        columns_to_fill = [
+            "rag_status",
+            "upd_high_level_device_type",
+            "cln_manufacturer",
+            "cln_manufacturer_device_name",
+        ]
+        logger.info(f"Filling missing values with 'NULL' in the columns: {columns_to_fill}")
+        master_joined_df[columns_to_fill] = master_joined_df[columns_to_fill].fillna("NULL")
+
+    except KeyError as e:
+        raise ColumnsNotFoundError(
+            dataset_columns=master_joined_df.columns,
+            clean_columns=[
+                "region",
+                "nhs_england_region",
+                *columns_to_fill,
+            ],
+        ) from e
+
+    return master_joined_df
