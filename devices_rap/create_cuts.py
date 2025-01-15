@@ -92,7 +92,7 @@ def create_regional_rag_summary_tables_cuts(
     logger.info("Creating the Regional RAG summary tables")
 
     rag_summary_tables = create_table_cuts(
-        data=pivoted_master_data, cut_columns=["nhs_england_region", "rag_status"]
+        data=pivoted_master_data, cut_columns=["Region", "RAG Status"]
     )
 
     logger.success(

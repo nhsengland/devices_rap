@@ -308,7 +308,7 @@ class TestCreateRAGSummaryTables:
         "kwarg, expected",
         [
             ("data", pd.DataFrame()),
-            ("cut_columns", ["nhs_england_region", "rag_status"]),
+            ("cut_columns", ["Region", "RAG Status"]),
             ("drop_cut_columns", None),
         ],
     )
