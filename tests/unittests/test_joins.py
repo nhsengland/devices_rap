@@ -405,12 +405,17 @@ class TestJoinWrapperFunctions:
         joins.join_exceptions,
     ]
 
-    @pytest.mark.parametrize("func", functions)
-    def test_returns_dataframe(self, mocker, func):
+    @pytest.mark.parametrize(
+        "func, drop_columns",
+        zip(functions, [["org_code"], ["dev_code"], ["dev_code", "provider_code"]]),
+    )
+    def test_returns_dataframe(self, mocker, func, drop_columns):
         """
         Test that the function returns a DataFrame.
         """
-        mocker.patch("devices_rap.joins.join_datasets", return_value=pd.DataFrame())
+        mocker.patch(
+            "devices_rap.joins.join_datasets", return_value=pd.DataFrame(columns=drop_columns)
+        )
         actual = func(pd.DataFrame(), pd.DataFrame())
         assert isinstance(actual, pd.DataFrame)
 
