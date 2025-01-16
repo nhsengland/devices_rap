@@ -72,31 +72,17 @@ def create_table_cuts(
     return dict(cut_data_dict)
 
 
-def create_regional_rag_summary_tables_cuts(
-    pivoted_master_data: pd.DataFrame,
-) -> Dict[str, pd.DataFrame]:
-    """
-    Create a collection of Regional RAG summary tables by cutting the pivoted master data by the
-    NHS England Region, `nhs_england_region`, and RAG Status, `rag_status`.
+def create_regional_table_cuts(
+    category_data: pd.DataFrame, detailed_data: pd.DataFrame
+) -> Dict[str, Dict[str, Dict[str, pd.DataFrame]]]:
+    """ """
+    rag_summary_tables = {}
 
-    Parameters
-    ----------
-    pivoted_master_data : pd.DataFrame
-        The pivoted master data to cut into Regional RAG summary tables
-
-    Returns
-    -------
-    dict
-        A dictionary of DataFrames with the unique values in the cut_columns as the keys
-    """
-    logger.info("Creating the Regional RAG summary tables")
-
-    rag_summary_tables = create_table_cuts(
-        data=pivoted_master_data, cut_columns=["Region", "RAG Status"]
-    )
-
-    logger.success(
-        f"Created the collection of {len(rag_summary_tables.keys())} Regional RAG summary tables"
-    )
-
+    for summary_type, data in {"category": category_data, "detailed": detailed_data}.items():
+        logger.info(f"Creating the Regional RAG {summary_type} summary tables")
+        regional_summary_tables = create_table_cuts(data=data, cut_columns=["Region"])
+        for region, data in tqdm.tqdm(regional_summary_tables.items()):
+            if region not in rag_summary_tables:
+                rag_summary_tables[region] = {}
+            rag_summary_tables[region][summary_type] = data
     return rag_summary_tables

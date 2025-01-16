@@ -250,7 +250,7 @@ class TestCreateRAGSummaryTables:
         """
         Test that the function returns a dictionary
         """
-        result = create_cuts.create_regional_rag_summary_tables_cuts(empty_df)
+        result = create_cuts.create_regional_table_cuts(empty_df)
         assert isinstance(result, dict)
 
     def test_returns_dict_of_dataframes(self, mock_create_table_cuts, empty_df):
@@ -261,14 +261,14 @@ class TestCreateRAGSummaryTables:
             "RAG1": pd.DataFrame(columns=["A", "B"], data=[(1, 1), (2, 2)]),
             "RAG2": pd.DataFrame(columns=["A", "B"], data=[(3, 3), (4, 4)]),
         }
-        result = create_cuts.create_regional_rag_summary_tables_cuts(empty_df)
+        result = create_cuts.create_regional_table_cuts(empty_df)
         assert all(isinstance(value, pd.DataFrame) for value in result.values())
 
     def test_calls_create_table_cuts(self, mock_create_table_cuts, empty_df):
         """
         Test that the function calls the create_table_cuts function
         """
-        create_cuts.create_regional_rag_summary_tables_cuts(empty_df)
+        create_cuts.create_regional_table_cuts(empty_df)
         mock_create_table_cuts.assert_called_once()
 
     def test_returns_correct_dataframes(self, mock_create_table_cuts, empty_df):
@@ -280,7 +280,7 @@ class TestCreateRAGSummaryTables:
             "RAG2": pd.DataFrame(columns=["A", "B"], data=[(3, 3), (4, 4)]),
         }
 
-        result = create_cuts.create_regional_rag_summary_tables_cuts(empty_df)
+        result = create_cuts.create_regional_table_cuts(empty_df)
         expected = {
             "RAG1": pd.DataFrame(columns=["A", "B"], data=[(1, 1), (2, 2)]),
             "RAG2": pd.DataFrame(columns=["A", "B"], data=[(3, 3), (4, 4)]),
@@ -318,7 +318,7 @@ class TestCreateRAGSummaryTables:
         """
         Tests if the function calls create_table_cuts with the correct arguments
         """
-        create_cuts.create_regional_rag_summary_tables_cuts(empty_df)
+        create_cuts.create_regional_table_cuts(empty_df)
 
         actual = mock_create_table_cuts.call_args.kwargs.get(kwarg)
 
@@ -331,7 +331,7 @@ class TestCreateRAGSummaryTables:
         """
         Test that the logger.info is called correctly
         """
-        create_cuts.create_regional_rag_summary_tables_cuts(empty_df)
+        create_cuts.create_regional_table_cuts(empty_df)
         mock_info.assert_called_once_with("Creating the Regional RAG summary tables")
 
     def test_log_success(self, mock_success, empty_df, mock_create_table_cuts):
@@ -342,7 +342,7 @@ class TestCreateRAGSummaryTables:
             "RAG1": pd.DataFrame(columns=["A", "B"], data=[(1, 1), (2, 2)]),
             "RAG2": pd.DataFrame(columns=["A", "B"], data=[(3, 3), (4, 4)]),
         }
-        create_cuts.create_regional_rag_summary_tables_cuts(empty_df)
+        create_cuts.create_regional_table_cuts(empty_df)
         mock_success.assert_called_once_with(
             "Created the collection of 2 Regional RAG summary tables"
         )
