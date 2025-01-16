@@ -146,6 +146,9 @@ def cleanse_master_joined_dataset(master_joined_df: pd.DataFrame) -> pd.DataFram
         )
         master_joined_df = master_joined_df.drop(columns=["region", "nhs_england_region"])
 
+        logger.info("Resolving inconsistent regions")
+        master_joined_df["upd_region"] = master_joined_df["upd_region"].str.replace("&", "and")
+
         logger.info(
             "Filling missing 'rag_status' values with 'RED' where 'upd_high_level_device_type' is missing"
         )
