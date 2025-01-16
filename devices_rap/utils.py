@@ -111,7 +111,7 @@ def order_columns(df: pd.DataFrame, column_order: List[str]) -> pd.DataFrame:
     Returns
     """
     try:
-        ordered_df = df.reindex(columns=column_order, axis=1)
+        ordered_df = df.reindex(columns=column_order)
     except KeyError as e:
         raise ColumnsNotFoundError(
             dataset_columns=df.columns,
