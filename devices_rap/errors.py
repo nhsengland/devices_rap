@@ -148,6 +148,22 @@ class InvalidMonthError(LoggedException):
     """
 
 
+class PathNotFoundError(LoggedException):
+    """
+    Exception raised when the path is not found.
+    """
+
+    def __init__(self, path):
+        self.message = f"Path not found: {path}"
+        super().__init__(self.message)
+
+
+class DataSetNotFoundError(LoggedException):
+    """
+    Exception raised when a dataset is not found in a dataset dictionary.
+    """
+
+
 class LoggedWarning(Warning):
     """
     Custom exception class that logs the warning message using the logger.
