@@ -1,0 +1,120 @@
+# Description: This file contains the configuration for the excel workbook outputs.
+# The configuration is used to define the columns and filters for each worksheet in the excel 
+# workbook.
+
+# The code uses the default datetime_column format of "%b %Y" if passed a null value. This defines
+# a placeholder so we can specify where the datetime columns should be in the column order.
+DEFAULT_DATETIME_COLUMN_FORMAT: &default_datetime_column_format Null
+
+BASE_COLUMNS_START: &base_columns_start
+  upd_region: "Region"
+  der_provider_code: "Provider Code"
+  current_name_in_proper_case: "Provider Name"
+  upd_high_level_device_type: "High Level Device Type"
+  description_in_title_case: "Device Category"
+
+SUMMARY_COLUMNS: &summary_columns
+  <<: *base_columns_start
+  rag_status: "RAG Status"
+  handover_date_zcm: "ZCM Handover Date"
+  handover_date_vcm: "VCM Handover Date"
+  datetime_columns: *default_datetime_column_format
+
+AMBER_SUMMARY_COLUMNS: &amber_summary_columns
+  <<: *summary_columns
+  exception_notes: "Exception Notes"
+  change_from_previous_month: "Change from Previous Month"
+
+DETAILED_COLUMNS: &detailed_columns
+  <<: *base_columns_start
+  cln_manufacturer: "Manufacturer"
+  cln_manufacturer_device_name: "Manufacturer Device Name"
+  rag_status: "RAG Status"
+  datetime_columns: *default_datetime_column_format
+
+DATA_COLUMNS: &data_columns
+  upd_region: "Region"
+  der_provider_code: "Provider Code"
+  current_name_in_proper_case: "Provider Name"
+  upd_high_level_device_type: "High Level Device Type"
+  description_in_title_case: "Device Category"
+  cln_manufacturer: "Manufacturer"
+  cln_manufacturer_device_name: "Manufacturer Device Name"
+  cln_activity_year: "Activity Year"
+  cln_activity_month: "Activity Month"
+  devices_ident: "Devices Ident"
+  cln_device_insertion_date: "Device Insertion Date"
+  cln_purchased_device_contract: "Purchased Device Contract"
+  cln_device_serial_number: "Device Serial Number"
+  cln_size: "Size"
+  cln_quantity: "Quantity"
+  cln_supplier_unit_price: "Supplier Unit Price"
+  cln_commissioner_unit_price: "Commissioner Unit Price"
+  cln_total_cost: "Total Cost"
+  der_commissioner_code: "Commissioner Code"
+  der_nhse_servicecategory: "NHSE Service Category"
+  der_nhse_serviceline: "NHSE Service Line"
+  der_gp_practice_code: "GP Practice Code"
+  der_high_level_device_type: "High Level Device Type"
+  der_subsidiary_device_type: "Subsidiary Device Type"
+  der_purchased_device_contract: "Purchased Device Contract"
+  der_vat_charged: "VAT Charged"
+  cln_attendance_identifier: "Attendance Identifier"
+
+STANDARD_SUB_TOTALS: &standard_sub_totals
+  - upd_region
+  - der_provider_code
+
+STANDARD_SORT_COLUMNS: &standard_sort_columns
+  - upd_region
+  - der_provider_code
+  - upd_high_level_device_type
+  - rag_status
+
+
+WORKSHEET_CONFIG:
+  AMBER Summary:
+    type: "summary"
+    columns: *amber_summary_columns
+    filters:
+      rag_status: ["AMBER"]
+    sub-totals: *standard_sub_totals
+    sort_columns: *standard_sort_columns
+  AMBER Detailed:
+    type: "detailed"
+    columns: *detailed_columns
+    filters:
+      rag_status: ["AMBER"]
+    sub-totals: *standard_sub_totals
+    sort_columns: *standard_sort_columns
+  RED Summary:
+    type: "summary"
+    columns: *summary_columns
+    filters:
+      rag_status: ["RED", "YELLOW"]
+    sub-totals: *standard_sub_totals
+    sort_columns: *standard_sort_columns
+  RED Detailed:
+    type: "detailed"
+    columns: *detailed_columns
+    filters:
+      rag_status: ["RED", "YELLOW"]
+    sub-totals: *standard_sub_totals
+    sort_columns: *standard_sort_columns
+  OTHER Summary:
+    type: "summary"
+    columns: *summary_columns
+    filters:
+      rag_status: ["GREEN VCM", "GREEN ZCM", "BLUE VCM", "BLUE ZCM"]
+    sub-totals: *standard_sub_totals
+    sort_columns: *standard_sort_columns
+  OTHER Detailed:
+    type: "detailed"
+    columns: *detailed_columns
+    filters:
+      rag_status: ["GREEN VCM", "GREEN ZCM", "BLUE VCM", "BLUE ZCM"]
+    sub-totals: *standard_sub_totals
+    sort_columns: *standard_sort_columns
+  Data:
+    type: "data"
+    columns: *data_columns

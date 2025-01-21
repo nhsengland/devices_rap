@@ -2,17 +2,57 @@
 Configuration file for the project.
 """
 
+import warnings
+from datetime import datetime
 from pathlib import Path
 
+import yaml
 from dotenv import load_dotenv
 from loguru import logger
+from tqdm import tqdm
+
+from devices_rap.errors import LoggedWarning, PathNotFoundError
+
+# Define project root directory
+PROJ_ROOT = Path(__file__).resolve().parents[1]
+
+# Configure loguru with tqdm.write https://github.com/Delgan/loguru/issues/135
+logger.remove(0)
+logger.add(lambda msg: tqdm.write(msg, end=""), colorize=True)
+
+# Set LOG_FILE to False to disable logging to file which is useful during development with automatic
+# test discovery turned on in an IDE like VSCode. This is because the config file will be executed
+# each time you save and the log file will be generated each time.
+LOG_FILE = False
+
+if LOG_FILE:
+    log_file_name = datetime.now().strftime("%Y%m%d_%H%M%S.log")
+    log_file_path = PROJ_ROOT / "logs" / log_file_name
+    log_file_path.parent.mkdir(parents=True, exist_ok=True)
+
+    logger.add(log_file_path)
+else:
+    warnings.warn(
+        "Logging to file is disabled. Enable it by setting the `LOG_FILE` variable to True.",
+        LoggedWarning,
+    )
 
 # Load environment variables from .env file if it exists
 load_dotenv()
 
+# Settings
+FIN_YEAR = "2425"
+FIN_MONTH = "6"
+USE_MULTIPROCESSING = True
+logger.debug(
+    f"Running the pipeline with the following settings: "
+    f"FIN_YEAR={FIN_YEAR}, "
+    f"FIN_MONTH={FIN_MONTH}, "
+    f"USE_MULTIPROCESSING={USE_MULTIPROCESSING}"
+)
+
 # Paths
-PROJ_ROOT = Path(__file__).resolve().parents[1]
-logger.info(f"PROJ_ROOT path is: {PROJ_ROOT}")
+logger.debug(f"PROJ_ROOT path is: {PROJ_ROOT}")
 
 DATA_DIR = PROJ_ROOT / "data"
 RAW_DATA_DIR = DATA_DIR / "raw"
@@ -25,30 +65,93 @@ MODELS_DIR = PROJ_ROOT / "models"
 REPORTS_DIR = PROJ_ROOT / "reports"
 FIGURES_DIR = REPORTS_DIR / "figures"
 
+# Financial year and month specific directories
+YEAR_DATA_DIR = RAW_DATA_DIR / FIN_YEAR
+MONTH_DATA_DIR = YEAR_DATA_DIR / FIN_MONTH
 
-MASTER_DEVICES_CSV_NAME = "data_2425_master_m6.csv"
-EXCEPTIONS_CSV_NAME = "exception_report_m6.csv"
+# File names
+AMBER_REPORT_EXCEL_CONFIG_NAME = "amber_report_excel_config.yaml"
+MASTER_DEVICES_CSV_NAME = "master_data.csv"
+EXCEPTIONS_CSV_NAME = "exception_report.csv"
 PROVIDER_CODES_LOOKUP_CSV_NAME = "provider_codes_lookup.csv"
-DEVICE_TAXONOMY_CSV_NAME = "device_taxonomy_2425.csv"
+DEVICE_TAXONOMY_CSV_NAME = "device_taxonomy.csv"
 
+# Config paths
+AMBER_REPORT_EXCEL_CONFIG_PATH = PROJ_ROOT / "amber_report_excel_config.yaml"
+
+# Dataset paths
+MASTER_DEVICES_PATH = MONTH_DATA_DIR / MASTER_DEVICES_CSV_NAME
+EXCEPTIONS_PATH = MONTH_DATA_DIR / EXCEPTIONS_CSV_NAME
+PROVIDER_CODES_LOOKUP_PATH = RAW_DATA_DIR / PROVIDER_CODES_LOOKUP_CSV_NAME
+DEVICE_TAXONOMY_PATH = YEAR_DATA_DIR / DEVICE_TAXONOMY_CSV_NAME
+
+# Dataset configuration
 DATASETS = {
     "master_devices": {
-        "filepath_or_buffer": RAW_DATA_DIR / MASTER_DEVICES_CSV_NAME,
+        "filepath_or_buffer": MASTER_DEVICES_PATH,
         "low_memory": False,
     },
-    "device_taxonomy": {"filepath_or_buffer": EXTERNAL_DATA_DIR / DEVICE_TAXONOMY_CSV_NAME},
-    "exceptions": {"filepath_or_buffer": RAW_DATA_DIR / EXCEPTIONS_CSV_NAME},
+    "device_taxonomy": {"filepath_or_buffer": DEVICE_TAXONOMY_PATH},
+    "exceptions": {"filepath_or_buffer": EXCEPTIONS_PATH},
     "provider_codes_lookup": {
-        "filepath_or_buffer": EXTERNAL_DATA_DIR / PROVIDER_CODES_LOOKUP_CSV_NAME
+        "filepath_or_buffer": PROVIDER_CODES_LOOKUP_PATH,
     },
 }
+logger.debug(f"Using the following datasets configuration: {DATASETS}")
 
-# If tqdm is installed, configure loguru with tqdm.write
-# https://github.com/Delgan/loguru/issues/135
-try:
-    from tqdm import tqdm
+# Create directories if they do not exist - this should only be done for output directories
+paths_to_create = [
+    # INTERIM_DATA_DIR,
+    PROCESSED_DATA_DIR,
+    # MODELS_DIR,
+    # REPORTS_DIR,
+    # FIGURES_DIR,
+]
+for dir_path in tqdm(paths_to_create):
+    logger.debug("Ensuring the following directory is created if not already:{}", dir_path)
+    dir_path.mkdir(parents=True, exist_ok=True)
 
-    logger.remove(0)
-    logger.add(lambda msg: tqdm.write(msg, end=""), colorize=True)
-except ModuleNotFoundError:
-    pass
+# Check paths
+logger.debug("Checking if the required paths exist")
+paths_to_check = [
+    RAW_DATA_DIR,
+    # INTERIM_DATA_DIR,
+    PROCESSED_DATA_DIR,
+    EXTERNAL_DATA_DIR,
+    # MODELS_DIR,
+    # REPORTS_DIR,
+    # FIGURES_DIR,
+    AMBER_REPORT_EXCEL_CONFIG_PATH,
+    YEAR_DATA_DIR,
+    MONTH_DATA_DIR,
+    MASTER_DEVICES_PATH,
+    EXCEPTIONS_PATH,
+    PROVIDER_CODES_LOOKUP_PATH,
+    DEVICE_TAXONOMY_PATH,
+]
+
+path_not_found_errors = []
+for path in tqdm(paths_to_check):
+    logger.debug("Checking if the path exists: {}", path)
+    if not path.exists():
+        path_not_found_errors.append(PathNotFoundError(path))
+
+if path_not_found_errors:
+    raise ExceptionGroup(
+        "Config paths were not found. Please ensure that the paths exists before running the pipeline.",
+        path_not_found_errors,
+    )
+
+# Load Amber Report Excel configuration
+with open(AMBER_REPORT_EXCEL_CONFIG_PATH, "r", encoding="UTF8") as file:
+    logger.debug(
+        "Loading the Amber Report Excel configuration from: {}", AMBER_REPORT_EXCEL_CONFIG_PATH
+    )
+    AMBER_REPORT_EXCEL_CONFIG = yaml.safe_load(file)
+    AMBER_OUTPUT_INSTRUCTIONS = AMBER_REPORT_EXCEL_CONFIG["WORKSHEET_CONFIG"]
+    logger.debug(
+        "Loaded the Amber Report Excel instructions successfully: {}",
+        AMBER_OUTPUT_INSTRUCTIONS,
+    )
+
+logger.success("Configuration loaded successfully.")

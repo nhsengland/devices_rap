@@ -54,15 +54,6 @@ class TestConfig:
         env_vars = dotenv_values()
         assert env_vars is not None
 
-    def test_tqdm_not_installed(self):
-        """Test if ModuleNotFoundError is handled when tqdm is not installed."""
-        with mock.patch.dict("sys.modules", {"tqdm": None}):
-            import devices_rap.config
-
-            importlib.reload(devices_rap.config)
-
-            assert not sys.modules.get("tqdm")
-
 
 if __name__ == "__main__":
     pytest.main([__file__])
