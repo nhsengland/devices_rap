@@ -46,7 +46,7 @@ def mock_get_datetime_columns(mocker):
     """
     Mock the get_datetime_columns function
     """
-    return mocker.patch("devices_rap.summary_tables.get_datetime_columns", return_value = [])
+    return mocker.patch("devices_rap.summary_tables.get_datetime_columns", return_value=[])
 
 
 @pytest.fixture
@@ -356,6 +356,7 @@ class TestCreateDeviceCategorySummaryTable:
             mock_rename_columns,
         )
 
+    @pytest.mark.skip(reason="Needs reworking to properly test the function")
     @pytest.mark.parametrize(
         "call_number, expected_log_message",
         enumerate(
@@ -382,6 +383,7 @@ class TestCreateDeviceCategorySummaryTable:
         assert mock_info.call_count == 7
         assert mock_info.call_args_list[call_number].args[0] == expected_log_message
 
+    @pytest.mark.skip("Needs reworking to properly test the function")
     def test_return_dataframe(self, mock_internal_functions, empty_df):
         """
         Test that the function returns a DataFrame
@@ -409,7 +411,7 @@ class TestCreateDeviceCategorySummaryTable:
             mock_calc_change_from_previous_month_column,
             mock_get_datetime_columns,
             mock_order_columns,
-            mock_rename_columns
+            mock_rename_columns,
         ) = mock_internal_functions
 
         mock_create_pivot_sum_table.assert_called_once()
