@@ -53,7 +53,8 @@ def column_summary_notes(
                 if row[col] == match:
                     group_list.append(note)
             if group_list:
-                group_list_str = f"{group.title()}: {", ".join(group_list)}. "
+                group_list_end = ", ".join(group_list)
+                group_list_str = f"{group.title()}: {group_list_end}. "
             else:
                 group_list_str = ""
             summary += group_list_str
