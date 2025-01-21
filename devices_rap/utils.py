@@ -1,13 +1,17 @@
 """
-
+This module provides utility functions for data manipulation and transformation,
+including functions for normalizing and un-normalizing column names, converting
+financial dates, parsing date strings, sorting lists with dates, and more.
 """
 
+import time
 import warnings
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 import pandas as pd
+from loguru import logger
 
 from devices_rap.errors import (
     ColumnsNotFoundError,
@@ -95,76 +99,6 @@ def un_normalise_column_names(df: pd.DataFrame) -> pd.DataFrame:
     """
     df.columns = df.columns.str.replace("_", " ").str.title()
     return df
-
-
-def order_columns(df: pd.DataFrame, column_order: List[str]) -> pd.DataFrame:
-    """
-    Wrapper function to order the columns in a DataFrame based on a provided list of column names.
-
-    Parameters
-    ----------
-    df : pd.DataFrame
-        Input DataFrame
-    column_order : List[str]
-        List of column names in the desired order
-
-    Returns
-    """
-    try:
-        ordered_df = df.reindex(columns=column_order, axis=1)
-    except KeyError as e:
-        raise ColumnsNotFoundError(
-            dataset_columns=df.columns,
-            column_order=column_order,
-        ) from e
-
-    return ordered_df
-
-
-def rename_columns(
-    df: pd.DataFrame, column_mapping: Dict[str, str], convert_datetimes: str | bool = True
-) -> pd.DataFrame:
-    """
-    Wrapper function to rename columns in a DataFrame based on a provided mapping of old to new
-
-    Parameters
-    ----------
-    df : pd.DataFrame
-        Input DataFrame
-    column_mapping : Dict[str, str]
-        Dictionary mapping old column names to new column names. Keys are old column names and
-        values are new column names
-    convert_datetimes : Optional[str | bool], optional
-        If a string is provided, the function will convert the column headers to datetime objects
-        using the provided format. If True, the function will convert the column headers to datetime
-        objects using the default format "%b %Y". If False, the function will not convert the column
-        headers to datetime objects, by default True.
-
-    Returns
-    -------
-    pd.DataFrame
-        DataFrame with columns renamed as per the provided mapping
-
-    Raises
-    ------
-    ColumnsNotFoundError
-        If any of the old column names are not found in the DataFrame
-    """
-    try:
-        renamed_df = df.rename(columns=column_mapping)
-    except KeyError as e:
-        raise ColumnsNotFoundError(
-            dataset_columns=df.columns,
-            column_mapping=column_mapping.keys(),
-        ) from e
-
-    if convert_datetimes:
-        if isinstance(convert_datetimes, str):
-            renamed_df = convert_datetime_column_headers(renamed_df, convert_datetimes)
-        else:
-            renamed_df = convert_datetime_column_headers(renamed_df)
-
-    return renamed_df
 
 
 def convert_values_to(
@@ -302,29 +236,6 @@ def parse_dates(date_str: str) -> Union[pd.Timestamp, pd.NaT, datetime]:  # type
                 return pd.NaT
 
 
-def convert_datetime_column_headers(
-    data: pd.DataFrame, output_format: str = "%b %Y"
-) -> pd.DataFrame:
-    """
-    Convert datetime column headers to string with a specified format.
-
-    Parameters
-    ----------
-    data : pd.DataFrame
-        The input DataFrame with some datetime column headers
-    output_format : str, optional
-        The output format to convert the datetime column headers to using the pandas strftime,
-        defaults to "%b %Y" which will yield "Jan 2021" from pd.Timestamp("2021-01-01")
-    """
-    if not any(isinstance(col, pd.Timestamp) for col in data.columns):
-        warnings.warn("No datetime columns found in the DataFrame.", DataTypeNotFoundWarning)
-    else:
-        data.columns = data.columns.map(
-            lambda x: x.strftime(output_format) if isinstance(x, pd.Timestamp) else x
-        )
-    return data
-
-
 def sort_string_list_with_dates(list_of_strings: List[str], format: str = "%b %Y") -> List[str]:
     """
     Sort a list of strings that may contain dates in the format specified by the format parameter.
@@ -358,3 +269,147 @@ def sort_string_list_with_dates(list_of_strings: List[str], format: str = "%b %Y
         return (date is not None, date or string)
 
     return sorted(list_of_strings, key=sort_key)
+
+
+def convert_datetime_column_headers(
+    data: pd.DataFrame, output_format: Optional[str] = None
+) -> pd.DataFrame:
+    """
+    Convert datetime column headers to string with a specified format.
+
+    Parameters
+    ----------
+    data : pd.DataFrame
+        The input DataFrame with some datetime column headers
+    output_format : str, optional
+        The output format to convert the datetime column headers to using the pandas strftime,
+        defaults to "%b %Y" which will yield "Jan 2021" from pd.Timestamp("2021-01-01")
+    """
+    output_format = output_format or "%b %Y"
+
+    if not any(isinstance(col, pd.Timestamp) for col in data.columns):
+        warnings.warn("No datetime columns found in the DataFrame.", DataTypeNotFoundWarning)
+    else:
+        data.columns = data.columns.map(
+            lambda x: x.strftime(output_format) if isinstance(x, pd.Timestamp) else x
+        )
+    return data
+
+
+def get_datetime_columns(data: pd.DataFrame) -> List[pd.Timestamp]:
+    """
+    Get the datetime columns from the data.
+
+    Parameters
+    ----------
+    data : pd.DataFrame
+        The data to get the datetime columns from
+
+    Returns
+    -------
+    Sequence[str | pd.Timestamp]
+        The datetime columns in the data
+    """
+    return [col for col in data.columns if isinstance(col, pd.Timestamp)]
+
+
+def calc_change_from_previous_month_column(
+    monthly_summary_table: pd.DataFrame,
+    most_recent_col: Optional[str] = None,
+    second_most_recent_col: Optional[str] = None,
+) -> pd.DataFrame:
+    """
+    Calculate the change from the previous month for the most recent and second most recent columns
+    in the monthly_summary_table. The function takes the last two columns in the table by default,
+    but the most_recent_col and second_most_recent_col can be specified.
+
+    Parameters
+    ----------
+    monthly_summary_table : pd.DataFrame
+        The monthly summary table to calculate the change from the previous month
+    most_recent_col : str, optional
+        The most recent column to calculate the change from, by default None
+    second_most_recent_col : str, optional
+        The second most recent column to calculate the change from, by default None
+
+    Returns
+    -------
+    pd.DataFrame
+        The monthly summary table with the change from the previous month column added
+
+    Raises
+    ------
+    ColumnsNotFoundError
+        If the most_recent_col or second_most_recent_col specified are not found in the dataset
+    """
+    datetime_columns = get_datetime_columns(monthly_summary_table)
+    most_recent_col = most_recent_col or datetime_columns[-1]  # type: ignore
+    second_most_recent_col = second_most_recent_col or datetime_columns[-2]  # type: ignore
+
+    try:
+        monthly_summary_table["change_from_previous_month"] = monthly_summary_table[
+            most_recent_col
+        ].fillna(0) - monthly_summary_table[second_most_recent_col].fillna(0)
+    except KeyError as e:
+        raise ColumnsNotFoundError(
+            dataset_columns=monthly_summary_table.columns,
+            most_recent_col=most_recent_col,
+            second_most_recent_col=second_most_recent_col,
+        ) from e
+
+    return monthly_summary_table
+
+
+def replace_list_element_with_list(
+    main_list: List[Any], insert_list: List[Any], match_value: Any
+) -> List[Any]:
+    """
+    Replace an element in a list with another list. The function will replace the first occurrence
+    of the match_value in the main_list with the insert_list.
+
+    Parameters
+    ----------
+    main_list : List[Any]
+        The main list to replace the element in
+    insert_list : List[Any]
+        The list to insert in place of the match_value
+    match_value : Any
+        The value to match in the main_list
+
+    Returns
+    -------
+    List[Any]
+        The main_list with the match_value replaced with the insert_list
+    """
+    index = main_list.index(match_value)
+    return main_list[:index] + insert_list + main_list[index + 1 :]  # noqa: E203
+
+
+def timeit(func):
+    """
+    A decorator that measures the execution time of a function and logs the duration.
+
+    Parameters
+    ----------
+    func : callable
+        The function to be wrapped and timed.
+
+    Returns
+    -------
+    callable
+        The wrapped function with added timing functionality.
+
+    Notes
+    -----
+    The execution time is logged using the `logger.debug` method.
+    """
+
+    def wrapped(*args, **kwargs):
+        start = time.time()
+        result = func(*args, **kwargs)
+        end = time.time()
+        duration = end - start
+        logger.debug(f"Function '{func.__name__}' executed in {duration:f} s")
+        return result
+
+    return wrapped
