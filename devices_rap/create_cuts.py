@@ -72,31 +72,33 @@ def create_table_cuts(
     return dict(cut_data_dict)
 
 
-def create_regional_rag_summary_tables_cuts(
-    pivoted_master_data: pd.DataFrame,
-) -> Dict[str, pd.DataFrame]:
+def create_regional_table_cuts(
+    tables: Dict[str, pd.DataFrame]
+) -> Dict[str, Dict[str, pd.DataFrame]]:
     """
-    Create a collection of Regional RAG summary tables by cutting the pivoted master data by the
-    NHS England Region, `nhs_england_region`, and RAG Status, `rag_status`.
+    Create a collection of Regional RAG summary tables by cutting the provided tables by the
+    'Region' column.
 
     Parameters
     ----------
-    pivoted_master_data : pd.DataFrame
-        The pivoted master data to cut into Regional RAG summary tables
+    tables : dict
+        A dictionary where keys are table types (e.g., 'summary', 'detailed') and values are
+        the corresponding DataFrames.
 
     Returns
     -------
     dict
-        A dictionary of DataFrames with the unique values in the cut_columns as the keys
+        A dictionary where keys are regions and values are dictionaries of table types and
+        their corresponding filtered DataFrames.
     """
-    logger.info("Creating the Regional RAG summary tables")
+    rag_summary_tables = {}
 
-    rag_summary_tables = create_table_cuts(
-        data=pivoted_master_data, cut_columns=["Region", "RAG Status"]
-    )
-
-    logger.success(
-        f"Created the collection of {len(rag_summary_tables.keys())} Regional RAG summary tables"
-    )
+    for table_type, data in tqdm.tqdm(tables.items(), position=0):
+        logger.info(f"Creating the Regional RAG {table_type} summary tables")
+        regional_summary_tables = create_table_cuts(data=data, cut_columns=["upd_region"])
+        for region, region_data in tqdm.tqdm(regional_summary_tables.items(), position=1):
+            if region not in rag_summary_tables:
+                rag_summary_tables[region] = {}
+            rag_summary_tables[region][table_type] = region_data
 
     return rag_summary_tables
