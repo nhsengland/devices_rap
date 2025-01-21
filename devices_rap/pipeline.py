@@ -7,6 +7,7 @@ from loguru import logger
 
 from devices_rap.clean_data import (
     batch_normalise_column_names,
+    cleanse_exceptions,
     cleanse_master_data,
     cleanse_master_joined_dataset,
 )
@@ -51,7 +52,7 @@ def amber_report_pipeline():
 
     provider_codes_lookup = normalised_datasets["provider_codes_lookup"]["data"]
     device_taxonomy = normalised_datasets["device_taxonomy"]["data"]
-    exceptions = normalised_datasets["exceptions"]["data"]
+    exceptions = normalised_datasets["exceptions"]["data"].pipe(cleanse_exceptions)
 
     master_provider_devices = join_provider_codes_lookup(master_devices, provider_codes_lookup)
 

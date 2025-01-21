@@ -2,6 +2,7 @@
 Tests for devices_rap/create_cuts.py
 """
 
+import sys
 import re
 import pytest
 import pandas as pd
@@ -9,6 +10,8 @@ import pandas as pd
 from devices_rap import create_cuts
 from devices_rap.errors import ColumnsNotFoundError
 
+if sys.version_info < (3, 11):
+    from exceptiongroup import ExceptionGroup  # type: ignore
 
 @pytest.fixture
 def mock_create_table_cuts(mocker):

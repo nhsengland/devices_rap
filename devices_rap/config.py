@@ -2,6 +2,7 @@
 Configuration file for the project.
 """
 
+import sys
 import warnings
 from datetime import datetime
 from pathlib import Path
@@ -12,6 +13,9 @@ from loguru import logger
 from tqdm import tqdm
 
 from devices_rap.errors import LoggedWarning, PathNotFoundError
+
+if sys.version_info < (3, 11):
+    from exceptiongroup import ExceptionGroup  # type: ignore
 
 # Define project root directory
 PROJ_ROOT = Path(__file__).resolve().parents[1]
@@ -50,6 +54,9 @@ logger.debug(
     f"FIN_MONTH={FIN_MONTH}, "
     f"USE_MULTIPROCESSING={USE_MULTIPROCESSING}"
 )
+
+# RAG Prioritisation
+RAG_PRIORITIES = ["AMBER", "RED", "YELLOW"]
 
 # Paths
 logger.debug(f"PROJ_ROOT path is: {PROJ_ROOT}")

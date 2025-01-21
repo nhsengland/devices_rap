@@ -181,3 +181,7 @@ class MergeWarning(LoggedWarning):
 
 class DataTypeNotFoundWarning(LoggedWarning):
     """Custom warning for when a data type is not found in a collection"""
+
+
+class DuplicateExceptionsWarning(LoggedWarning):
+    """Custom warning for when duplicate exceptions are found in a dataset"""

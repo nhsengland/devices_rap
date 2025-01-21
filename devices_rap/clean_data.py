@@ -2,14 +2,17 @@
 Functions for cleaning and cleansing datasets
 """
 
-from typing import Any, Dict
+import warnings
+from typing import Any, Dict, List
 
 import pandas as pd
 import tqdm
 from loguru import logger
 
+from devices_rap.config import RAG_PRIORITIES
 from devices_rap.errors import (
     ColumnsNotFoundError,
+    DuplicateExceptionsWarning,
     NoDataProvidedError,
     NoDatasetsProvidedError,
 )
@@ -54,7 +57,6 @@ def batch_normalise_column_names(datasets: Dict[str, Dict[str, Any]]) -> Dict[st
 def cleanse_master_data(master_df: pd.DataFrame) -> pd.DataFrame:
     """
     Clean the master dataset ready for processing. This function will:
-    - Normalise the column names
     - Convert high level device type values
     - Convert activity year values without century
     - Convert activity date values to datetime
@@ -105,7 +107,8 @@ def cleanse_master_data(master_df: pd.DataFrame) -> pd.DataFrame:
 def cleanse_master_joined_dataset(master_joined_df: pd.DataFrame) -> pd.DataFrame:
     """
     Clean the joined dataset ready for pivoting. This function will:
-    - Consolidate region columns into a single column
+    - Consolidate region columns into a single column, 'upd_region'
+    - Fix inconsistent 'upd_region' values by replacing '&' with 'and'
     - Fill missing 'rag_status' values with 'RED' where 'upd_high_level_device_type' is missing
     - Fill missing values with 'NULL' in the columns:
         - rag_status
@@ -178,3 +181,69 @@ def cleanse_master_joined_dataset(master_joined_df: pd.DataFrame) -> pd.DataFram
         ) from e
 
     return master_joined_df
+
+
+def cleanse_exceptions(
+    exceptions_df: pd.DataFrame, rag_priorities: List[str] = RAG_PRIORITIES
+) -> pd.DataFrame:
+    """
+    Clean the exceptions dataset ready for processing. This function will:
+    - Deduplicate merged providers with conflicting rag_status values
+
+    Parameters
+    ----------
+    exceptions_df : pd.DataFrame
+        The exceptions dataset to be cleaned.
+
+    Returns
+    -------
+    pd.DataFrame
+        The cleaned exceptions dataset
+
+    Raises
+    ------
+    ColumnsNotFoundError
+        If the required columns are not present in the dataset
+    """
+
+    logger.info("Cleaning the exceptions dataset ready for processing")
+
+    pre_duplicated_exceptions = exceptions_df[
+        exceptions_df.duplicated(subset=["provider_code", "dev_code"], keep=False)
+    ]
+    logger.debug(
+        f"Found {pre_duplicated_exceptions.shape[0]} duplicated exceptions before cleaning"
+    )
+
+    unique_rag_statuses = exceptions_df["rag_status"].astype(str).unique()
+
+    additional_rag_statuses = sorted(set(unique_rag_statuses) - set(rag_priorities))
+    RAG_PRIORITIES = rag_priorities + additional_rag_statuses
+
+    if not {"provider_code", "dev_code", "rag_status"}.issubset(exceptions_df.columns):
+        raise ColumnsNotFoundError(
+            dataset_columns=exceptions_df.columns,
+            clean_columns=["provider_code", "dev_code", "rag_status"],
+        )
+
+    exceptions_df["rag_status"] = pd.Categorical(
+        exceptions_df["rag_status"], categories=RAG_PRIORITIES, ordered=True
+    )
+
+    exceptions_df = exceptions_df.sort_values("rag_status").drop_duplicates(
+        subset=["provider_code", "dev_code"], keep="first"
+    )
+
+    exceptions_df["rag_status"] = exceptions_df["rag_status"].astype(str)
+
+    post_duplicated_exceptions = exceptions_df[
+        exceptions_df.duplicated(subset=["provider_code", "dev_code"], keep=False)
+    ]
+
+    if not post_duplicated_exceptions.empty:
+        warnings.warn(
+            f"Found {post_duplicated_exceptions.shape[0]} duplicated exceptions after cleaning",
+            DuplicateExceptionsWarning,
+        )
+
+    return exceptions_df
