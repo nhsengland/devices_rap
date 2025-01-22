@@ -2,13 +2,10 @@
 Tests for the configuration settings in devices_rap/config.py.
 """
 
-import sys
-import importlib
-
+from pathlib import Path
 import pytest
 from dotenv import dotenv_values
 from loguru import logger
-from unittest import mock
 
 from devices_rap.config import (
     DATA_DIR,
@@ -42,7 +39,10 @@ class TestConfig:
     )
     def test_dir_paths(self, dir_path, expected):
         """Test if the directory paths are correctly set."""
-        assert dir_path.__str__().endswith(expected)
+        windows_expected = expected.replace("/", "\\")
+        actual = dir_path.__str__()
+        
+        assert actual.endswith(expected) or actual.endswith(windows_expected)
 
     def test_logger_configuration(self):
         """Test if the logger is correctly configured."""
