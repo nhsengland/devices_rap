@@ -6,6 +6,7 @@ import sys
 import warnings
 from datetime import datetime
 from pathlib import Path
+from typing import List, Optional
 
 import yaml
 from dotenv import load_dotenv
@@ -118,36 +119,53 @@ for dir_path in tqdm(paths_to_create):
     logger.debug("Ensuring the following directory is created if not already:{}", dir_path)
     dir_path.mkdir(parents=True, exist_ok=True)
 
-# Check paths
-logger.debug("Checking if the required paths exist")
-paths_to_check = [
-    RAW_DATA_DIR,
-    # INTERIM_DATA_DIR,
-    PROCESSED_DATA_DIR,
-    EXTERNAL_DATA_DIR,
-    # MODELS_DIR,
-    # REPORTS_DIR,
-    # FIGURES_DIR,
-    AMBER_REPORT_EXCEL_CONFIG_PATH,
-    YEAR_DATA_DIR,
-    MONTH_DATA_DIR,
-    MASTER_DEVICES_PATH,
-    EXCEPTIONS_PATH,
-    PROVIDER_CODES_LOOKUP_PATH,
-    DEVICE_TAXONOMY_PATH,
-]
 
-path_not_found_errors = []
-for path in tqdm(paths_to_check):
-    logger.debug("Checking if the path exists: {}", path)
-    if not path.exists():
-        path_not_found_errors.append(PathNotFoundError(path))
+def check_paths(paths_to_check: Optional[List[Path]] = None):
+    """
+    Checks if the specified paths exist. If any of the paths do not exist, an exception is raised.
 
-if path_not_found_errors:
-    raise ExceptionGroup(
-        "Config paths were not found. Please ensure that the paths exists before running the pipeline.",
-        path_not_found_errors,
-    )
+    Parameters
+    ----------
+    paths_to_check : Optional[List[Path]], optional
+        A list of paths to check. If not provided, a default list of paths will be used.
+
+    Raises
+    ------
+    ExceptionGroup[PathNotFoundError]
+        If any of the paths do not exist, an exception is raised containing all the missing paths.
+    """
+
+    # Check paths
+    logger.debug("Checking if the required paths exist")
+    paths_to_check = paths_to_check or [
+        RAW_DATA_DIR,
+        # INTERIM_DATA_DIR,
+        PROCESSED_DATA_DIR,
+        EXTERNAL_DATA_DIR,
+        # MODELS_DIR,
+        # REPORTS_DIR,
+        # FIGURES_DIR,
+        AMBER_REPORT_EXCEL_CONFIG_PATH,
+        YEAR_DATA_DIR,
+        MONTH_DATA_DIR,
+        MASTER_DEVICES_PATH,
+        EXCEPTIONS_PATH,
+        PROVIDER_CODES_LOOKUP_PATH,
+        DEVICE_TAXONOMY_PATH,
+    ]
+
+    path_not_found_errors = []
+    for path in tqdm(paths_to_check):
+        logger.debug("Checking if the path exists: {}", path)
+        if not path.exists():
+            path_not_found_errors.append(PathNotFoundError(path))
+
+    if path_not_found_errors:
+        raise ExceptionGroup(
+            "Config paths were not found. Please ensure that the paths exists before running the pipeline.",
+            path_not_found_errors,
+        )
+
 
 # Load Amber Report Excel configuration
 with open(AMBER_REPORT_EXCEL_CONFIG_PATH, "r", encoding="UTF8") as file:

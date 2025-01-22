@@ -11,7 +11,7 @@ from devices_rap.clean_data import (
     cleanse_master_data,
     cleanse_master_joined_dataset,
 )
-from devices_rap.config import AMBER_OUTPUT_INSTRUCTIONS, DATASETS
+from devices_rap.config import AMBER_OUTPUT_INSTRUCTIONS, DATASETS, check_paths
 from devices_rap.create_cuts import create_regional_table_cuts
 from devices_rap.data_in.load_csv import load_devices_datasets
 from devices_rap.data_out import create_excel_reports
@@ -35,6 +35,7 @@ def amber_report_pipeline():
     Pipeline to create the monthly Amber Device Reports for all Regions.
 
     The pipeline will:
+    - Check the required paths exist
     - Load the raw data
     - Cleanse the data by normalising column names and converting values in the master dataset
     - Join the datasets together to create the master devices dataset
@@ -42,6 +43,8 @@ def amber_report_pipeline():
     - Create the regional tables for each region from the summary, detailed and master datasets
     - Create the Excel reports for each region based on the regional tables and output instructions
     """
+    check_paths()
+
     logger.info("Starting the Devices Pipeline")
 
     datasets = load_devices_datasets(DATASETS)
