@@ -208,7 +208,9 @@ def convert_fin_dates_vectorised(
     return pd.to_datetime(year + "-" + month.astype(str) + "-01")
 
 
-def parse_dates(date_str: str) -> Union[pd.Timestamp, pd._typing.DatetimeNaTType, datetime]:  # type: ignore
+def parse_dates(
+    date_str: str,
+) -> Union[pd.Timestamp, pd._typing.DatetimeNaTType, datetime]:  # type: ignore
     """
     Parses a date string into a pandas Timestamp, NaT, or datetime object.
     The function attempts to parse the input date string using the following formats:
@@ -227,13 +229,17 @@ def parse_dates(date_str: str) -> Union[pd.Timestamp, pd._typing.DatetimeNaTType
     try:
         return pd.to_datetime(date_str, format="%d/%m/%Y %H:%M")
     except ValueError:
-        try:
-            return pd.to_datetime(date_str, format="%d/%m/%Y")
-        except ValueError:
-            try:
-                return datetime(1899, 12, 30) + timedelta(days=float(date_str))
-            except ValueError:
-                return pd.NaT
+        pass
+
+    try:
+        return pd.to_datetime(date_str, format="%d/%m/%Y")
+    except ValueError:
+        pass
+
+    try:
+        return datetime(1899, 12, 30) + timedelta(days=float(date_str))
+    except ValueError:
+        return pd.NaT
 
 
 def sort_string_list_with_dates(list_of_strings: List[str], format: str = "%b %Y") -> List[str]:
