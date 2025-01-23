@@ -27,7 +27,6 @@ class TestBatchNormaliseColumnNames:
         """
         Test that the function raises an error when the data key is missing
         """
-        mocker.patch("devices_rap.clean_data.normalise_column_names")
         with pytest.raises(clean_data.NoDataProvidedError):
             clean_data.batch_normalise_column_names({"test": {}})
 
@@ -35,7 +34,6 @@ class TestBatchNormaliseColumnNames:
         """
         Test that the function raises an error when the data is not a DataFrame
         """
-        mocker.patch("devices_rap.clean_data.normalise_column_names")
         with pytest.raises(clean_data.NoDataProvidedError):
             clean_data.batch_normalise_column_names({"test": {"data": None}})
 
