@@ -2,7 +2,6 @@
 Tests for the configuration settings in devices_rap/config.py.
 """
 
-from pathlib import Path
 import pytest
 from dotenv import dotenv_values
 from loguru import logger
@@ -41,7 +40,7 @@ class TestConfig:
         """Test if the directory paths are correctly set."""
         windows_expected = expected.replace("/", "\\")
         actual = dir_path.__str__()
-        
+
         assert actual.endswith(expected) or actual.endswith(windows_expected)
 
     def test_logger_configuration(self):
