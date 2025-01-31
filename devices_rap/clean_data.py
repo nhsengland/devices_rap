@@ -3,7 +3,7 @@ Functions for cleaning and cleansing datasets
 """
 
 import warnings
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Literal, Optional
 
 import pandas as pd
 import tqdm
@@ -12,7 +12,8 @@ from loguru import logger
 from devices_rap.config import RAG_PRIORITIES
 from devices_rap.errors import (
     ColumnsNotFoundError,
-    DuplicateExceptionsWarning,
+    DuplicateDataError,
+    DuplicateDataWarning,
     NoDataProvidedError,
     NoDatasetsProvidedError,
 )
@@ -20,6 +21,7 @@ from devices_rap.utils import (
     convert_fin_dates_vectorised,
     convert_values_to,
     normalise_column_names,
+    sort_by_priority,
 )
 
 
@@ -140,6 +142,14 @@ def cleanse_master_joined_dataset(master_joined_df: pd.DataFrame) -> pd.DataFram
 
     logger.info("Cleaning the joined dataset ready for pivoting")
 
+    columns_to_fill = [
+        "rag_status",
+        "upd_high_level_device_type",
+        "cln_manufacturer",
+        "cln_manufacturer_device_name",
+        # "upd_region",
+    ]
+
     try:
         logger.info(
             "Consolidating region columns into a single column, preferring 'region' over 'nhs_england_region'"
@@ -161,12 +171,6 @@ def cleanse_master_joined_dataset(master_joined_df: pd.DataFrame) -> pd.DataFram
             "rag_status",
         ] = "RED"
 
-        columns_to_fill = [
-            "rag_status",
-            "upd_high_level_device_type",
-            "cln_manufacturer",
-            "cln_manufacturer_device_name",
-        ]
         logger.info(f"Filling missing values with 'NULL' in the columns: {columns_to_fill}")
         master_joined_df[columns_to_fill] = master_joined_df[columns_to_fill].fillna("NULL")
 
@@ -184,16 +188,30 @@ def cleanse_master_joined_dataset(master_joined_df: pd.DataFrame) -> pd.DataFram
 
 
 def cleanse_exceptions(
-    exceptions_df: pd.DataFrame, rag_priorities: List[str] = RAG_PRIORITIES
+    exceptions_df: pd.DataFrame, rag_priorities: Optional[List[str]] = None
 ) -> pd.DataFrame:
     """
-    Clean the exceptions dataset ready for processing. This function will:
-    - Deduplicate merged providers with conflicting rag_status values
+    Clean the exceptions dataset ready for processing. This function will remove duplicate
+    exceptions by keeping the first occurrence of each provider and device code combination
+    with the highest RAG status as defined the rag_priorities variable.
+
+    The rag_priorities variable is a list of RAG status priorities, with the default being:
+    - "AMBER"
+    - "RED"
+    - "YELLOW"
+
+    If the dataset contains additional RAG statuses, they will be added to the end of the list in
+    alphabetical order.
 
     Parameters
     ----------
     exceptions_df : pd.DataFrame
-        The exceptions dataset to be cleaned.
+        The exceptions dataset to be cleaned. Must contain the following columns:
+        - provider_code
+        - dev_code
+        - rag_status
+    rag_priorities : List[str], optional
+        The list of RAG status priorities, by default RAG_PRIORITIES
 
     Returns
     -------
@@ -205,45 +223,119 @@ def cleanse_exceptions(
     ColumnsNotFoundError
         If the required columns are not present in the dataset
     """
+    rag_priorities = rag_priorities or RAG_PRIORITIES
 
     logger.info("Cleaning the exceptions dataset ready for processing")
 
-    pre_duplicated_exceptions = exceptions_df[
-        exceptions_df.duplicated(subset=["provider_code", "dev_code"], keep=False)
-    ]
-    logger.debug(
-        f"Found {pre_duplicated_exceptions.shape[0]} duplicated exceptions before cleaning"
+    exceptions_df = drop_duplicates_on_priority(
+        data=exceptions_df,
+        subset=["provider_code", "dev_code"],
+        priority_column="rag_status",
+        priority_order=rag_priorities,
     )
-
-    unique_rag_statuses = exceptions_df["rag_status"].astype(str).unique()
-
-    additional_rag_statuses = sorted(set(unique_rag_statuses) - set(rag_priorities))
-    RAG_PRIORITIES = rag_priorities + additional_rag_statuses
-
-    if not {"provider_code", "dev_code", "rag_status"}.issubset(exceptions_df.columns):
-        raise ColumnsNotFoundError(
-            dataset_columns=exceptions_df.columns,
-            clean_columns=["provider_code", "dev_code", "rag_status"],
-        )
-
-    exceptions_df["rag_status"] = pd.Categorical(
-        exceptions_df["rag_status"], categories=RAG_PRIORITIES, ordered=True
-    )
-
-    exceptions_df = exceptions_df.sort_values("rag_status").drop_duplicates(
-        subset=["provider_code", "dev_code"], keep="first"
-    )
-
-    exceptions_df["rag_status"] = exceptions_df["rag_status"].astype(str)
-
-    post_duplicated_exceptions = exceptions_df[
-        exceptions_df.duplicated(subset=["provider_code", "dev_code"], keep=False)
-    ]
-
-    if not post_duplicated_exceptions.empty:
-        warnings.warn(
-            f"Found {post_duplicated_exceptions.shape[0]} duplicated exceptions after cleaning",
-            DuplicateExceptionsWarning,
-        )
 
     return exceptions_df
+
+
+def drop_duplicates_on_priority(
+    data: pd.DataFrame, subset: str | List[str], priority_column: str, priority_order: List[str]
+) -> pd.DataFrame:
+    """
+    This function will remove duplicate rows from the dataset by keeping the first occurrence of
+    each unique value in the subset column(s) with the highest priority value in the
+    priority_columns as defined in the priority_order variable.
+
+    If the dataset contains additional values in the priority_column not already specified in the
+    priority_order variable, they will be added to the end of the list in alphabetical order.
+
+    Parameters
+    ----------
+    data : pd.DataFrame
+        The dataset with duplicates to be removed. Must contain the columns specified in the
+        subset and priority_column variables.
+    subset : str | List[str]
+        The column(s) to use to identify duplicates
+    priority_column : str
+        The column to use to determine the priority of the duplicates
+    priority_order : List[str]
+        The list of priority values to use when determining which duplicates to keep
+
+    Returns
+    -------
+    pd.DataFrame
+        The dataset with duplicates removed
+
+    Raises
+    ------
+    ColumnsNotFoundError
+        If the required columns are not present in the dataset
+    """
+    if isinstance(subset, str):
+        subset = [subset]
+
+    check_duplicates(data=data, duplicate_severity="INFO", subset=subset)
+
+    if not {*subset, priority_column}.issubset(data.columns):
+        raise ColumnsNotFoundError(
+            dataset_columns=data.columns,
+            drop_duplicate_columns=[*subset, priority_column],
+        )
+
+    unique_values = data[priority_column].astype(str).unique()
+
+    additional_values = sorted(set(unique_values) - set(priority_order))
+    complete_priorities = priority_order + additional_values
+
+    data = (
+        data.pipe(sort_by_priority, priority_column, complete_priorities)
+        .drop_duplicates(subset=subset, keep="first")
+        .reset_index(drop=True)
+    )
+
+    check_duplicates(data=data, duplicate_severity="ERROR", subset=subset)
+
+    return data
+
+
+def check_duplicates(
+    data: pd.DataFrame,
+    duplicate_severity: Literal["ERROR"] | Literal["WARNING"] | Literal["INFO"] = "INFO",
+    subset: Optional[str | List[str]] = None,
+) -> None:
+    """
+    Function checks for duplicates in the dataset and raises an error, warning or logs an info
+    with information about the number of duplicates found. The level of the message can be
+    controlled by the duplicate_severity variable.
+
+    Parameters
+    ----------
+    data : pd.DataFrame
+        The dataset to check for duplicates
+    duplicate_severity : Literal["ERROR"] | Literal["WARNING"] | Literal["INFO"], optional
+        The severity of the message to raise, by default "INFO"
+    subset : str | List[str], optional
+        The column(s) to use to identify duplicates, by default None
+
+    Raises
+    ------
+    DuplicateDataError
+        If the severity is set to "ERROR" and duplicates are found
+    DuplicateDataWarning
+        If the severity is set to "WARNING" and duplicates are found
+
+    Side Effects
+    ------------
+    Logs a message with the number of duplicates found if severity is set to "INFO"
+    """
+    duplicate_data = data[data.duplicated(subset=subset, keep=False)]
+    duplicate_amount = duplicate_data.shape[0]
+
+    if duplicate_amount > 0:
+        message = f"Found {duplicate_amount} duplicated rows in the dataset"
+        message += f" with subset columns: {subset}" if subset else ""
+        if duplicate_severity == "ERROR":
+            raise DuplicateDataError(message=message)
+        elif duplicate_severity == "WARNING":
+            warnings.warn(message, DuplicateDataWarning)
+        else:
+            logger.info(message)

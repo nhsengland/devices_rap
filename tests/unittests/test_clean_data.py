@@ -82,7 +82,9 @@ class TestCleanseMasterData:
         Fixture to mock the functions called by cleanse_master_data
         """
         mock_convert_fin_dates = mocker.patch(
-            "devices_rap.clean_data.convert_fin_dates_vectorised", return_value="foo", autospec=True
+            "devices_rap.clean_data.convert_fin_dates_vectorised",
+            return_value="foo",
+            autospec=True,
         )
         mock_convert_values_to = mocker.patch(
             "devices_rap.clean_data.convert_values_to", return_value="bar", autospec=True
@@ -135,6 +137,585 @@ class TestCleanseMasterData:
         mock_logger.info.assert_any_call("Converting activity year values without century")
         mock_logger.info.assert_any_call("Converting activity date values to datetime")
 
+    def test_columns_not_found_error(self, mock_error):
+        """
+        Test that the function raises a ColumnsNotFoundError when the required columns are not present
+        """
+        with pytest.raises(clean_data.ColumnsNotFoundError):
+            clean_data.cleanse_master_data(pd.DataFrame())
 
-if __name__ == "__main__":
-    pytest.main([__file__])
+        mock_error.assert_called_once_with(
+            "Columns were not found in the dataset. MISSING COLUMNS: CLEAN_COLUMNS: "
+            "['cln_activity_year', 'der_high_level_device_type']"
+        )
+
+
+class TestCleanseMasterJoinedDataset:
+    """
+    Tests for clean_data.cleanse_master_joined_dataset
+    """
+
+    joined_df_columns = [
+        "region",
+        "nhs_england_region",
+        "rag_status",
+        "upd_high_level_device_type",
+        "cln_manufacturer",
+        "cln_manufacturer_device_name",
+    ]
+
+    @pytest.fixture
+    def empty_joined_df(self):
+        return pd.DataFrame(columns=self.joined_df_columns)
+
+    def test_dataframe_returned(self, empty_joined_df):
+        """
+        Test that the function returns a DataFrame
+        """
+        actual = clean_data.cleanse_master_joined_dataset(empty_joined_df)
+        expected_dtype = pd.DataFrame
+        assert isinstance(actual, expected_dtype)
+
+    @pytest.mark.parametrize(
+        "input_data, expected_upd_region",
+        [
+            (("test1", "test2", "test", "test", "test", "test"), "test1"),
+            ((None, "test2", "test", "test", "test", "test"), "test2"),
+            (("test1", None, "test", "test", "test", "test"), "test1"),
+            ((None, None, "test", "test", "test", "test"), None),
+        ],
+    )
+    def test_consolidates_region_columns(self, input_data, expected_upd_region):
+        """
+        Test that the function consolidates region columns into a single column
+        """
+        input_df = pd.DataFrame(columns=self.joined_df_columns, data=[input_data])
+        actual = clean_data.cleanse_master_joined_dataset(input_df)
+        assert actual["upd_region"].values[0] == expected_upd_region
+
+    def test_drops_unwanted_columns(self, empty_joined_df):
+        """
+        Test that the function drops unwanted columns
+        """
+        actual = clean_data.cleanse_master_joined_dataset(empty_joined_df)
+        expected_columns = [
+            "rag_status",
+            "upd_high_level_device_type",
+            "cln_manufacturer",
+            "cln_manufacturer_device_name",
+            "upd_region",
+        ]
+        assert list(actual.columns) == expected_columns
+
+    @pytest.mark.parametrize(
+        "input_data, expected_upd_region",
+        [
+            (("test1", "test2", "test", "test", "test", "test"), "test1"),
+            (("&", None, "test", "test", "test", "test"), "and"),
+            (("test1", "&", "test", "test", "test", "test"), "test1"),
+            (("test&", "test2", "test", "test", "test", "test"), "testand"),
+            (("test&1", "test2", "test", "test", "test", "test"), "testand1"),
+        ],
+    )
+    def test_fixes_inconsistent_regions(self, input_data, expected_upd_region):
+        """
+        Test that the function fixes inconsistent region values
+        """
+        input_df = pd.DataFrame(columns=self.joined_df_columns, data=[input_data])
+        actual = clean_data.cleanse_master_joined_dataset(input_df)
+        assert actual["upd_region"].values[0] == expected_upd_region
+
+    @pytest.mark.parametrize(
+        "input_data, expected_rag_status",
+        [
+            (("test", "test", "test", None, "test", "test"), "test"),
+            (("test", "test", None, "test", "test", "test"), "NULL"),
+            (("test", "test", None, None, "test", "test"), "RED"),
+            (("test", "test", "test", "test", "test", "test"), "test"),
+        ],
+    )
+    def test_fills_missing_rag_status(self, input_data, expected_rag_status):
+        """
+        Test that the function fills missing rag_status values
+        """
+        input_df = pd.DataFrame(columns=self.joined_df_columns, data=[input_data])
+        actual = clean_data.cleanse_master_joined_dataset(input_df)
+        assert actual["rag_status"].values[0] == expected_rag_status
+
+    @pytest.mark.parametrize(
+        "input_data, expected_data",
+        [
+            (
+                ("test", "test", "test", "test", "test", "test"),
+                ("test", "test", "test", "test", "test"),
+            ),
+            (
+                ("test", "test", "test", "test", "test", None),
+                ("test", "test", "test", "NULL", "test"),
+            ),
+            (
+                ("test", "test", "test", "test", None, None),
+                ("test", "test", "NULL", "NULL", "test"),
+            ),
+            (("test", "test", "test", None, None, None), ("test", "NULL", "NULL", "NULL", "test")),
+            (("test", "test", None, "test", None, None), ("NULL", "test", "NULL", "NULL", "test")),
+            ((None, None, None, "test", None, None), ("NULL", "test", "NULL", "NULL", None)),
+        ],
+    )
+    def test_fills_missing_values(self, input_data, expected_data):
+        """
+        Test that the function fills missing values
+        """
+        input_df = pd.DataFrame(columns=self.joined_df_columns, data=[input_data])
+        actual = clean_data.cleanse_master_joined_dataset(input_df)
+        expected_columns = [
+            "rag_status",
+            "upd_high_level_device_type",
+            "cln_manufacturer",
+            "cln_manufacturer_device_name",
+            "upd_region",
+        ]
+        expected = pd.DataFrame(columns=expected_columns, data=[expected_data])
+
+        pd.testing.assert_frame_equal(actual, expected)
+
+    def test_columns_not_found_error(self, mock_error):
+        """
+        Test that the function raises a ColumnsNotFoundError when the required columns are not present
+        """
+        with pytest.raises(clean_data.ColumnsNotFoundError):
+            clean_data.cleanse_master_joined_dataset(pd.DataFrame())
+
+        mock_error.assert_called_once_with(
+            "Columns were not found in the dataset. MISSING COLUMNS: CLEAN_COLUMNS: "
+            "['cln_manufacturer', 'cln_manufacturer_device_name', 'nhs_england_region', "
+            "'rag_status', 'region', 'upd_high_level_device_type']"
+        )
+
+
+class TestDropDuplicatesOnPriority:
+    """
+    Tests for clean_data.drop_duplicates_on_priority
+    """
+
+    exceptions_columns = ["provider_code", "dev_code", "rag_status"]
+
+    @pytest.fixture
+    def empty_exceptions_df(self):
+        """
+        Fixture to provide an empty exceptions DataFrame with the required columns
+        """
+        return pd.DataFrame(
+            columns=self.exceptions_columns,
+        )
+
+    @pytest.fixture
+    def default_kwargs(self):
+        """
+        Fixture to provide the default arguments for the drop_duplicates_on_priority function
+        """
+        return {
+            "subset": ["provider_code", "dev_code"],
+            "priority_column": "rag_status",
+            "priority_order": ["AMBER", "RED", "YELLOW"],
+        }
+
+    @pytest.fixture
+    def mock_check_duplicates(self, mocker):
+        """
+        Mock the check_duplicates function
+        """
+        return mocker.patch("devices_rap.clean_data.check_duplicates")
+
+    def test_dataframe_returned(self, empty_exceptions_df, default_kwargs, mock_check_duplicates):
+        """
+        Test that the function returns a DataFrame
+        """
+        actual = clean_data.drop_duplicates_on_priority(empty_exceptions_df, **default_kwargs)
+        expected_dtype = pd.DataFrame
+        assert isinstance(actual, expected_dtype)
+
+    @pytest.mark.parametrize(
+        "input_data, expected_data",
+        [
+            (
+                [
+                    ("test1", "foo", "AMBER"),
+                    ("test1", "foo", "RED"),
+                ],
+                [
+                    ("test1", "foo", "AMBER"),
+                ],
+            ),
+            (
+                [
+                    ("test2", "foo", "RED"),
+                    ("test2", "foo", "YELLOW"),
+                ],
+                [
+                    ("test2", "foo", "RED"),
+                ],
+            ),
+            (
+                [
+                    ("test3", "foo", "A"),
+                    ("test3", "foo", "B"),
+                ],
+                [
+                    ("test3", "foo", "A"),
+                ],
+            ),
+            (
+                [
+                    ("test4", "foo", "D"),
+                    ("test4", "foo", "C"),
+                ],
+                [
+                    ("test4", "foo", "C"),
+                ],
+            ),
+            (
+                [
+                    ("test5", "foo", "E"),
+                    ("test5", "bar", "E"),
+                ],
+                [
+                    ("test5", "foo", "E"),
+                    ("test5", "bar", "E"),
+                ],
+            ),
+            (
+                [
+                    ("test6", "foo", "F"),
+                    ("test6", "foo", "F"),
+                ],
+                [
+                    ("test6", "foo", "F"),
+                ],
+            ),
+        ],
+    )
+    def test_removes_duplicates(
+        self, default_kwargs, mock_check_duplicates, input_data, expected_data
+    ):
+        """
+        Test that the function removes duplicate exceptions with default rag_priorities
+        """
+        input_df = pd.DataFrame(columns=self.exceptions_columns, data=input_data)
+        actual = clean_data.drop_duplicates_on_priority(input_df, **default_kwargs)
+        expected = pd.DataFrame(columns=self.exceptions_columns, data=expected_data)
+        pd.testing.assert_frame_equal(actual, expected)
+
+    @pytest.mark.parametrize(
+        "kwarg_name, kwarg_value, expected_data",
+        (
+            [
+                ("subset", "test_column", [("test1", "foo", "AMBER", "bar")]),
+                (
+                    "subset",
+                    ["provider_code", "dev_code", "test_column"],
+                    [("test1", "foo", "AMBER", "bar"), ("test2", "foo", "RED", "bar")],
+                ),
+                (
+                    "priority_column",
+                    "test_column",
+                    [("test1", "foo", "AMBER", "bar"), ("test2", "foo", "YELLOW", "bar")],
+                ),
+                (
+                    "priority_order",
+                    ["YELLOW", "RED", "AMBER"],
+                    [
+                        ("test2", "foo", "YELLOW", "bar"),
+                        ("test1", "foo", "RED", "bar"),
+                    ],
+                ),
+            ]
+        ),
+    )
+    def test_removes_duplicates_with_different_kwargs(
+        self, default_kwargs, mock_check_duplicates, kwarg_name, kwarg_value, expected_data
+    ):
+        """
+        Test that the function removes duplicate exceptions with different kwargs
+        """
+        input_kwargs = default_kwargs.copy()
+        input_kwargs[kwarg_name] = kwarg_value
+
+        columns = self.exceptions_columns + ["test_column"]
+
+        input_data = [
+            ("test1", "foo", "AMBER", "bar"),
+            ("test1", "foo", "RED", "bar"),
+            ("test2", "foo", "YELLOW", "bar"),
+            ("test2", "foo", "RED", "bar"),
+        ]
+        input_df = pd.DataFrame(columns=columns, data=input_data)
+
+        actual = clean_data.drop_duplicates_on_priority(input_df, **input_kwargs)
+        expected = pd.DataFrame(columns=columns, data=expected_data)
+
+        pd.testing.assert_frame_equal(actual, expected)
+
+    def test_columns_not_found_error(self, mock_error, default_kwargs):
+        """
+        Test that the function raises a ColumnsNotFoundError when the required columns are not present
+        """
+        with pytest.raises(clean_data.ColumnsNotFoundError):
+            clean_data.drop_duplicates_on_priority(pd.DataFrame(), **default_kwargs)
+
+        mock_error.assert_called_once_with(
+            "Columns were not found in the dataset. MISSING COLUMNS: DROP_DUPLICATE_COLUMNS: "
+            "['dev_code', 'provider_code', 'rag_status']"
+        )
+
+    def test_calls_check_duplicates_twice(self, mock_check_duplicates, default_kwargs):
+        """
+        Test that the function calls the check_duplicates function
+        """
+        input_data = [
+            ("test1", "test1", "AMBER"),
+            ("test1", "test1", "RED"),
+            ("test2", "test1", "RED"),
+            ("test2", "test1", "YELLOW"),
+        ]
+        input_df = pd.DataFrame(columns=self.exceptions_columns, data=input_data)
+        clean_data.drop_duplicates_on_priority(input_df, **default_kwargs)
+
+        assert mock_check_duplicates.call_count == 2
+
+    @pytest.mark.parametrize("kwarg_to_check", ["data", "subset", "duplicate_severity"])
+    @pytest.mark.parametrize(
+        "call_count, kwargs",
+        [
+            (
+                0,
+                {
+                    "data": pd.DataFrame(
+                        columns=exceptions_columns,
+                        data=[
+                            ("test1", "test1", "AMBER"),
+                            ("test1", "test1", "RED"),
+                            ("test2", "test1", "RED"),
+                            ("test2", "test1", "YELLOW"),
+                        ],
+                    ),
+                    "subset": ["provider_code", "dev_code"],
+                    "duplicate_severity": "INFO",
+                },
+            ),
+            (
+                1,
+                {
+                    "data": pd.DataFrame(
+                        columns=exceptions_columns,
+                        data=[
+                            ("test1", "test1", "AMBER"),
+                            ("test2", "test1", "RED"),
+                        ],
+                    ),
+                    "subset": ["provider_code", "dev_code"],
+                    "duplicate_severity": "ERROR",
+                },
+            ),
+        ],
+    )
+    def test_check_calls_check_duplicates_kwargs(
+        self, mock_check_duplicates, default_kwargs, kwarg_to_check, call_count, kwargs
+    ):
+        """
+        Check that the first time that:
+        - The data is input_data
+        - The subset is ["provider_code", "dev_code"]
+        - The duplicate_severity is INFO
+
+        The second time that:
+        - The data is input_data
+        - The subset is ["provider_code", "dev_code"]
+        - The duplicate_severity is ERROR
+        """
+        input_data = [
+            ("test1", "test1", "AMBER"),
+            ("test1", "test1", "RED"),
+            ("test2", "test1", "RED"),
+            ("test2", "test1", "YELLOW"),
+        ]
+        input_df = pd.DataFrame(columns=self.exceptions_columns, data=input_data)
+        clean_data.drop_duplicates_on_priority(input_df, **default_kwargs)
+
+        actual_kwargs = mock_check_duplicates.call_args_list[call_count].kwargs
+
+        actual_kwarg = actual_kwargs[kwarg_to_check]
+        expected_kwargs = kwargs[kwarg_to_check]
+
+        if isinstance(expected_kwargs, pd.DataFrame):
+            pd.testing.assert_frame_equal(actual_kwarg, expected_kwargs)
+        else:
+            assert actual_kwarg == expected_kwargs
+
+
+class TestCleanseExceptions:
+    """
+    Tests for clean_data.cleanse_exceptions function
+    """
+
+    exceptions_columns = ["provider_code", "dev_code", "rag_status"]
+
+    @pytest.fixture
+    def empty_exceptions_df(self):
+        """
+        Fixture to provide an empty exceptions DataFrame with the required columns
+        """
+        return pd.DataFrame(
+            columns=self.exceptions_columns,
+        )
+
+    @pytest.fixture
+    def mock_drop_duplicates_on_priority(self, mocker, empty_exceptions_df):
+        """
+        Mock the drop_duplicates_on_priority function
+        """
+        return mocker.patch(
+            "devices_rap.clean_data.drop_duplicates_on_priority", return_value=empty_exceptions_df
+        )
+
+    def test_dataframe_returned(self, empty_exceptions_df, mock_drop_duplicates_on_priority):
+        """
+        Test that the function returns a DataFrame
+        """
+        actual = clean_data.cleanse_exceptions(empty_exceptions_df)
+        expected_dtype = pd.DataFrame
+        assert isinstance(actual, expected_dtype)
+
+    def test_calls_drop_duplicates_on_priority(
+        self, empty_exceptions_df, mock_drop_duplicates_on_priority
+    ):
+        """
+        Test that the function calls the drop_duplicates_on_priority function
+        """
+        clean_data.cleanse_exceptions(empty_exceptions_df)
+        assert mock_drop_duplicates_on_priority.call_count == 1
+
+    @pytest.mark.parametrize(
+        "kwarg_name, expected_kwarg_value",
+        (
+            ("data", pd.DataFrame(columns=exceptions_columns, data=[["test1", "test1", "AMBER"]])),
+            ("subset", ["provider_code", "dev_code"]),
+            ("priority_column", "rag_status"),
+            ("priority_order", ["AMBER", "RED", "YELLOW"]),
+        ),
+    )
+    def test_calls_drop_duplicates_on_priority_kwargs(
+        self, mock_drop_duplicates_on_priority, kwarg_name, expected_kwarg_value
+    ):
+        """
+        Test that the function calls the drop_duplicates_on_priority function with the correct kwargs
+        """
+        clean_data.cleanse_exceptions(
+            pd.DataFrame(columns=self.exceptions_columns, data=[["test1", "test1", "AMBER"]])
+        )
+        actual_kwargs = mock_drop_duplicates_on_priority.call_args.kwargs
+
+        if isinstance(expected_kwarg_value, pd.DataFrame):
+            pd.testing.assert_frame_equal(actual_kwargs[kwarg_name], expected_kwarg_value)
+        else:
+            assert actual_kwargs[kwarg_name] == expected_kwarg_value
+
+
+class TestCheckDuplicates:
+    """
+    Tests for clean_data.check_duplicates function
+    """
+
+    @pytest.fixture
+    def duplicate_df(self):
+        """
+        Returns a dataset with duplicate values
+        """
+        return pd.DataFrame(
+            columns=["col1", "col2", "col3"],
+            data=[
+                ("test1", "test2", "test3"),
+                ("test1", "test2", "test3"),
+            ],
+        )
+
+    @pytest.fixture
+    def no_duplicates_df(self):
+        """
+        Returns a dataset with no duplicate values
+        """
+        return pd.DataFrame(
+            columns=["col1", "col2", "col3"],
+            data=[
+                ("test1", "test2", "test3"),
+                ("test4", "test5", "test6"),
+            ],
+        )
+
+    @pytest.fixture
+    def one_column_duplicates_df(self):
+        """
+        Returns a dataset with duplicate values in one column
+        """
+        return pd.DataFrame(
+            columns=["col1", "col2", "col3"],
+            data=[
+                ("test1", "test2", "test3"),
+                ("test1", "test5", "test6"),
+            ],
+        )
+
+    def test_raises_duplicate_data_error(self, mock_error, duplicate_df):
+        """
+        Test that the function raises a DuplicateDataError when duplicate values are found
+        """
+        with pytest.raises(clean_data.DuplicateDataError):
+            clean_data.check_duplicates(duplicate_df, "ERROR")
+
+        mock_error.assert_called_once_with("Found 2 duplicated rows in the dataset")
+
+    def test_raises_no_error(self, mock_error, no_duplicates_df):
+        """
+        Test that the function does not raise an error when no duplicate values are found
+        """
+        clean_data.check_duplicates(no_duplicates_df, "ERROR")
+        mock_error.assert_not_called()
+
+    def test_raises_warning(self, mock_warning, duplicate_df):
+        """
+        Test that the function raises a warning when duplicate values are found
+        """
+        clean_data.check_duplicates(duplicate_df, "WARNING")
+        mock_warning.assert_called_once_with("Found 2 duplicated rows in the dataset")
+
+    def test_raises_no_warning(self, mock_warning, no_duplicates_df):
+        """
+        Test that the function does not raise a warning when no duplicate values are found
+        """
+        clean_data.check_duplicates(no_duplicates_df, "WARNING")
+        mock_warning.assert_not_called()
+
+    def test_logs_info(self, mock_info, duplicate_df):
+        """
+        Test that the function logs an info message when no duplicate values are found
+        """
+        clean_data.check_duplicates(duplicate_df, "INFO")
+        mock_info.assert_called_once_with("Found 2 duplicated rows in the dataset")
+
+    def test_logs_no_info(self, mock_info, no_duplicates_df):
+        """
+        Test that the function does not log an info message when duplicate values are found
+        """
+        clean_data.check_duplicates(no_duplicates_df, "INFO")
+        mock_info.assert_not_called()
+
+    def test_subset(self, mock_error, one_column_duplicates_df):
+        """
+        Test that the function raises a DuplicateDataError when duplicate values are found in a subset of columns
+        """
+        with pytest.raises(clean_data.DuplicateDataError):
+            clean_data.check_duplicates(one_column_duplicates_df, "ERROR", subset=["col1"])
+
+        mock_error.assert_called_once_with(
+            "Found 2 duplicated rows in the dataset with subset columns: ['col1']"
+        )
