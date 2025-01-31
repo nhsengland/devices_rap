@@ -419,3 +419,34 @@ def timeit(func):
         return result
 
     return wrapped
+
+
+def sort_by_priority(data: pd.DataFrame, column: str, priorities: List[str]) -> pd.DataFrame:
+    """
+    Sort a DataFrame by a column based on a list of priorities.
+
+    Parameters
+    ----------
+    data : pd.DataFrame
+        The DataFrame to be sorted.
+    column : str
+        The column name to sort by.
+    priorities : List[str]
+        The list of priorities to sort by.
+
+    Returns
+    -------
+    pd.DataFrame
+        The sorted DataFrame.
+    """
+
+    def priority(value: str) -> int:
+        try:
+            return priorities.index(value)
+        except ValueError:
+            return len(priorities)
+
+    return data.sort_values(
+        column,
+        key=lambda col: col.map(priority),
+    )
