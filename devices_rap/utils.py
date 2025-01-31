@@ -321,8 +321,8 @@ def get_datetime_columns(data: pd.DataFrame) -> List[pd.Timestamp]:
 
 def calc_change_from_previous_month_column(
     monthly_summary_table: pd.DataFrame,
-    most_recent_col: Optional[str] = None,
-    second_most_recent_col: Optional[str] = None,
+    most_recent_col: Optional[str | pd.Timestamp] = None,
+    second_most_recent_col: Optional[str | pd.Timestamp] = None,
 ) -> pd.DataFrame:
     """
     Calculate the change from the previous month for the most recent and second most recent columns
@@ -359,8 +359,8 @@ def calc_change_from_previous_month_column(
     except KeyError as e:
         raise ColumnsNotFoundError(
             dataset_columns=monthly_summary_table.columns,
-            most_recent_col=most_recent_col,
-            second_most_recent_col=second_most_recent_col,
+            most_recent_col=[most_recent_col],
+            second_most_recent_col=[second_most_recent_col],
         ) from e
 
     return monthly_summary_table
