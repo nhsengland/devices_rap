@@ -1,4 +1,39 @@
 """
+This module provides functions to process worksheet data based on provided configurations.
+The functions include filtering data, adding subtotals, handling datetime columns, ordering
+columns, renaming columns, rounding data, and processing worksheets and regions.
+
+Functions
+---------
+filter_data(worksheet_data: pd.DataFrame, worksheet_filters: Dict[str, list]) -> pd.DataFrame
+    Filter the worksheet data based on the provided filters.
+
+add_subtotals(
+) -> pd.DataFrame
+
+handle_datetime_columns(
+) -> Tuple[pd.DataFrame, Dict[str, str]]
+    Handle the datetime columns in the worksheet data.
+
+order_columns(worksheet_data: pd.DataFrame, worksheet_columns: Dict[str, str]) -> pd.DataFrame
+    Order the columns in the worksheet data based on the provided column order.
+
+rename_columns(
+) -> pd.DataFrame
+    Rename the columns in the worksheet data based on the provided column mapping.
+
+round_data(worksheet_data: pd.DataFrame) -> pd.DataFrame
+
+process_worksheet(worksheet_config: Dict, datasets: Dict[str, pd.DataFrame]) -> pd.DataFrame
+    Process the worksheet data based on the provided configuration.
+
+process_region(
+) -> Dict[str, pd.DataFrame]
+    Process the output instructions for the specified region.
+
+interpret_output_instructions(
+) -> Dict[str, Dict[str, pd.DataFrame]]
+    Interpret the output instructions for each region.
 
 """
 
@@ -43,8 +78,13 @@ def filter_data(worksheet_data: pd.DataFrame, worksheet_filters: Dict[str, list]
     1    B     2    20
     2    C     3    30
     """
-    for column, values in worksheet_filters.items():
-        worksheet_data = worksheet_data[worksheet_data[column].isin(values)]
+    try:
+        for column, values in worksheet_filters.items():
+            worksheet_data = worksheet_data[worksheet_data[column].isin(values)]
+    except KeyError as e:
+        raise ColumnsNotFoundError(
+            dataset_columns=worksheet_data.columns, filter_columns=worksheet_filters.keys()
+        ) from e
     return worksheet_data
 
 
@@ -94,7 +134,7 @@ def add_subtotals(
 
     try:
         if sort_columns:
-            worksheet_data.sort_values(by=sort_columns, inplace=True)
+            worksheet_data = worksheet_data.sort_values(by=sort_columns).reset_index(drop=True)
     except KeyError as e:
         raise ColumnsNotFoundError(
             dataset_columns=worksheet_data.columns, sort_columns=sort_columns
@@ -104,7 +144,7 @@ def add_subtotals(
 
 
 def handle_datetime_columns(
-    worksheet_data: pd.DataFrame, worksheet_columns: Dict[str, str]
+    worksheet_data: pd.DataFrame, worksheet_columns: Dict[str, str | None]
 ) -> Tuple[pd.DataFrame, Dict[str, str]]:
     """
     Handle the datetime columns in the worksheet data. The function will check if the datetime
@@ -189,20 +229,21 @@ def rename_columns(
         If the columns specified in the worksheet_columns dictionary are not found in the dataset
     """
     try:
-        renamed_worksheet_data = worksheet_data.rename(columns=worksheet_columns)
+        renamed_worksheet_data = worksheet_data.rename(columns=worksheet_columns, errors="raise")
     except KeyError as e:
         raise ColumnsNotFoundError(
             dataset_columns=worksheet_data.columns,
-            column_mapping=worksheet_columns.keys(),
+            column_rename=worksheet_columns.keys(),
         ) from e
     return renamed_worksheet_data
 
 
-def round_data(worksheet_data: pd.DataFrame) -> pd.DataFrame:
+def round_data(worksheet_data: pd.DataFrame, decimals: int) -> pd.DataFrame:
     """
-    Round the data in the worksheet to two decimal places.
+    Wrapper around the DataFrame.round method to round the data in the worksheet to the specified
+    number of decimal places.
     """
-    rounded_worksheet_data = worksheet_data.round(2)
+    rounded_worksheet_data = worksheet_data.round(decimals)
     return rounded_worksheet_data
 
 
@@ -227,11 +268,13 @@ def process_worksheet(worksheet_config: Dict, datasets: Dict[str, pd.DataFrame])
     except KeyError as e:
         raise DataSetNotFoundError(
             f"The dataset specified in the worksheet configuration, {worksheet_type}, was not found"
-            f" in the datasets: {datasets.keys()}"
+            f" in the datasets: {list(datasets.keys())}"
         ) from e
 
     worksheet_filters = worksheet_config.get("filters", {})
-    filtered_worksheet_data = filter_data(worksheet_data, worksheet_filters)
+    filtered_worksheet_data = filter_data(
+        worksheet_data=worksheet_data, worksheet_filters=worksheet_filters
+    )
 
     if "sub-totals" in worksheet_config:
         subtotal_columns = worksheet_config["sub-totals"]
@@ -244,8 +287,10 @@ def process_worksheet(worksheet_config: Dict, datasets: Dict[str, pd.DataFrame])
     else:
         sub_total_worksheet_data = filtered_worksheet_data
 
+    worksheet_columns = worksheet_config.get("columns", {})
+
     unchanged_worksheet_data, worksheet_columns = handle_datetime_columns(
-        worksheet_data=sub_total_worksheet_data, worksheet_columns=worksheet_config["columns"]
+        worksheet_data=sub_total_worksheet_data, worksheet_columns=worksheet_columns
     )
 
     ordered_worksheet_data = order_columns(
@@ -256,7 +301,8 @@ def process_worksheet(worksheet_config: Dict, datasets: Dict[str, pd.DataFrame])
         worksheet_data=ordered_worksheet_data, worksheet_columns=worksheet_columns
     )
 
-    final_worksheet_data = round_data(renamed_worksheet_data)
+    decimals = worksheet_config.get("round_to", 2)
+    final_worksheet_data = round_data(worksheet_data=renamed_worksheet_data, decimals=decimals)
 
     return final_worksheet_data
 
