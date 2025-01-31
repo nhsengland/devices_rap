@@ -164,6 +164,10 @@ class DataSetNotFoundError(LoggedException):
     """
 
 
+class DuplicateDataError(LoggedException):
+    """Custom error for when duplicate data are found in a dataset"""
+
+
 class LoggedWarning(Warning):
     """
     Custom exception class that logs the warning message using the logger.
@@ -183,5 +187,5 @@ class DataTypeNotFoundWarning(LoggedWarning):
     """Custom warning for when a data type is not found in a collection"""
 
 
-class DuplicateExceptionsWarning(LoggedWarning):
-    """Custom warning for when duplicate exceptions are found in a dataset"""
+class DuplicateDataWarning(LoggedWarning):
+    """Custom warning for when duplicate data are found in a dataset"""
