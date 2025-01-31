@@ -4,12 +4,13 @@ Tests for devices_rap/utils.py
 
 from datetime import datetime
 import re
+import time
 
 import pandas as pd
 import pytest
 
 from devices_rap import utils
-from devices_rap.errors import DataTypeNotFoundWarning, InvalidMonthError
+from devices_rap.errors import ColumnsNotFoundError, DataTypeNotFoundWarning, InvalidMonthError
 
 pytestmark = pytest.mark.no_data_needed
 
@@ -426,6 +427,237 @@ class TestSortStringListWithDates:
         """
         result = utils.sort_string_list_with_dates(list_of_strings, format)
         assert result == expected
+
+
+class TestCalcChangeFromPreviousMonthColumn:
+    """
+    Tests for the utils.calc_change_from_previous_month_column function
+    """
+
+    @pytest.fixture()
+    def monthly_summary_table(self) -> pd.DataFrame:
+        """
+        Returns a dataframe with datetime columns and some data
+        """
+        data = {
+            pd.Timestamp("2023-01-01"): [100, 200, 300],
+            pd.Timestamp("2023-02-01"): [110, 210, 310],
+            pd.Timestamp("2023-03-01"): [120, 220, 320],
+        }
+        df = pd.DataFrame(data)
+        return df
+
+    def test_default_columns(self, monthly_summary_table):
+        """
+        Test the calc_change_from_previous_month_column function with default columns
+        """
+        result_df = utils.calc_change_from_previous_month_column(monthly_summary_table)
+        expected_change = [10, 10, 10]
+        assert list(result_df["change_from_previous_month"]) == expected_change
+
+    def test_specified_columns(self, monthly_summary_table):
+        """
+        Test the calc_change_from_previous_month_column function with specified columns
+        """
+        result_df = utils.calc_change_from_previous_month_column(
+            monthly_summary_table,
+            most_recent_col=pd.Timestamp("2023-02-01"),
+            second_most_recent_col=pd.Timestamp("2023-01-01"),
+        )
+        expected_change = [10, 10, 10]
+        assert list(result_df["change_from_previous_month"]) == expected_change
+
+    def test_missing_columns(self, monthly_summary_table):
+        """
+        Test the calc_change_from_previous_month_column function with missing columns
+        """
+        match = re.escape(
+            "Columns were not found in the dataset. MISSING COLUMNS: MOST_RECENT_COL: "
+            "['non_existent_col']"
+        )
+        with pytest.raises(ColumnsNotFoundError, match=match):
+            utils.calc_change_from_previous_month_column(
+                monthly_summary_table,
+                most_recent_col="non_existent_col",
+                second_most_recent_col=pd.Timestamp("2023-01-01"),
+            )
+
+    def test_with_nan_values(self):
+        """
+        Test the calc_change_from_previous_month_column function with NaN values
+        """
+        data = {
+            pd.Timestamp("2023-01-01"): [100, None, 300],
+            pd.Timestamp("2023-02-01"): [110, 210, None],
+        }
+        df = pd.DataFrame(data)
+        result_df = utils.calc_change_from_previous_month_column(df)
+        expected_change = [10, 210, -300]
+        assert list(result_df["change_from_previous_month"]) == expected_change
+
+class TestReplaceListElementWithList:
+    """
+    Tests for the utils.replace_list_element_with_list function
+    """
+
+    @pytest.mark.parametrize(
+        "main_list, insert_list, match_value, expected",
+        [
+            ([1, 2, 3], [4, 5], 2, [1, 4, 5, 3]),
+            (["a", "b", "c"], ["x", "y"], "b", ["a", "x", "y", "c"]),
+            ([1, 2, 3], [4, 5], 1, [4, 5, 2, 3]),
+            ([1, 2, 3], [4, 5], 3, [1, 2, 4, 5]),
+            ([1, 2, 3], [], 2, [1, 3]),
+        ],
+    )
+    def test_replace_list_element_with_list(self, main_list, insert_list, match_value, expected):
+        """
+        Test the replace_list_element_with_list function. Cases to test:
+            1. Replace an element in the middle of the list
+            2. Replace an element in the middle of the list with strings
+            3. Replace the first element in the list
+            4. Replace the last element in the list
+            5. Replace an element with an empty list
+        """
+        result = utils.replace_list_element_with_list(main_list, insert_list, match_value)
+        assert result == expected
+
+    def test_replace_list_element_with_list_no_match(self):
+        """
+        Test the replace_list_element_with_list function when the match_value is not in the list.
+        Should raise a ValueError.
+        """
+        main_list = [1, 2, 3]
+        insert_list = [4, 5]
+        match_value = 6
+        with pytest.raises(ValueError):
+            utils.replace_list_element_with_list(main_list, insert_list, match_value)
+
+
+class TestTimeit:
+    """
+    Tests for the utils.timeit decorator
+    """
+
+    @pytest.fixture
+    def mock_logger(self, mocker):
+        """
+        Fixture to mock the logger
+        """
+        return mocker.patch("devices_rap.utils.logger")
+
+    def test_timeit_decorator(self, mock_logger):
+        """
+        Test the timeit decorator to ensure it logs the execution time
+        """
+
+        @utils.timeit
+        def sample_function():
+            time.sleep(0.1)
+            return "result"
+
+        result = sample_function()
+        assert result == "result"
+        assert mock_logger.debug.called
+        log_message = mock_logger.debug.call_args[0][0]
+        assert re.match(r"Function 'sample_function' executed in \d+\.\d+ s", log_message)
+
+    def test_timeit_decorator_with_args(self, mock_logger):
+        """
+        Test the timeit decorator with a function that takes arguments
+        """
+
+        @utils.timeit
+        def sample_function(x, y):
+            time.sleep(0.1)
+            return x + y
+
+        result = sample_function(1, 2)
+        assert result == 3
+        assert mock_logger.debug.called
+        log_message = mock_logger.debug.call_args[0][0]
+        assert re.match(r"Function 'sample_function' executed in \d+\.\d+ s", log_message)
+
+    def test_timeit_decorator_with_kwargs(self, mock_logger):
+        """
+        Test the timeit decorator with a function that takes keyword arguments
+        """
+
+        @utils.timeit
+        def sample_function(x, y=0):
+            time.sleep(0.1)
+            return x + y
+
+        result = sample_function(1, y=2)
+        assert result == 3
+        assert mock_logger.debug.called
+        log_message = mock_logger.debug.call_args[0][0]
+        assert re.match(r"Function 'sample_function' executed in \d+\.\d+ s", log_message)
+
+class TestSortByPriority:
+    """
+    Tests for the utils.sort_by_priority function
+    """
+
+    @pytest.fixture()
+    def input_df(self) -> pd.DataFrame:
+        """
+        Returns a dataframe with a column to be sorted by priority
+        """
+        data = {
+            "priority_column": ["low", "high", "medium", "low", "high"],
+            "values": [1, 2, 3, 4, 5],
+        }
+        df = pd.DataFrame(data)
+        return df
+
+    @pytest.mark.parametrize(
+        "priorities, expected_order",
+        [
+            (["high", "medium", "low"], ["high", "high", "medium", "low", "low"]),
+            (["low", "medium", "high"], ["low", "low", "medium", "high", "high"]),
+            (["medium", "low", "high"], ["medium", "low", "low", "high", "high"]),
+            ([], ["low", "high", "medium", "low", "high"]),
+        ],
+    )
+    def test_sort_by_priority(self, input_df, priorities, expected_order):
+        """
+        Test the sort_by_priority function with different priority orders
+        """
+        result_df = utils.sort_by_priority(input_df, "priority_column", priorities)
+        assert list(result_df["priority_column"]) == expected_order
+
+    def test_sort_by_priority_with_missing_values(self):
+        """
+        Test the sort_by_priority function with values not in the priority list
+        """
+        data = {
+            "priority_column": ["low", "high", "medium", "unknown", "high"],
+            "values": [1, 2, 3, 4, 5],
+        }
+        df = pd.DataFrame(data)
+        priorities = ["high", "medium", "low"]
+        expected_order = ["high", "high", "medium", "low", "unknown"]
+        result_df = utils.sort_by_priority(df, "priority_column", priorities)
+        assert list(result_df["priority_column"]) == expected_order
+
+    def test_sort_by_priority_with_empty_dataframe(self):
+        """
+        Test the sort_by_priority function with an empty dataframe
+        """
+        df = pd.DataFrame(columns=["priority_column", "values"])
+        priorities = ["high", "medium", "low"]
+        result_df = utils.sort_by_priority(df, "priority_column", priorities)
+        assert result_df.empty
+
+    def test_sort_by_priority_with_no_priority_column(self):
+        """
+        Test the sort_by_priority function when the priority column does not exist
+        """
+        df = pd.DataFrame({"values": [1, 2, 3, 4, 5]})
+        priorities = ["high", "medium", "low"]
+        with pytest.raises(KeyError):
+            utils.sort_by_priority(df, "priority_column", priorities)
 
 
 if __name__ == "__main__":
