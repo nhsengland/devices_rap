@@ -13,6 +13,7 @@ from devices_rap.errors import ColumnsNotFoundError
 if sys.version_info < (3, 11):
     from exceptiongroup import ExceptionGroup  # type: ignore
 
+
 @pytest.fixture
 def mock_create_table_cuts(mocker):
     """
@@ -244,112 +245,149 @@ class TestCreateTableCuts:
         mock_info.assert_called_once_with(expected_message)
 
 
-@pytest.mark.xfail()
-class TestCreateRAGSummaryTables:
+class TestCreateRegionalTableCuts:
     """
-    Tests for create_cuts.create_rag_summary_tables
+    Tests for create_cuts.create_regional_table_cuts
     """
 
-    def test_returns_dict(self, mock_create_table_cuts, empty_df):
+    @pytest.fixture
+    def test_input(self):
+        """
+        Fixture to return a test dictionary of dataframes
+        """
+        columns = ["upd_region", "A", "B", "C"]
+        data = [
+            ("North", 1, 1, 1),
+            ("North", 1, 2, 2),
+            ("South", 1, 1, 3),
+            ("South", 1, 2, 4),
+        ]
+        df = pd.DataFrame(columns=columns, data=data)
+        return {
+            "summary": df,
+            "detailed": df,
+        }
+
+    @pytest.fixture
+    def mock_create_table_cuts(self, mocker):
+        """
+        Fixture to mock the create_cuts.create_table_cuts function
+        """
+        columns = ["upd_region", "A", "B", "C"]
+        north_data = [
+            ("North", 1, 1, 1),
+            ("North", 1, 2, 2),
+        ]
+        south_data = [
+            ("South", 1, 1, 3),
+            ("South", 1, 2, 4),
+        ]
+        return_value = {
+            "North": pd.DataFrame(columns=columns, data=north_data),
+            "South": pd.DataFrame(columns=columns, data=south_data),
+        }
+        return mocker.patch("devices_rap.create_cuts.create_table_cuts", return_value=return_value)
+
+    def test_returns_dict(self, test_input, mock_create_table_cuts):
         """
         Test that the function returns a dictionary
         """
-        result = create_cuts.create_regional_rag_summary_tables_cuts(empty_df)
+        result = create_cuts.create_regional_table_cuts(test_input)
         assert isinstance(result, dict)
 
-    def test_returns_dict_of_dataframes(self, mock_create_table_cuts, empty_df):
+    def test_returns_dict_of_dicts(self, test_input, mock_create_table_cuts):
         """
-        Test that the function returns a dictionary of DataFrames
+        Test that the function returns a dictionary of dictionaries
         """
-        mock_create_table_cuts.return_value = {
-            "RAG1": pd.DataFrame(columns=["A", "B"], data=[(1, 1), (2, 2)]),
-            "RAG2": pd.DataFrame(columns=["A", "B"], data=[(3, 3), (4, 4)]),
-        }
-        result = create_cuts.create_regional_rag_summary_tables_cuts(empty_df)
-        assert all(isinstance(value, pd.DataFrame) for value in result.values())
+        result = create_cuts.create_regional_table_cuts(test_input)
+        assert all(isinstance(value, dict) for value in result.values())
 
-    def test_calls_create_table_cuts(self, mock_create_table_cuts, empty_df):
+    def test_keys_are_regions(self, test_input, mock_create_table_cuts):
         """
-        Test that the function calls the create_table_cuts function
+        Test that the keys of the returned dictionary are regions
         """
-        create_cuts.create_regional_rag_summary_tables_cuts(empty_df)
-        mock_create_table_cuts.assert_called_once()
+        result = create_cuts.create_regional_table_cuts(test_input)
+        assert set(result.keys()) == {"North", "South"}
 
-    def test_returns_correct_dataframes(self, mock_create_table_cuts, empty_df):
+    def test_inner_keys_are_table_types(self, test_input, mock_create_table_cuts):
         """
-        Test that the function returns the correct DataFrames
+        Test that the inner keys of the returned dictionary are table types
         """
-        mock_create_table_cuts.return_value = {
-            "RAG1": pd.DataFrame(columns=["A", "B"], data=[(1, 1), (2, 2)]),
-            "RAG2": pd.DataFrame(columns=["A", "B"], data=[(3, 3), (4, 4)]),
-        }
+        result = create_cuts.create_regional_table_cuts(test_input)
+        for region_tables in result.values():
+            assert set(region_tables.keys()) == {"summary", "detailed"}
 
-        result = create_cuts.create_regional_rag_summary_tables_cuts(empty_df)
-        expected = {
-            "RAG1": pd.DataFrame(columns=["A", "B"], data=[(1, 1), (2, 2)]),
-            "RAG2": pd.DataFrame(columns=["A", "B"], data=[(3, 3), (4, 4)]),
-        }
-
-        assert result.keys() == expected.keys()
-
-        failures = []
-        for key, value in result.items():
-            try:
-                actual_df = value.sort_values(by=value.columns.tolist()).reset_index(drop=True)
-                expected_df = (
-                    expected[key]
-                    .sort_values(by=expected[key].columns.tolist())
-                    .reset_index(drop=True)
-                )
-                pd.testing.assert_frame_equal(actual_df, expected_df)
-            except AssertionError as fail:
-                failures.append(fail)
-
-        if failures:
-            raise ExceptionGroup("Test failures", failures)
+    def test_inner_values_are_dataframes(self, test_input, mock_create_table_cuts):
+        """
+        Test that the inner values of the returned dictionary are DataFrames
+        """
+        result = create_cuts.create_regional_table_cuts(test_input)
+        for region_tables in result.values():
+            assert all(isinstance(df, pd.DataFrame) for df in region_tables.values())
 
     @pytest.mark.parametrize(
-        "kwarg, expected",
+        "region, table_type, expected_df",
         [
-            ("data", pd.DataFrame()),
-            ("cut_columns", ["Region", "RAG Status"]),
-            ("drop_cut_columns", None),
+            (
+                "North",
+                "summary",
+                pd.DataFrame(
+                    columns=["upd_region", "A", "B", "C"],
+                    data=[
+                        ("North", 1, 1, 1),
+                        ("North", 1, 2, 2),
+                    ],
+                ),
+            ),
+            (
+                "North",
+                "detailed",
+                pd.DataFrame(
+                    columns=["upd_region", "A", "B", "C"],
+                    data=[
+                        ("North", 1, 1, 1),
+                        ("North", 1, 2, 2),
+                    ],
+                ),
+            ),
+            (
+                "South",
+                "summary",
+                pd.DataFrame(
+                    columns=["upd_region", "A", "B", "C"],
+                    data=[
+                        ("South", 1, 1, 3),
+                        ("South", 1, 2, 4),
+                    ],
+                ),
+            ),
+            (
+                "South",
+                "detailed",
+                pd.DataFrame(
+                    columns=["upd_region", "A", "B", "C"],
+                    data=[
+                        ("South", 1, 1, 3),
+                        ("South", 1, 2, 4),
+                    ],
+                ),
+            )
         ],
     )
-    def test_calls_create_table_cuts_with_correct_args(
-        self, mock_create_table_cuts, empty_df, kwarg, expected
+    def test_correct_data_in_dataframes(
+        self, test_input, mock_create_table_cuts, region, table_type, expected_df
     ):
         """
-        Tests if the function calls create_table_cuts with the correct arguments
+        Test that the data in the returned DataFrames is correct
         """
-        create_cuts.create_regional_rag_summary_tables_cuts(empty_df)
+        actual_dict = create_cuts.create_regional_table_cuts(test_input)
 
-        actual = mock_create_table_cuts.call_args.kwargs.get(kwarg)
+        actual = actual_dict[region][table_type]
 
-        if isinstance(expected, pd.DataFrame):
-            pd.testing.assert_frame_equal(actual, expected)
-        else:
-            assert actual == expected
+        actual_df = actual.sort_values(by=actual.columns.tolist()).reset_index(drop=True)
+        expected_df = expected_df.sort_values(by=expected_df.columns.tolist()).reset_index(drop=True)
 
-    def test_log_info(self, mock_info, empty_df, mock_create_table_cuts):
-        """
-        Test that the logger.info is called correctly
-        """
-        create_cuts.create_regional_rag_summary_tables_cuts(empty_df)
-        mock_info.assert_called_once_with("Creating the Regional RAG summary tables")
-
-    def test_log_success(self, mock_success, empty_df, mock_create_table_cuts):
-        """
-        Test that the logger.success is called correctly
-        """
-        mock_create_table_cuts.return_value = {
-            "RAG1": pd.DataFrame(columns=["A", "B"], data=[(1, 1), (2, 2)]),
-            "RAG2": pd.DataFrame(columns=["A", "B"], data=[(3, 3), (4, 4)]),
-        }
-        create_cuts.create_regional_rag_summary_tables_cuts(empty_df)
-        mock_success.assert_called_once_with(
-            "Created the collection of 2 Regional RAG summary tables"
-        )
+        pd.testing.assert_frame_equal(actual_df, expected_df)
 
 
 if __name__ == "__main__":
