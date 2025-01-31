@@ -91,9 +91,9 @@ class TestCreatePivotSumTable:
     @pytest.mark.parametrize(
         "kwarg, input_value, actual_kwarg, expected",
         [
-            ("values",  ["test"], "values", ["test"]),
-            ("columns",  ["test"], "columns", ["test"]),
-            ("base_index",  ["test"], "index", ["test"]),
+            ("values", ["test"], "values", ["test"]),
+            ("columns", ["test"], "columns", ["test"]),
+            ("base_index", ["test"], "index", ["test"]),
             (
                 "extended_index", ["test"], 
                 "index",

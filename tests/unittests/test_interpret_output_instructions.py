@@ -3,7 +3,6 @@ Tests for the interpret_output_instructions module.
 """
 
 import re
-from tkinter import N
 import pytest
 import pandas as pd
 
