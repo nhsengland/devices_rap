@@ -5,6 +5,9 @@ Tests for the configuration settings in devices_rap/config.py.
 import pytest
 from dotenv import dotenv_values
 from loguru import logger
+from pathlib import Path
+from devices_rap.config import MASTER_DEVICES_PATH, check_paths, PathNotFoundError
+from exceptiongroup import ExceptionGroup
 
 from devices_rap.config import (
     DATA_DIR,
@@ -52,6 +55,45 @@ class TestConfig:
         """Test if environment variables are loaded from the .env file."""
         env_vars = dotenv_values()
         assert env_vars is not None
+
+
+class TestCheckPaths:
+    """
+    Tests for the check_paths function
+    """
+
+    def test_check_paths_all_exist(self, mocker):
+        """Test check_paths when all paths exist."""
+        mocker.patch("pathlib.Path.exists", return_value=True)
+        try:
+            check_paths()
+        except ExceptionGroup:
+            pytest.fail("ExceptionGroup was raised unexpectedly!")
+
+    def test_check_paths_all_missing(self, mocker):
+        """Test check_paths when some paths are missing."""
+
+        mocker.patch("pathlib.Path.exists", return_value=False)
+        with pytest.raises(ExceptionGroup) as exc_info:
+            check_paths()
+        assert any(isinstance(e, PathNotFoundError) for e in exc_info.value.exceptions)
+
+    def test_check_paths_no_paths_provided(self, mocker):
+        """Test check_paths when no paths are provided."""
+        mocker.patch("pathlib.Path.exists", return_value=True)
+        try:
+            check_paths([])
+        except ExceptionGroup:
+            pytest.fail("ExceptionGroup was raised unexpectedly!")
+
+    def test_check_paths_custom_paths(self, mocker):
+        """Test check_paths with custom paths."""
+        custom_paths = [Path("/custom/path/one"), Path("/custom/path/two")]
+        mocker.patch("pathlib.Path.exists", return_value=True)
+        try:
+            check_paths(custom_paths)
+        except ExceptionGroup:
+            pytest.fail("ExceptionGroup was raised unexpectedly!")
 
 
 if __name__ == "__main__":
