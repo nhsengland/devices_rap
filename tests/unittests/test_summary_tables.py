@@ -275,7 +275,7 @@ class TestCreatePivotSumTable:
         """
         Test that the ColumnsNotFoundError is raised when the columns are not found in the dataset
         """
-        mock_info, mock_error, _, _ = mock_log_levels
+        mock_info, mock_error = mock_log_levels["info"], mock_log_levels["error"]
 
         input_df = pd.DataFrame(columns=input_columns)
 
