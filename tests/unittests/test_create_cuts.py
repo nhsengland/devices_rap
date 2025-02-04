@@ -208,7 +208,7 @@ class TestCreateTableCuts:
         """
         Test that the ColumnsNotFoundError is raised when the columns are not found in the dataset
         """
-        mock_info, mock_error, _, _ = mock_log_levels
+        mock_info, mock_error = mock_log_levels["info"], mock_log_levels["error"]
 
         with pytest.raises(ColumnsNotFoundError, match=re.escape(expected_message)):
             create_cuts.create_table_cuts(test_input, cut_columns)
