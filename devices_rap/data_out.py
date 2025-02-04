@@ -4,7 +4,7 @@ Functionality that handle the output of processed data from the pipeline.
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Optional
 
 import pandas as pd
 import tqdm
@@ -20,9 +20,9 @@ from devices_rap.config import (
 
 def create_excel_reports(
     output_workbooks: Dict[str, Dict[str, pd.DataFrame]],
-    output_directory: Path = PROCESSED_DATA_DIR,
-    fin_year: str = FIN_YEAR,
-    fin_month: str = FIN_MONTH,
+    output_directory: Optional[Path] = None,
+    fin_year: Optional[str] = None,
+    fin_month: Optional[str] = None,
 ):
     """
     Create the Excel reports based on the processed data. The function will create an Excel file for
@@ -32,13 +32,21 @@ def create_excel_reports(
     ----------
     output_workbooks : dict
         The processed data for each region
-    output_directory : str
-        The path to save the Excel reports to
+    output_directory : Path, optional
+        The directory to save the Excel reports to, by default PROCESSED_DATA_DIR
+    fin_year : str, optional
+        The financial year, by default FIN_YEAR
+    fin_month : str, optional
+        The financial month, by default FIN_MONTH
 
     Returns
     -------
     None
     """
+    output_directory = output_directory or PROCESSED_DATA_DIR
+    fin_year = fin_year or FIN_YEAR
+    fin_month = fin_month or FIN_MONTH
+
     logger.info("Creating excel reports")
 
     fin_output_directory = output_directory / fin_year / fin_month
@@ -47,14 +55,23 @@ def create_excel_reports(
     if USE_MULTIPROCESSING:
         with ThreadPoolExecutor() as executor:
             futures = [
-                executor.submit(process_region, fin_output_directory, region, worksheets)
+                executor.submit(
+                    process_region,
+                    fin_output_directory=fin_output_directory,
+                    region=region,
+                    worksheets=worksheets,
+                )
                 for region, worksheets in output_workbooks.items()
             ]
             for future in tqdm.tqdm(as_completed(futures), total=len(futures), position=0):
                 future.result()
     else:
         for region, worksheets in output_workbooks.items():
-            process_region(fin_output_directory, region, worksheets)
+            process_region(
+                fin_output_directory=fin_output_directory,
+                region=region,
+                worksheets=worksheets,
+            )
 
     logger.success("Excel reports created successfully.")
 
@@ -86,7 +103,7 @@ def process_region(fin_output_directory: Path, region: str, worksheets: Dict[str
     else:
         logger.info(f"Creating Excel report for {region}")
 
-    create_excel_file(output_file, worksheets)
+    create_excel_file(output_file=output_file, worksheets=worksheets)
 
     logger.success(f"Excel report for {region} created successfully.")
 
@@ -115,7 +132,12 @@ def create_excel_file(output_file: Path, worksheets: Dict[str, pd.DataFrame]):
             with ThreadPoolExecutor() as executor:
                 futures = [
                     executor.submit(
-                        write_worksheet, writer, sheet_name, data, header_format, output_file
+                        write_worksheet,
+                        writer=writer,
+                        sheet_name=sheet_name,
+                        data=data,
+                        header_format=header_format,
+                        output_file=output_file,
                     )
                     for sheet_name, data in worksheets.items()
                 ]
@@ -123,7 +145,13 @@ def create_excel_file(output_file: Path, worksheets: Dict[str, pd.DataFrame]):
                     future.result()
         else:
             for sheet_name, data in worksheets.items():
-                write_worksheet(writer, sheet_name, data, header_format, output_file)
+                write_worksheet(
+                    writer=writer,
+                    sheet_name=sheet_name,
+                    data=data,
+                    header_format=header_format,
+                    output_file=output_file,
+                )
 
 
 def create_header_format(workbook) -> object:
@@ -152,14 +180,18 @@ def create_header_format(workbook) -> object:
 
 
 def write_worksheet(
-    writer, sheet_name: str, data: pd.DataFrame, header_format: object, output_file: Path
+    writer: pd.ExcelWriter,
+    sheet_name: str,
+    data: pd.DataFrame,
+    header_format: object,
+    output_file: Path,
 ):
     """
     Write a worksheet to the Excel file.
 
     Parameters
     ----------
-    writer : object
+    writer : pd.ExcelWriter
         The Excel writer object
     sheet_name : str
         The name of the worksheet
@@ -178,10 +210,12 @@ def write_worksheet(
         f"Writing data with {data.shape[0]} rows and {data.shape[1]} columns to "
         f"the {sheet_name} worksheet to the Excel file, {output_file}."
     )
-    data.to_excel(writer, sheet_name=sheet_name, index=False, startrow=1, header=False)
-    worksheet = writer.sheets[sheet_name]
+    data.to_excel(
+        excel_writer=writer, sheet_name=sheet_name, index=False, startrow=1, header=False
+    )
 
     # Write the column headers with the defined format.
+    worksheet = writer.sheets[sheet_name]
     for col_num, value in enumerate(data.columns.values):
         worksheet.write(0, col_num, value, header_format)
 
