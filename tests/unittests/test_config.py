@@ -2,12 +2,16 @@
 Tests for the configuration settings in devices_rap/config.py.
 """
 
+import sys
 import pytest
 from dotenv import dotenv_values
 from loguru import logger
 from pathlib import Path
-from devices_rap.config import MASTER_DEVICES_PATH, check_paths, PathNotFoundError
-from exceptiongroup import ExceptionGroup
+
+from devices_rap.config import check_paths, PathNotFoundError
+
+if sys.version_info < (3, 11):
+    from exceptiongroup import ExceptionGroup  # type: ignore
 
 from devices_rap.config import (
     DATA_DIR,
