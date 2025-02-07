@@ -30,11 +30,11 @@ logger.add(lambda msg: tqdm.write(msg, end=""), colorize=True)
 # each time you save and the log file will be generated each time.
 LOG_FILE = False
 
-if LOG_FILE:
-    log_file_name = datetime.now().strftime("%Y%m%d_%H%M%S.log")
-    log_file_path = PROJ_ROOT / "logs" / log_file_name
-    log_file_path.parent.mkdir(parents=True, exist_ok=True)
+log_file_name = datetime.now().strftime("%Y%m%d_%H%M%S.log")
+log_file_path = PROJ_ROOT / "logs" / log_file_name
 
+if LOG_FILE:
+    log_file_path.parent.mkdir(parents=True, exist_ok=True)
     logger.add(log_file_path)
 else:
     warnings.warn(
@@ -47,7 +47,7 @@ load_dotenv()
 
 # Settings
 FIN_YEAR = "2425"
-FIN_MONTH = "6"
+FIN_MONTH = "8"
 USE_MULTIPROCESSING = True
 logger.debug(
     f"Running the pipeline with the following settings: "

@@ -205,7 +205,7 @@ def convert_fin_dates_vectorised(
     year = pd.Series(np.where(month <= 9, century + year_1, century + year_2))
     month = pd.Series(np.where(month <= 9, month + 3, month - 9))
 
-    return pd.to_datetime(year + "-" + month.astype(str) + "-01")
+    return pd.to_datetime(year + "-" + month.astype(int).astype(str) + "-01")
 
 
 def parse_dates(
