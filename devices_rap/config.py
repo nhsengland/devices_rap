@@ -18,6 +18,10 @@ from devices_rap.errors import LoggedWarning, PathNotFoundError
 if sys.version_info < (3, 11):
     from exceptiongroup import ExceptionGroup  # type: ignore
 
+# Set financial year and month
+FIN_YEAR = "2425"
+FIN_MONTH = "8"
+
 # Define project root directory
 PROJ_ROOT = Path(__file__).resolve().parents[1]
 
@@ -46,8 +50,6 @@ else:
 load_dotenv()
 
 # Settings
-FIN_YEAR = "2425"
-FIN_MONTH = "8"
 USE_MULTIPROCESSING = True
 logger.debug(
     f"Running the pipeline with the following settings: "
