@@ -77,7 +77,7 @@ class TestCleanseMasterData:
     """
 
     @pytest.fixture
-    def mock_called_functions(self, mocker):
+    def mock_called_functions(self, mocker, mock_info):
         """
         Fixture to mock the functions called by cleanse_master_data
         """
@@ -89,9 +89,16 @@ class TestCleanseMasterData:
         mock_convert_values_to = mocker.patch(
             "devices_rap.clean_data.convert_values_to", return_value="bar", autospec=True
         )
-        mock_logger = mocker.patch("devices_rap.clean_data.logger")
+        mock_convert_to_numeric_column = mocker.patch(
+            "devices_rap.clean_data.convert_to_numeric_column", return_value=pd.Series("bar"), autospec=True
+        )
 
-        return mock_convert_fin_dates, mock_convert_values_to, mock_logger
+        return (
+            mock_convert_fin_dates,
+            mock_convert_values_to,
+            mock_info,
+            mock_convert_to_numeric_column,
+        )
 
     @pytest.fixture
     def test_master_df(self):
@@ -103,6 +110,7 @@ class TestCleanseMasterData:
                 "der_high_level_device_type": ["test_der_high_level_device_type"],
                 "cln_activity_year": ["test_cln_activity_year"],
                 "cln_activity_month": ["test_cln_activity_month"],
+                "cln_total_cost": ["test_cln_total_cost"],
             }
         )
 
@@ -110,7 +118,7 @@ class TestCleanseMasterData:
         """
         Test that the function applies the convert_fin_dates function correctly
         """
-        mock_convert_fin_dates, _, _ = mock_called_functions
+        mock_convert_fin_dates, _, _ , _ = mock_called_functions
         clean_data.cleanse_master_data(test_master_df)
         assert mock_convert_fin_dates.call_count == 1
 
@@ -118,7 +126,7 @@ class TestCleanseMasterData:
         """
         Test that the function applies the convert_values_to function correctly
         """
-        _, mock_convert_values_to, _ = mock_called_functions
+        _, mock_convert_values_to, _ , _ = mock_called_functions
         clean_data.cleanse_master_data(test_master_df)
         assert mock_convert_values_to.call_count == 2
         mock_convert_values_to.assert_called_with(
@@ -129,13 +137,16 @@ class TestCleanseMasterData:
         """
         Test that the function logs the expected messages
         """
-        _, _, mock_logger = mock_called_functions
+        _, _, mock_info , _ = mock_called_functions
         clean_data.cleanse_master_data(test_master_df)
-        assert mock_logger.info.call_count == 4
-        mock_logger.info.assert_any_call("Cleaning the master dataset ready for processing")
-        mock_logger.info.assert_any_call("Converting high level device type values")
-        mock_logger.info.assert_any_call("Converting activity year values without century")
-        mock_logger.info.assert_any_call("Converting activity date values to datetime")
+        assert mock_info.call_count == 5
+        mock_info.assert_any_call("Cleaning the master dataset ready for processing")
+        mock_info.assert_any_call("Converting high level device type values")
+        mock_info.assert_any_call("Converting activity year values without century")
+        mock_info.assert_any_call("Converting activity date values to datetime")
+        mock_info.assert_any_call(
+            "Converting total cost values to numeric, removing commas and converting to float"
+        )
 
     def test_columns_not_found_error(self, mock_error):
         """
@@ -146,7 +157,7 @@ class TestCleanseMasterData:
 
         mock_error.assert_called_once_with(
             "Columns were not found in the dataset. MISSING COLUMNS: CLEAN_COLUMNS: "
-            "['cln_activity_year', 'der_high_level_device_type']"
+            "['cln_activity_year', 'cln_total_cost', 'der_high_level_device_type']"
         )
 
 

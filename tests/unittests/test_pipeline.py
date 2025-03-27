@@ -50,9 +50,6 @@ class TestAmberReportPipeline:
             columns=["create_device_category_summary_table"]
         ),
         "create_device_summary_table": pd.DataFrame(columns=["create_device_summary_table"]),
-        "calc_change_from_previous_month_column": pd.DataFrame(
-            columns=["calc_change_from_previous_month_column"]
-        ),
         "join_mini_tables": pd.DataFrame(columns=["join_mini_tables"]),
         "create_regional_table_cuts": {
             "test": pd.DataFrame(columns=["create_regional_table_cuts"])
@@ -225,24 +222,10 @@ class TestAmberReportPipeline:
 
         pd.testing.assert_frame_equal(actual, expected)
 
-    def test_calls_calc_change_from_previous_month_column_with_correct_args(
-        self, mock_pipeline_functions
-    ):
-        """
-        Test that amber_report_pipeline calls calc_change_from_previous_month_column with the correct arguments
-        """
-        pipeline.amber_report_pipeline()
-
-        actual = mock_pipeline_functions["calc_change_from_previous_month_column"].call_args.args[
-            0
-        ]
-        expected = self.pipeline_functions["create_device_category_summary_table"]
-
-        pd.testing.assert_frame_equal(actual, expected)
 
     @pytest.mark.parametrize(
         "call_num, previous_function",
-        [(0, "calc_change_from_previous_month_column"), (1, "create_device_summary_table")],
+        [(1, "create_device_summary_table")],
     )
     def test_calls_join_mini_tables_with_correct_args(
         self, mock_pipeline_functions, call_num, previous_function

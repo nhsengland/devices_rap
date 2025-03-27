@@ -19,7 +19,7 @@ from typing import List, Optional
 import pandas as pd
 from loguru import logger
 
-from devices_rap.errors import ColumnsNotFoundError, LoggedValueError
+from devices_rap.errors import ColumnsNotFoundError
 from devices_rap.utils import get_datetime_columns
 
 
@@ -92,9 +92,6 @@ def create_pivot_sum_table(
         f"COLUMNS: {columns}, "
         f"INDEX: {index}"
     )
-
-    if not pd.api.types.is_numeric_dtype(data[values]):
-        raise LoggedValueError(f"The values column '{values}' must be numerical.")
 
     try:
         pivoted_data = pd.pivot_table(

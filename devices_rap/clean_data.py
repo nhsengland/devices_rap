@@ -19,6 +19,7 @@ from devices_rap.errors import (
 )
 from devices_rap.utils import (
     convert_fin_dates_vectorised,
+    convert_to_numeric_column,
     convert_values_to,
     normalise_column_names,
     sort_by_priority,
@@ -101,12 +102,11 @@ def cleanse_master_data(master_df: pd.DataFrame) -> pd.DataFrame:
         logger.info(
             "Converting total cost values to numeric, removing commas and converting to float"
         )
-        master_df["cln_total_cost"] = master_df["cln_total_cost"].str.replace(",", "")
-        master_df["cln_total_cost"] = pd.to_numeric(master_df["cln_total_cost"], errors="coerce")
+        master_df["cln_total_cost"] = convert_to_numeric_column(master_df["cln_total_cost"])
     except KeyError as e:
         raise ColumnsNotFoundError(
             dataset_columns=master_df.columns,
-            clean_columns=["der_high_level_device_type", "cln_activity_year"],
+            clean_columns=["der_high_level_device_type", "cln_activity_year", "cln_total_cost"],
         ) from e
 
     return master_df

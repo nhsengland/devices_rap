@@ -316,6 +316,73 @@ class TestCreatePivotSumTable:
         mock_info.assert_called_once_with(expected_message)
 
 
+class TestCalcChangeFromPreviousMonthColumn:
+    """
+    Tests for the summary_tables.calc_change_from_previous_month_column function
+    """
+
+    @pytest.fixture()
+    def monthly_summary_table(self) -> pd.DataFrame:
+        """
+        Returns a dataframe with datetime columns and some data
+        """
+        data = {
+            pd.Timestamp("2023-01-01"): [100, 200, 300],
+            pd.Timestamp("2023-02-01"): [110, 210, 310],
+            pd.Timestamp("2023-03-01"): [120, 220, 320],
+        }
+        df = pd.DataFrame(data)
+        return df
+
+    def test_default_columns(self, monthly_summary_table):
+        """
+        Test the calc_change_from_previous_month_column function with default columns
+        """
+        result_df = summary_tables.calc_change_from_previous_month_column(monthly_summary_table)
+        expected_change = [10, 10, 10]
+        assert list(result_df["change_from_previous_month"]) == expected_change
+
+    def test_specified_columns(self, monthly_summary_table):
+        """
+        Test the calc_change_from_previous_month_column function with specified columns
+        """
+        result_df = summary_tables.calc_change_from_previous_month_column(
+            monthly_summary_table,
+            most_recent_col=pd.Timestamp("2023-02-01"),
+            second_most_recent_col=pd.Timestamp("2023-01-01"),
+        )
+        expected_change = [10, 10, 10]
+        assert list(result_df["change_from_previous_month"]) == expected_change
+
+    def test_missing_columns(self, monthly_summary_table):
+        """
+        Test the calc_change_from_previous_month_column function with missing columns
+        """
+        match = re.escape(
+            "Columns were not found in the dataset. MISSING COLUMNS: MOST_RECENT_COL: "
+            "['non_existent_col']"
+        )
+        with pytest.raises(ColumnsNotFoundError, match=match):
+            summary_tables.calc_change_from_previous_month_column(
+                monthly_summary_table,
+                most_recent_col="non_existent_col",
+                second_most_recent_col=pd.Timestamp("2023-01-01"),
+            )
+
+    def test_with_nan_values(self):
+        """
+        Test the calc_change_from_previous_month_column function with NaN values
+        """
+        data = {
+            pd.Timestamp("2023-01-01"): [100, None, 300],
+            pd.Timestamp("2023-02-01"): [110, 210, None],
+        }
+        df = pd.DataFrame(data)
+        result_df = summary_tables.calc_change_from_previous_month_column(df)
+        expected_change = [10, 210, -300]
+        assert list(result_df["change_from_previous_month"]) == expected_change
+
+
 class TestCreateDeviceCategorySummaryTable:
     """
     Test class for summary_tables.create_device_category_summary_table

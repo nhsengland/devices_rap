@@ -399,3 +399,21 @@ def sort_by_priority(data: pd.DataFrame, column: str, priorities: List[str]) -> 
         column,
         key=lambda col: col.map(priority),
     )
+
+
+def convert_to_numeric_column(column: pd.Series) -> pd.Series:
+    """
+    Convert a column to numeric, removing any commas and converting to float,
+    coercing any errors"
+
+    Parameters
+    ----------
+    column : pd.Series
+        The column to convert to numeric
+
+    Returns
+    -------
+    pd.Series
+        The converted column
+    """
+    return pd.to_numeric(column.astype(str).str.replace(",", ""), errors="coerce")
