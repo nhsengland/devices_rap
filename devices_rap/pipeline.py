@@ -26,7 +26,7 @@ from devices_rap.summary_tables import (
     create_device_category_summary_table,
     create_device_summary_table,
 )
-from devices_rap.utils import calc_change_from_previous_month_column, timeit
+from devices_rap.utils import timeit
 
 
 @timeit
@@ -71,18 +71,14 @@ def amber_report_pipeline():
         master_provider_devices_taxonomy_exceptions
     )
 
-    summary_data = (
-        create_device_category_summary_table(
-            master_devices_data=master_devices_table,
-        )
-        .pipe(calc_change_from_previous_month_column)
-        .pipe(
-            join_mini_tables,
-            provider_codes_lookup=provider_codes_lookup,
-            device_taxonomy=device_taxonomy,
-            exceptions=exceptions,
-            include_exception_notes=True,
-        )
+    summary_data = create_device_category_summary_table(
+        master_devices_data=master_devices_table,
+    ).pipe(
+        join_mini_tables,
+        provider_codes_lookup=provider_codes_lookup,
+        device_taxonomy=device_taxonomy,
+        exceptions=exceptions,
+        include_exception_notes=True,
     )
 
     detailed_data = create_device_summary_table(

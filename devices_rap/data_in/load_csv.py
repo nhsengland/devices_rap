@@ -52,6 +52,12 @@ NA_VALUES = [
     "<r>",
     "Not known",
     "***NOT LISTED/UNKNOWN/999999***",
+    " -   ",
+    " - ",
+    " -",
+    "-  ",
+    "- ",
+    " -  ",
 ]
 
 

@@ -13,11 +13,7 @@ import numpy as np
 import pandas as pd
 from loguru import logger
 
-from devices_rap.errors import (
-    ColumnsNotFoundError,
-    DataTypeNotFoundWarning,
-    InvalidMonthError,
-)
+from devices_rap.errors import DataTypeNotFoundWarning, InvalidMonthError
 
 
 def normalise_column_names(
@@ -317,53 +313,6 @@ def get_datetime_columns(data: pd.DataFrame) -> List[pd.Timestamp]:
         The datetime columns in the data
     """
     return [col for col in data.columns if isinstance(col, pd.Timestamp)]
-
-
-def calc_change_from_previous_month_column(
-    monthly_summary_table: pd.DataFrame,
-    most_recent_col: Optional[str | pd.Timestamp] = None,
-    second_most_recent_col: Optional[str | pd.Timestamp] = None,
-) -> pd.DataFrame:
-    """
-    Calculate the change from the previous month for the most recent and second most recent columns
-    in the monthly_summary_table. The function takes the last two columns in the table by default,
-    but the most_recent_col and second_most_recent_col can be specified.
-
-    Parameters
-    ----------
-    monthly_summary_table : pd.DataFrame
-        The monthly summary table to calculate the change from the previous month
-    most_recent_col : str, optional
-        The most recent column to calculate the change from, by default None
-    second_most_recent_col : str, optional
-        The second most recent column to calculate the change from, by default None
-
-    Returns
-    -------
-    pd.DataFrame
-        The monthly summary table with the change from the previous month column added
-
-    Raises
-    ------
-    ColumnsNotFoundError
-        If the most_recent_col or second_most_recent_col specified are not found in the dataset
-    """
-    datetime_columns = get_datetime_columns(monthly_summary_table)
-    most_recent_col = most_recent_col or datetime_columns[-1]  # type: ignore
-    second_most_recent_col = second_most_recent_col or datetime_columns[-2]  # type: ignore
-
-    try:
-        monthly_summary_table["change_from_previous_month"] = monthly_summary_table[
-            most_recent_col
-        ].fillna(0) - monthly_summary_table[second_most_recent_col].fillna(0)
-    except KeyError as e:
-        raise ColumnsNotFoundError(
-            dataset_columns=monthly_summary_table.columns,
-            most_recent_col=[most_recent_col],
-            second_most_recent_col=[second_most_recent_col],
-        ) from e
-
-    return monthly_summary_table
 
 
 def replace_list_element_with_list(

@@ -97,6 +97,12 @@ def cleanse_master_data(master_df: pd.DataFrame) -> pd.DataFrame:
 
         logger.info("Converting activity date values to datetime")
         master_df["activity_date"] = convert_fin_dates_vectorised(master_df)
+
+        logger.info(
+            "Converting total cost values to numeric, removing commas and converting to float"
+        )
+        master_df["cln_total_cost"] = master_df["cln_total_cost"].str.replace(",", "")
+        master_df["cln_total_cost"] = pd.to_numeric(master_df["cln_total_cost"], errors="coerce")
     except KeyError as e:
         raise ColumnsNotFoundError(
             dataset_columns=master_df.columns,

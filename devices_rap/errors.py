@@ -168,6 +168,12 @@ class DuplicateDataError(LoggedException):
     """Custom error for when duplicate data are found in a dataset"""
 
 
+class LoggedValueError(LoggedException):
+    """
+    Custom exception class that logs the error message using the logger.
+    """
+
+
 class LoggedWarning(Warning):
     """
     Custom exception class that logs the warning message using the logger.
