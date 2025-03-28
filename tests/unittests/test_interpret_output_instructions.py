@@ -7,7 +7,7 @@ import pytest
 import pandas as pd
 
 from devices_rap import interpret_output_instructions as instructions
-from devices_rap.errors import ColumnsNotFoundError, DataSetNotFoundError
+from nhs_herbot.errors import ColumnsNotFoundError, DataSetNotFoundError
 
 
 class TestFilterData:
@@ -1021,9 +1021,15 @@ class TestProcessRegion:
     @pytest.mark.parametrize(
         "call_no, message",
         (
-            (0, "Interpreting output instructions for the test region",),
-            (1, "Processing the test worksheet for the test region",),
-        )
+            (
+                0,
+                "Interpreting output instructions for the test region",
+            ),
+            (
+                1,
+                "Processing the test worksheet for the test region",
+            ),
+        ),
     )
     def test_loggers(self, mock_info, mock_process_worksheet, call_no, message):
         """

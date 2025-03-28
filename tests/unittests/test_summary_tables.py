@@ -8,7 +8,7 @@ import pandas as pd
 import pytest
 
 from devices_rap import summary_tables
-from devices_rap.errors import ColumnsNotFoundError
+from nhs_herbot.errors import ColumnsNotFoundError
 
 
 pytestmark = pytest.mark.no_data_needed
@@ -36,8 +36,7 @@ def mock_calc_change_from_previous_month_column(mocker, empty_df):
     Mock the calc_change_from_previous_month_column function
     """
     return mocker.patch(
-        "devices_rap.summary_tables.calc_change_from_previous_month_column",
-        return_value=empty_df
+        "devices_rap.summary_tables.calc_change_from_previous_month_column", return_value=empty_df
     )
 
 
@@ -95,7 +94,8 @@ class TestCreatePivotSumTable:
             ("columns", ["test"], "columns", ["test"]),
             ("base_index", ["test"], "index", ["test"]),
             (
-                "extended_index", ["test"], 
+                "extended_index",
+                ["test"],
                 "index",
                 [
                     "upd_region",
@@ -106,7 +106,8 @@ class TestCreatePivotSumTable:
                 ],
             ),
             (
-                "extended_index", "test", 
+                "extended_index",
+                "test",
                 "index",
                 [
                     "upd_region",
@@ -118,7 +119,9 @@ class TestCreatePivotSumTable:
             ),
         ],
     )
-    def test_non_default_values(self, mocker, empty_df, kwarg, input_value, actual_kwarg, expected):
+    def test_non_default_values(
+        self, mocker, empty_df, kwarg, input_value, actual_kwarg, expected
+    ):
         """
         Test that the function can handle non-default values
         """
@@ -388,14 +391,26 @@ class TestCreateDeviceCategorySummaryTable:
     Test class for summary_tables.create_device_category_summary_table
     """
 
-    def test_returns_dataframe(self, mocker, empty_df, mock_create_pivot_sum_table, mock_calc_change_from_previous_month_column):
+    def test_returns_dataframe(
+        self,
+        mocker,
+        empty_df,
+        mock_create_pivot_sum_table,
+        mock_calc_change_from_previous_month_column,
+    ):
         """
         Tests that the create_device_category_summary_table function returns a DataFrame
         """
         result = summary_tables.create_device_category_summary_table(empty_df)
         assert isinstance(result, pd.DataFrame)
 
-    def test_calls_create_pivot_sum_table(self, mocker, empty_df, mock_create_pivot_sum_table, mock_calc_change_from_previous_month_column):
+    def test_calls_create_pivot_sum_table(
+        self,
+        mocker,
+        empty_df,
+        mock_create_pivot_sum_table,
+        mock_calc_change_from_previous_month_column,
+    ):
         """
         Tests that the create_device_category_summary_table function calls create_pivot_sum_table
         """

@@ -18,9 +18,8 @@ from typing import List, Optional
 
 import pandas as pd
 from loguru import logger
-
-from devices_rap.errors import ColumnsNotFoundError
-from devices_rap.utils import get_datetime_columns
+from nhs_herbot.errors import ColumnsNotFoundError
+from nhs_herbot.utils import get_datetime_columns
 
 
 def create_pivot_sum_table(

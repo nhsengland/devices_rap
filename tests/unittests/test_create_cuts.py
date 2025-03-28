@@ -8,7 +8,7 @@ import pytest
 import pandas as pd
 
 from devices_rap import create_cuts
-from devices_rap.errors import ColumnsNotFoundError
+from nhs_herbot.errors import ColumnsNotFoundError
 
 if sys.version_info < (3, 11):
     from exceptiongroup import ExceptionGroup  # type: ignore
@@ -371,7 +371,7 @@ class TestCreateRegionalTableCuts:
                         ("South", 1, 2, 4),
                     ],
                 ),
-            )
+            ),
         ],
     )
     def test_correct_data_in_dataframes(
@@ -385,7 +385,9 @@ class TestCreateRegionalTableCuts:
         actual = actual_dict[region][table_type]
 
         actual_df = actual.sort_values(by=actual.columns.tolist()).reset_index(drop=True)
-        expected_df = expected_df.sort_values(by=expected_df.columns.tolist()).reset_index(drop=True)
+        expected_df = expected_df.sort_values(by=expected_df.columns.tolist()).reset_index(
+            drop=True
+        )
 
         pd.testing.assert_frame_equal(actual_df, expected_df)
 

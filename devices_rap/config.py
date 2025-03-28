@@ -11,9 +11,8 @@ from typing import List, Optional
 import yaml
 from dotenv import load_dotenv
 from loguru import logger
+from nhs_herbot.errors import LoggedWarning, PathNotFoundError
 from tqdm import tqdm
-
-from devices_rap.errors import LoggedWarning, PathNotFoundError
 
 if sys.version_info < (3, 11):
     from exceptiongroup import ExceptionGroup  # type: ignore

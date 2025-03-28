@@ -25,11 +25,9 @@ DATASETS : dict
 
 from typing import Any, Dict
 
-import pandas as pd
 import tqdm
-from loguru import logger
-
-from devices_rap.errors import NoDatasetsProvidedError, NoFilePathProvidedError
+from nhs_herbot.errors import NoDatasetsProvidedError
+from nhs_herbot.load_csv import load_csv_data
 
 NA_VALUES = [
     "(blank)",
@@ -59,47 +57,6 @@ NA_VALUES = [
     "- ",
     " -  ",
 ]
-
-
-def load_csv_data(dataset_name: str, **read_csv_kwargs) -> pd.DataFrame:
-    """
-    Load CSV data into a pandas DataFrame.
-
-    Parameters
-    ----------
-    dataset_name : str
-        The name of the dataset being loaded.
-    **read_csv_kwargs : dict
-        Additional keyword arguments to pass to `pd.read_csv`. Must include `filepath_or_buffer`.
-
-    Returns
-    -------
-    pd.DataFrame
-        DataFrame containing the loaded CSV data.
-
-    Raises
-    ------
-    NoFilePathProvidedError
-        If `filepath_or_buffer` is not provided in `read_csv_kwargs`.
-
-    Notes
-    -----
-    This function logs the dataset name and file path before loading the data.
-    """
-    try:
-        filepath_or_buffer = read_csv_kwargs["filepath_or_buffer"]
-    except KeyError as e:
-        raise NoFilePathProvidedError("No file path provided.") from e
-
-    logger.info(f"Loading {dataset_name} data from: {filepath_or_buffer}")
-
-    data_df = pd.read_csv(
-        na_values=NA_VALUES,
-        skip_blank_lines=True,
-        **read_csv_kwargs,
-    ).dropna(how="all")
-
-    return data_df
 
 
 def load_devices_datasets(datasets: Dict[str, Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
@@ -134,7 +91,7 @@ def load_devices_datasets(datasets: Dict[str, Dict[str, Any]]) -> Dict[str, Dict
     for dataset_name, dataset_kwargs in tqdm.tqdm(datasets.items(), desc="Loading datasets"):
         if "data" in dataset_kwargs:
             dataset_kwargs.pop("data")
-        dataset_df = load_csv_data(dataset_name, **dataset_kwargs)
+        dataset_df = load_csv_data(dataset_name, na_values=NA_VALUES, **dataset_kwargs)
         datasets[dataset_name]["data"] = dataset_df
 
     return datasets

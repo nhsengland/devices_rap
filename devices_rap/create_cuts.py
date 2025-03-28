@@ -16,8 +16,7 @@ from typing import Any, Dict, List
 import pandas as pd
 import tqdm
 from loguru import logger
-
-from devices_rap.errors import ColumnsNotFoundError
+from nhs_herbot.errors import ColumnsNotFoundError
 
 
 def create_table_cuts(
@@ -73,7 +72,7 @@ def create_table_cuts(
 
 
 def create_regional_table_cuts(
-    tables: Dict[str, pd.DataFrame]
+    tables: Dict[str, pd.DataFrame],
 ) -> Dict[str, Dict[str, pd.DataFrame]]:
     """
     Create a collection of Regional RAG summary tables by cutting the provided tables by the

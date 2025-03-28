@@ -42,9 +42,8 @@ from typing import Dict, List, Optional, Tuple
 import pandas as pd
 import tqdm
 from loguru import logger
-
-from devices_rap.errors import ColumnsNotFoundError, DataSetNotFoundError
-from devices_rap.utils import get_datetime_columns
+from nhs_herbot.errors import ColumnsNotFoundError, DataSetNotFoundError
+from nhs_herbot.utils import get_datetime_columns
 
 
 def filter_data(worksheet_data: pd.DataFrame, worksheet_filters: Dict[str, list]) -> pd.DataFrame:

@@ -24,7 +24,7 @@ class TestLoadCSVData:
         """
         Test that the function loads a CSV file with no NA values.
         """
-        result = load_csv_data("test", filepath_or_buffer=create_temp_csv_file)
+        result = load_csv_data("test", filepath_or_buffer=create_temp_csv_file, na_values=na_value)
         assert na_value not in result.values
 
     def test_skipped_blank_lines(self, create_temp_csv_file):

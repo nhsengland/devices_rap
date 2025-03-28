@@ -6,7 +6,7 @@ import re
 import pytest
 import pandas as pd
 from devices_rap import exception_notes
-from devices_rap.errors import ColumnsNotFoundError
+from nhs_herbot.errors import ColumnsNotFoundError
 
 
 class TestColumnSummaryNotes:
@@ -45,7 +45,9 @@ class TestColumnSummaryNotes:
         match_summaries = {"Group 1": "Y", "Group 2": "Ceased"}
 
         actual = exception_notes.column_summary_notes(row, columns_to_summarise, match_summaries)
-        expected = pd.Series(["Group 1: Note 1. Group 2: Note 3."], index=["summary"], dtype="string")
+        expected = pd.Series(
+            ["Group 1: Note 1. Group 2: Note 3."], index=["summary"], dtype="string"
+        )
 
         pd.testing.assert_series_equal(actual, expected)
 
@@ -199,7 +201,9 @@ class TestCreateExceptionsNotes:
         Tests that the function returns a DataFrame with the correct columns.
         """
 
-        actual = exception_notes.create_exception_notes(input_exceptions, drop_columns=drop_columns)
+        actual = exception_notes.create_exception_notes(
+            input_exceptions, drop_columns=drop_columns
+        )
         assert actual.columns.tolist() == expected_columns
 
     def test_returns_correct_values(self, input_exceptions):

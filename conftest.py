@@ -13,8 +13,6 @@ from devices_rap.data_in.load_csv import NA_VALUES
 
 warnings.filterwarnings("ignore", category=DeprecationWarning, message=".*platformdirs.*")
 
-TEST_DATA_DIR = DATA_DIR / "_test"
-
 Logger = Any
 
 MockLoggerDict = Dict[

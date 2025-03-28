@@ -4,6 +4,7 @@ raw data and creating the final reports.
 """
 
 from loguru import logger
+from nhs_herbot.utils import timeit
 
 from devices_rap.clean_data import (
     batch_normalise_column_names,
@@ -26,7 +27,6 @@ from devices_rap.summary_tables import (
     create_device_category_summary_table,
     create_device_summary_table,
 )
-from devices_rap.utils import timeit
 
 
 @timeit
