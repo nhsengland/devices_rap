@@ -1,6 +1,8 @@
+-e .
 black
-flake8
 exceptiongroup
+flake8
+git+https://github.com/nhsengland/nhs_herbot.git@20250328
 ipython
 isort
 jupyterlab
@@ -12,13 +14,12 @@ numpy
 pandas
 pip
 pre-commit
-python-dotenv
 pytest
 pytest-cov
 pytest-mock
 pytest-xdist
+python-dotenv
 scikit-learn
 tqdm
 typer
 xlsxwriter
--e .
