@@ -19,7 +19,7 @@ if sys.version_info < (3, 11):
 
 # Set financial year and month
 FIN_YEAR = "2425"
-FIN_MONTH = "10"
+FIN_MONTH = "11"
 
 # Define project root directory
 PROJ_ROOT = Path(__file__).resolve().parents[1]
@@ -65,9 +65,7 @@ logger.debug(f"PROJ_ROOT path is: {PROJ_ROOT}")
 
 DATA_DIR = PROJ_ROOT / "data"
 RAW_DATA_DIR = DATA_DIR / "raw"
-INTERIM_DATA_DIR = DATA_DIR / "interim"
 PROCESSED_DATA_DIR = DATA_DIR / "processed"
-EXTERNAL_DATA_DIR = DATA_DIR / "external"
 
 MODELS_DIR = PROJ_ROOT / "models"
 
@@ -142,7 +140,6 @@ def check_paths(paths_to_check: Optional[List[Path]] = None):
         RAW_DATA_DIR,
         # INTERIM_DATA_DIR,
         PROCESSED_DATA_DIR,
-        EXTERNAL_DATA_DIR,
         # MODELS_DIR,
         # REPORTS_DIR,
         # FIGURES_DIR,

@@ -15,9 +15,7 @@ if sys.version_info < (3, 11):
 
 from devices_rap.config import (
     DATA_DIR,
-    EXTERNAL_DATA_DIR,
     FIGURES_DIR,
-    INTERIM_DATA_DIR,
     MODELS_DIR,
     PROCESSED_DATA_DIR,
     RAW_DATA_DIR,
@@ -35,9 +33,7 @@ class TestConfig:
         [
             (DATA_DIR, "data"),
             (RAW_DATA_DIR, "data/raw"),
-            (INTERIM_DATA_DIR, "data/interim"),
             (PROCESSED_DATA_DIR, "data/processed"),
-            (EXTERNAL_DATA_DIR, "data/external"),
             (MODELS_DIR, "models"),
             (REPORTS_DIR, "reports"),
             (FIGURES_DIR, "reports/figures"),
