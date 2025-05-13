@@ -20,6 +20,7 @@ from nhs_herbot.utils import (
     convert_to_numeric_column,
     convert_values_to,
     normalise_column_names,
+    parse_dates,
     sort_by_priority,
 )
 
@@ -197,9 +198,11 @@ def cleanse_exceptions(
     exceptions_df: pd.DataFrame, rag_priorities: Optional[List[str]] = None
 ) -> pd.DataFrame:
     """
-    Clean the exceptions dataset ready for processing. This function will remove duplicate
-    exceptions by keeping the first occurrence of each provider and device code combination
-    with the highest RAG status as defined the rag_priorities variable.
+    Clean the exceptions dataset ready for processing.
+
+    First, it will convert the handover date columns to datetime format. Then, it will remove
+    duplicate exceptions by keeping the first occurrence of each provider and device code
+    combination with the highest RAG status as defined the rag_priorities variable.
 
     The rag_priorities variable is a list of RAG status priorities, with the default being:
     - "AMBER"
@@ -223,16 +226,28 @@ def cleanse_exceptions(
     -------
     pd.DataFrame
         The cleaned exceptions dataset
-
-    Raises
-    ------
-    ColumnsNotFoundError
-        If the required columns are not present in the dataset
     """
     rag_priorities = rag_priorities or RAG_PRIORITIES
 
     logger.info("Cleaning the exceptions dataset ready for processing")
 
+    date_columns = [
+        "handover_date_zcm",
+        "handover_date_vcm",
+    ]
+
+    exceptions_df = convert_date_columns_to_datetime(
+        data=exceptions_df,
+        date_columns=date_columns,
+    )
+
+    logger.info("Converting handover date columns to datetime")
+    exceptions_df = convert_date_columns_to_datetime(
+        data=exceptions_df,
+        date_columns=date_columns,
+    )
+
+    logger.info("Resolving duplicates in the exceptions dataset.")
     exceptions_df = drop_duplicates_on_priority(
         data=exceptions_df,
         subset=["provider_code", "dev_code"],
@@ -241,6 +256,41 @@ def cleanse_exceptions(
     )
 
     return exceptions_df
+
+
+def convert_date_columns_to_datetime(data: pd.DataFrame, date_columns: List[str]) -> pd.DataFrame:
+    """
+    Convert specified date columns in the dataframe to datetime format using the parse_dates
+    function. This function will raise an error if any of the specified date columns are not present
+    in the dataframe. The function will log the conversion process for each date column.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        The dataframe containing the date columns to be converted.
+    date_columns : List[str]
+        A list of column names to be converted to datetime.
+
+    Returns
+    -------
+    pd.DataFrame
+        The dataframe with specified date columns converted to datetime.
+
+    Raises
+    ------
+    ColumnsNotFoundError
+        If any of the specified date columns are not present in the dataframe.
+    """
+    for date_col in tqdm.tqdm(date_columns):
+        try:
+            logger.info(f"Converting {date_col} values to datetime")
+            data[date_col] = data[date_col].apply(parse_dates)
+        except KeyError as e:
+            raise ColumnsNotFoundError(
+                dataset_columns=data.columns,
+                date_column=date_columns,
+            ) from e
+    return data
 
 
 def drop_duplicates_on_priority(

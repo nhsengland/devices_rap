@@ -90,7 +90,9 @@ class TestCleanseMasterData:
             "devices_rap.clean_data.convert_values_to", return_value="bar", autospec=True
         )
         mock_convert_to_numeric_column = mocker.patch(
-            "devices_rap.clean_data.convert_to_numeric_column", return_value=pd.Series("bar"), autospec=True
+            "devices_rap.clean_data.convert_to_numeric_column",
+            return_value=pd.Series("bar"),
+            autospec=True,
         )
 
         return (
@@ -118,7 +120,7 @@ class TestCleanseMasterData:
         """
         Test that the function applies the convert_fin_dates function correctly
         """
-        mock_convert_fin_dates, _, _ , _ = mock_called_functions
+        mock_convert_fin_dates, _, _, _ = mock_called_functions
         clean_data.cleanse_master_data(test_master_df)
         assert mock_convert_fin_dates.call_count == 1
 
@@ -126,7 +128,7 @@ class TestCleanseMasterData:
         """
         Test that the function applies the convert_values_to function correctly
         """
-        _, mock_convert_values_to, _ , _ = mock_called_functions
+        _, mock_convert_values_to, _, _ = mock_called_functions
         clean_data.cleanse_master_data(test_master_df)
         assert mock_convert_values_to.call_count == 2
         mock_convert_values_to.assert_called_with(
@@ -137,7 +139,7 @@ class TestCleanseMasterData:
         """
         Test that the function logs the expected messages
         """
-        _, _, mock_info , _ = mock_called_functions
+        _, _, mock_info, _ = mock_called_functions
         clean_data.cleanse_master_data(test_master_df)
         assert mock_info.call_count == 5
         mock_info.assert_any_call("Cleaning the master dataset ready for processing")
@@ -581,6 +583,16 @@ class TestCleanseExceptions:
         )
 
     @pytest.fixture
+    def mock_convert_date_columns_to_datetime(self, mocker, empty_exceptions_df):
+        """
+        Mock the convert_date_columns_to_datetime function
+        """
+        return mocker.patch(
+            "devices_rap.clean_data.convert_date_columns_to_datetime",
+            return_value=empty_exceptions_df,
+        )
+
+    @pytest.fixture
     def mock_drop_duplicates_on_priority(self, mocker, empty_exceptions_df):
         """
         Mock the drop_duplicates_on_priority function
@@ -589,7 +601,12 @@ class TestCleanseExceptions:
             "devices_rap.clean_data.drop_duplicates_on_priority", return_value=empty_exceptions_df
         )
 
-    def test_dataframe_returned(self, empty_exceptions_df, mock_drop_duplicates_on_priority):
+    def test_dataframe_returned(
+        self,
+        empty_exceptions_df,
+        mock_convert_date_columns_to_datetime,
+        mock_drop_duplicates_on_priority,
+    ):
         """
         Test that the function returns a DataFrame
         """
@@ -598,7 +615,10 @@ class TestCleanseExceptions:
         assert isinstance(actual, expected_dtype)
 
     def test_calls_drop_duplicates_on_priority(
-        self, empty_exceptions_df, mock_drop_duplicates_on_priority
+        self,
+        empty_exceptions_df,
+        mock_convert_date_columns_to_datetime,
+        mock_drop_duplicates_on_priority,
     ):
         """
         Test that the function calls the drop_duplicates_on_priority function
@@ -616,14 +636,20 @@ class TestCleanseExceptions:
         ),
     )
     def test_calls_drop_duplicates_on_priority_kwargs(
-        self, mock_drop_duplicates_on_priority, kwarg_name, expected_kwarg_value
+        self,
+        mock_convert_date_columns_to_datetime,
+        mock_drop_duplicates_on_priority,
+        kwarg_name,
+        expected_kwarg_value,
     ):
         """
         Test that the function calls the drop_duplicates_on_priority function with the correct kwargs
         """
-        clean_data.cleanse_exceptions(
-            pd.DataFrame(columns=self.exceptions_columns, data=[["test1", "test1", "AMBER"]])
+        input_df = pd.DataFrame(
+            columns=self.exceptions_columns, data=[["test1", "test1", "AMBER"]]
         )
+        mock_convert_date_columns_to_datetime.return_value = input_df
+        clean_data.cleanse_exceptions(input_df)
         actual_kwargs = mock_drop_duplicates_on_priority.call_args.kwargs
 
         if isinstance(expected_kwarg_value, pd.DataFrame):
@@ -730,3 +756,68 @@ class TestCheckDuplicates:
         mock_error.assert_called_once_with(
             "Found 2 duplicated rows in the dataset with subset columns: ['col1']"
         )
+
+
+class TestConvertDateColumnsToDatetime:
+    """
+    Tests for clean_data.convert_date_columns_to_datetime
+    """
+
+    @pytest.fixture
+    def test_dataframe(self):
+        """
+        Fixture to create a test DataFrame with date columns
+        """
+        return pd.DataFrame(
+            {
+                "date_col1": ["01/01/2023 12:00", "02/01/2023 12:00"],
+                "date_col2": ["03/01/2023", "04/01/2023"],
+                "excel_date_col": [44927, 44928],
+                "non_date_col": ["test1", "test2"],
+            }
+        )
+
+    @pytest.mark.parametrize(
+        "data_columns, expected_data",
+        (
+            (
+                ["date_col1"],
+                {"date_col1": (pd.Timestamp("2023-01-01 12:00"), pd.Timestamp("2023-01-02 12:00"))},
+            ),
+            (
+                ["date_col2"],
+                {"date_col2": (pd.Timestamp("2023-01-03"), pd.Timestamp("2023-01-04"))},
+            ),
+            (
+                ["excel_date_col"],
+                {"excel_date_col": (pd.Timestamp("2023-01-01"), pd.Timestamp("2023-01-02"))},
+            ),
+        ),
+    )
+    def test_handles_dates_in_different_formats(self, test_dataframe, data_columns, expected_data):
+        """
+        Test that the function handles dates in different formats
+        """
+        actual = clean_data.convert_date_columns_to_datetime(test_dataframe, data_columns)[data_columns]
+        expected = pd.DataFrame(expected_data)
+        pd.testing.assert_frame_equal(actual, expected)
+
+    def test_raises_columns_not_found_error(self, test_dataframe):
+        """
+        Test that the function raises ColumnsNotFoundError when a specified date column is missing
+        """
+        date_columns = ["missing_col"]
+        with pytest.raises(clean_data.ColumnsNotFoundError) as exc_info:
+            clean_data.convert_date_columns_to_datetime(test_dataframe, date_columns)
+
+        assert "missing_col" in str(exc_info.value)
+
+    def test_logs_conversion_process(self, test_dataframe, mock_info):
+        """
+        Test that the function logs the conversion process for each date column
+        """
+        date_columns = ["date_col1", "date_col2"]
+        clean_data.convert_date_columns_to_datetime(test_dataframe, date_columns)
+
+        mock_info.assert_any_call("Converting date_col1 values to datetime")
+        mock_info.assert_any_call("Converting date_col2 values to datetime")
