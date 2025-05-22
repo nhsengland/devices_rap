@@ -93,6 +93,8 @@ WORKSHEET_CONFIG:
     columns: *amber_summary_columns
     filters:
       rag_status: ["AMBER"]
+      upd_high_level_device_type: 
+        not: ["NULL", "DEV98", "DEV99"]
     sub-totals: *standard_sub_totals
     sort_columns: *standard_sort_columns
   AMBER Detailed:
@@ -100,6 +102,8 @@ WORKSHEET_CONFIG:
     columns: *detailed_columns
     filters:
       rag_status: ["AMBER"]
+      upd_high_level_device_type: 
+        not: ["NULL", "DEV98", "DEV99"]
     sub-totals: *standard_sub_totals
     sort_columns: *standard_sort_columns
   RED Summary:
@@ -107,6 +111,8 @@ WORKSHEET_CONFIG:
     columns: *summary_columns
     filters:
       rag_status: ["RED", "YELLOW"]
+      upd_high_level_device_type: 
+        not: ["NULL", "DEV98", "DEV99", "DEV19", "DEV21", "DEV24", "DEV28", "DEV31"]
     sub-totals: *standard_sub_totals
     sort_columns: *standard_sort_columns
   RED Detailed:
@@ -114,26 +120,16 @@ WORKSHEET_CONFIG:
     columns: *detailed_columns
     filters:
       rag_status: ["RED", "YELLOW"]
+      upd_high_level_device_type: 
+        not: ["NULL", "DEV98", "DEV99", "DEV19", "DEV21", "DEV24", "DEV28", "DEV31"]
     sub-totals: *standard_sub_totals
     sort_columns: *standard_sort_columns
-  # OTHER Summary:
-  #   type: "summary"
-  #   columns: *summary_columns
-  #   filters:
-  #     rag_status: ["GREEN VCM", "GREEN ZCM", "BLUE VCM", "BLUE ZCM"]
-  #   sub-totals: *standard_sub_totals
-  #   sort_columns: *standard_sort_columns
-  # OTHER Detailed:
-  #   type: "detailed"
-  #   columns: *detailed_columns
-  #   filters:
-  #     rag_status: ["GREEN VCM", "GREEN ZCM", "BLUE VCM", "BLUE ZCM"]
-  #   sub-totals: *standard_sub_totals
-  #   sort_columns: *standard_sort_columns
   NON-MIGRATED Summary:
     type: "summary"
     columns: *summary_columns
     filters:
+      rag_status: 
+        not: ["NULL"]
       upd_high_level_device_type: *non_migrated_device_types
     sub-totals: *standard_sub_totals
     sort_columns: *standard_sort_columns
@@ -141,6 +137,8 @@ WORKSHEET_CONFIG:
     type: "detailed"
     columns: *detailed_columns
     filters:
+      rag_status: 
+        not: ["NULL"]
       upd_high_level_device_type: *non_migrated_device_types
     sub-totals: *standard_sub_totals
     sort_columns: *standard_sort_columns
