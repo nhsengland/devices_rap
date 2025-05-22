@@ -19,7 +19,7 @@ if sys.version_info < (3, 11):
 
 # Set financial year and month
 FIN_YEAR = "2425"
-FIN_MONTH = "11"
+FIN_MONTH = "12"
 
 # Define project root directory
 PROJ_ROOT = Path(__file__).resolve().parents[1]
