@@ -236,11 +236,6 @@ def cleanse_exceptions(
         "handover_date_vcm",
     ]
 
-    exceptions_df = convert_date_columns_to_datetime(
-        data=exceptions_df,
-        date_columns=date_columns,
-    )
-
     logger.info("Converting handover date columns to datetime")
     exceptions_df = convert_date_columns_to_datetime(
         data=exceptions_df,

@@ -37,7 +37,7 @@ interpret_output_instructions(
 
 """
 
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Literal, Optional, Tuple
 
 import pandas as pd
 import tqdm
@@ -46,7 +46,9 @@ from nhs_herbot.errors import ColumnsNotFoundError, DataSetNotFoundError
 from nhs_herbot.utils import get_datetime_columns
 
 
-def filter_data(worksheet_data: pd.DataFrame, worksheet_filters: Dict[str, list]) -> pd.DataFrame:
+def filter_data(
+    worksheet_data: pd.DataFrame, worksheet_filters: Dict[str, list | Dict[Literal["not"], list]]
+) -> pd.DataFrame:
     """
     Filter the worksheet data based on the provided filters. The function will filter the data
     based on the columns and values provided in the worksheet_filters dictionary.
@@ -78,8 +80,13 @@ def filter_data(worksheet_data: pd.DataFrame, worksheet_filters: Dict[str, list]
     2    C     3    30
     """
     try:
-        for column, values in worksheet_filters.items():
-            worksheet_data = worksheet_data[worksheet_data[column].isin(values)]
+        for column, filter_values in worksheet_filters.items():
+            if isinstance(filter_values, dict) and "not" in filter_values:
+                worksheet_data = worksheet_data[~worksheet_data[column].isin(filter_values["not"])]
+            elif isinstance(filter_values, list):
+                worksheet_data = worksheet_data[worksheet_data[column].isin(filter_values)]
+            else:
+                raise ValueError(f"Invalid filter value for column {column}: {filter_values}")
     except KeyError as e:
         raise ColumnsNotFoundError(
             dataset_columns=worksheet_data.columns, filter_columns=worksheet_filters.keys()
@@ -300,7 +307,7 @@ def process_worksheet(worksheet_config: Dict, datasets: Dict[str, pd.DataFrame])
         worksheet_data=ordered_worksheet_data, worksheet_columns=worksheet_columns
     )
 
-    decimals = worksheet_config.get("round_to", 2)
+    decimals = worksheet_config.get("round_to", 0)
     final_worksheet_data = round_data(worksheet_data=renamed_worksheet_data, decimals=decimals)
 
     return final_worksheet_data

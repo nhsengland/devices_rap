@@ -4,7 +4,7 @@ Functionality that handle the output of processed data from the pipeline.
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, Literal, Optional
 
 import pandas as pd
 import tqdm
@@ -16,6 +16,8 @@ from devices_rap.config import (
     PROCESSED_DATA_DIR,
     USE_MULTIPROCESSING,
 )
+
+FormatsDict = Dict[Literal["header", "total", "default", "cost"], object]
 
 
 def create_excel_reports(
@@ -126,7 +128,7 @@ def create_excel_file(output_file: Path, worksheets: Dict[str, pd.DataFrame]):
     logger.debug(f"Creating the Excel file: {output_file}")
     with pd.ExcelWriter(output_file, engine="xlsxwriter") as writer:
         workbook = writer.book
-        header_format = create_header_format(workbook)
+        formats = create_formats(workbook)
 
         if USE_MULTIPROCESSING:
             with ThreadPoolExecutor() as executor:
@@ -136,7 +138,7 @@ def create_excel_file(output_file: Path, worksheets: Dict[str, pd.DataFrame]):
                         writer=writer,
                         sheet_name=sheet_name,
                         data=data,
-                        header_format=header_format,
+                        formats=formats,
                         output_file=output_file,
                     )
                     for sheet_name, data in worksheets.items()
@@ -149,14 +151,16 @@ def create_excel_file(output_file: Path, worksheets: Dict[str, pd.DataFrame]):
                     writer=writer,
                     sheet_name=sheet_name,
                     data=data,
-                    header_format=header_format,
+                    formats=formats,
                     output_file=output_file,
                 )
 
 
-def create_header_format(workbook) -> object:
+def create_formats(workbook) -> FormatsDict:
     """
-    Create the header format for the Excel file.
+    Create the formats for the Excel file. This include the formats for the:
+    - Header rows
+    - Total rows
 
     Parameters
     ----------
@@ -165,29 +169,92 @@ def create_header_format(workbook) -> object:
 
     Returns
     -------
-    object
-        The header format
+    FORMATS_DICT (dict[str, object])
+        A dictionary containing the formats for the Excel file
     """
-    return workbook.add_format(
-        {
+    format_config = {
+        "default": {},
+        "cost": {
+            "num_format": "£#,##0",
+        },
+        "header": {
             "bold": True,
             "text_wrap": True,
             "valign": "top",
             "fg_color": "#D9E1F2",
             "border": 1,
-        }
-    )
+        },
+        "total": {
+            "bold": True,
+            "fg_color": "#C6EFCE",
+            "num_format": "£#,##0",
+        },
+    }
+
+    formats = {}
+
+    for name, config in format_config.items():
+        if config:
+            formats[name] = workbook.add_format(config)
+        else:
+            formats[name] = workbook.add_format()
+
+    return formats
+
+
+def apply_excel_formatting(writer, data: pd.DataFrame, formats: FormatsDict, sheet_name: str):
+    """
+    Apply formatting to the Excel worksheet. This includes:
+    - Header formatting
+    - Total row formatting
+    - Column formatting for floats
+    - Autofilter for the header row
+    - Autofit for the columns
+
+    Parameters
+    ----------
+    writer : pd.ExcelWriter
+        The Excel writer object
+    data : pd.DataFrame
+        The data to write to the worksheet
+    formats : dict
+        The formats to apply to the worksheet
+    sheet_name : str
+        The name of the worksheet
+    """
+    # Write the column headers with the defined format.
+    header_format = formats["header"]
+
+    worksheet = writer.sheets[sheet_name]
+    for col_num, value in enumerate(data.columns.values):
+        worksheet.write(0, col_num, value, header_format)
+
+    worksheet.autofilter(0, 0, data.shape[0], data.shape[1] - 1)
+
+    # Apply formatting for rows with "Total" in the provider code column
+    for row_num, (provider_code, region) in enumerate(
+        zip(data["Provider Code"], data["Region"]), start=1
+    ):  # Start from row 1 (after header)
+        if "Total" in str(provider_code) or "Total" in str(region):
+            worksheet.set_row(row_num, None, formats["total"])
+
+    # Apply formatting for columns with floats to be formatted as Accounting "£#,##0"
+    for col_num, dtype in enumerate(data.dtypes):
+        if dtype in ["float64", "float32"]:
+            worksheet.set_column(col_num, col_num, None, formats["cost"])
+
+    worksheet.autofit()
 
 
 def write_worksheet(
     writer: pd.ExcelWriter,
     sheet_name: str,
     data: pd.DataFrame,
-    header_format: object,
+    formats: FormatsDict,
     output_file: Path,
 ):
     """
-    Write a worksheet to the Excel file.
+    Write a worksheet to the Excel file with conditional formatting.
 
     Parameters
     ----------
@@ -197,8 +264,8 @@ def write_worksheet(
         The name of the worksheet
     data : pd.DataFrame
         The data to write to the worksheet
-    header_format : object
-        The header format
+    formats : dict
+        The formats to apply to the worksheet
     output_file : Path
         The path to the Excel file that is been written to (only used for logging context)
 
@@ -210,14 +277,24 @@ def write_worksheet(
         f"Writing data with {data.shape[0]} rows and {data.shape[1]} columns to "
         f"the {sheet_name} worksheet to the Excel file, {output_file}."
     )
+
+    # Format datetime columns to %d-%m-%Y
+    for col in data.select_dtypes(include=["datetime"]).columns:
+        data[col] = data[col].dt.strftime("%d-%m-%Y")
+
     data.to_excel(
-        excel_writer=writer, sheet_name=sheet_name, index=False, startrow=1, header=False
+        excel_writer=writer,
+        sheet_name=sheet_name,
+        index=False,
+        startrow=1,
+        header=False,
     )
 
-    # Write the column headers with the defined format.
-    worksheet = writer.sheets[sheet_name]
-    for col_num, value in enumerate(data.columns.values):
-        worksheet.write(0, col_num, value, header_format)
+    apply_excel_formatting(
+        writer=writer,
+        data=data,
+        formats=formats,
+        sheet_name=sheet_name,
+    )
 
-    worksheet.autofilter(0, 0, data.shape[0], data.shape[1] - 1)
-    worksheet.autofit()
+    logger.debug(f"Worksheet {sheet_name} written to the Excel file: {output_file}")
