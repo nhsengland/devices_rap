@@ -23,14 +23,14 @@ class TestBatchNormaliseColumnNames:
         with pytest.raises(clean_data.NoDatasetsProvidedError):
             clean_data.batch_normalise_column_names({})
 
-    def test_checks_for_missing_data_key(self, mocker):
+    def test_checks_for_missing_data_key(self):
         """
         Test that the function raises an error when the data key is missing
         """
         with pytest.raises(clean_data.NoDataProvidedError):
             clean_data.batch_normalise_column_names({"test": {}})
 
-    def test_check_for_data_not_dataframe(self, mocker):
+    def test_check_for_data_not_dataframe(self):
         """
         Test that the function raises an error when the data is not a DataFrame
         """
@@ -152,7 +152,8 @@ class TestCleanseMasterData:
 
     def test_columns_not_found_error(self, mock_error):
         """
-        Test that the function raises a ColumnsNotFoundError when the required columns are not present
+        Test that the function raises a ColumnsNotFoundError when the required columns are not
+        present
         """
         with pytest.raises(clean_data.ColumnsNotFoundError):
             clean_data.cleanse_master_data(pd.DataFrame())
@@ -294,7 +295,8 @@ class TestCleanseMasterJoinedDataset:
 
     def test_columns_not_found_error(self, mock_error):
         """
-        Test that the function raises a ColumnsNotFoundError when the required columns are not present
+        Test that the function raises a ColumnsNotFoundError when the required columns are not
+        present
         """
         with pytest.raises(clean_data.ColumnsNotFoundError):
             clean_data.cleanse_master_joined_dataset(pd.DataFrame())
@@ -471,7 +473,8 @@ class TestDropDuplicatesOnPriority:
 
     def test_columns_not_found_error(self, mock_error, default_kwargs):
         """
-        Test that the function raises a ColumnsNotFoundError when the required columns are not present
+        Test that the function raises a ColumnsNotFoundError when the required columns are not
+        present
         """
         with pytest.raises(clean_data.ColumnsNotFoundError):
             clean_data.drop_duplicates_on_priority(pd.DataFrame(), **default_kwargs)
@@ -643,7 +646,8 @@ class TestCleanseExceptions:
         expected_kwarg_value,
     ):
         """
-        Test that the function calls the drop_duplicates_on_priority function with the correct kwargs
+        Test that the function calls the drop_duplicates_on_priority function with the correct
+        kwargs
         """
         input_df = pd.DataFrame(
             columns=self.exceptions_columns, data=[["test1", "test1", "AMBER"]]
@@ -748,7 +752,8 @@ class TestCheckDuplicates:
 
     def test_subset(self, mock_error, one_column_duplicates_df):
         """
-        Test that the function raises a DuplicateDataError when duplicate values are found in a subset of columns
+        Test that the function raises a DuplicateDataError when duplicate values are found in a
+        subset of columns
         """
         with pytest.raises(clean_data.DuplicateDataError):
             clean_data.check_duplicates(one_column_duplicates_df, "ERROR", subset=["col1"])
@@ -782,7 +787,12 @@ class TestConvertDateColumnsToDatetime:
         (
             (
                 ["date_col1"],
-                {"date_col1": (pd.Timestamp("2023-01-01 12:00"), pd.Timestamp("2023-01-02 12:00"))},
+                {
+                    "date_col1": (
+                        pd.Timestamp("2023-01-01 12:00"),
+                        pd.Timestamp("2023-01-02 12:00"),
+                    )
+                },
             ),
             (
                 ["date_col2"],
@@ -798,7 +808,9 @@ class TestConvertDateColumnsToDatetime:
         """
         Test that the function handles dates in different formats
         """
-        actual = clean_data.convert_date_columns_to_datetime(test_dataframe, data_columns)[data_columns]
+        actual = clean_data.convert_date_columns_to_datetime(test_dataframe, data_columns)[
+            data_columns
+        ]
         expected = pd.DataFrame(expected_data)
         pd.testing.assert_frame_equal(actual, expected)
 
