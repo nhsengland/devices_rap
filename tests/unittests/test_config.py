@@ -4,10 +4,10 @@ Tests for devices_rap.config module.
 
 from pathlib import Path
 from typing import Literal
+import sys
+
 import pytest
 import yaml
-
-
 from nhs_herbot.errors import PathNotFoundError, LoggedWarning
 
 from devices_rap.config import ConfigError, config_logger, create_directory, Config
@@ -17,6 +17,9 @@ from devices_rap.constants import (
     MASTER_DEVICES_CSV_NAME,
     PROVIDER_CODES_LOOKUP_CSV_NAME,
 )
+
+if sys.version_info < (3, 11):
+    from exceptiongroup import ExceptionGroup  # type: ignore
 
 
 class TestConfigError:
