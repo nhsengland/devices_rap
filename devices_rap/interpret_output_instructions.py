@@ -45,6 +45,8 @@ from loguru import logger
 from nhs_herbot.errors import ColumnsNotFoundError, DataSetNotFoundError
 from nhs_herbot.utils import get_datetime_columns
 
+from devices_rap.config import Config
+
 
 def filter_data(
     worksheet_data: pd.DataFrame, worksheet_filters: Dict[str, list | Dict[Literal["not"], list]]
@@ -336,7 +338,7 @@ def process_region(
 
 
 def interpret_output_instructions(
-    instructions: Dict[str, Dict], region_cuts: Dict[str, Dict[str, pd.DataFrame]]
+    pipeline_config: Config, region_cuts: Dict[str, Dict[str, pd.DataFrame]]
 ) -> Dict[str, Dict[str, pd.DataFrame]]:
     """
     Interpret the output instructions for each region. The function will process the output instructions
@@ -344,6 +346,7 @@ def interpret_output_instructions(
     and the processed data dictionary as the value ready for writing to an Excel file.
     """
     logger.info("Interpreting output instructions for each region")
+    instructions = pipeline_config.amber_report_output_instructions
 
     output_workbooks = {}
 

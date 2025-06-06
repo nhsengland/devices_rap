@@ -12,7 +12,7 @@ from devices_rap.clean_data import (
     cleanse_master_data,
     cleanse_master_joined_dataset,
 )
-from devices_rap.config import AMBER_OUTPUT_INSTRUCTIONS, DATASETS, check_paths
+from devices_rap.config import Config, FinMonths, FinYears
 from devices_rap.create_cuts import create_regional_table_cuts
 from devices_rap.data_in.load_csv import load_devices_datasets
 from devices_rap.data_out import create_excel_reports
@@ -30,7 +30,9 @@ from devices_rap.summary_tables import (
 
 
 @timeit
-def amber_report_pipeline():
+def amber_report_pipeline(
+    fin_month: FinMonths, fin_year: FinYears, use_multiprocessing: bool
+) -> None:
     """
     Pipeline to create the monthly Amber Device Reports for all Regions.
 
@@ -43,11 +45,14 @@ def amber_report_pipeline():
     - Create the regional tables for each region from the summary, detailed and master datasets
     - Create the Excel reports for each region based on the regional tables and output instructions
     """
-    check_paths()
+    logger.info("Starting the Amber Report Pipeline")
 
-    logger.info("Starting the Devices Pipeline")
+    # Load the pipeline configuration
+    pipeline_config = Config(
+        fin_month=fin_month, fin_year=fin_year, use_multiprocessing=use_multiprocessing
+    )
 
-    datasets = load_devices_datasets(DATASETS)
+    datasets = load_devices_datasets(pipeline_config=pipeline_config)
 
     normalised_datasets = batch_normalise_column_names(datasets)
 
@@ -101,13 +106,13 @@ def amber_report_pipeline():
     regional_table_cuts = create_regional_table_cuts(tables=uncut_datasets)
 
     output_workbooks = interpret_output_instructions(
-        instructions=AMBER_OUTPUT_INSTRUCTIONS, region_cuts=regional_table_cuts
+        pipeline_config=pipeline_config, region_cuts=regional_table_cuts
     )
 
-    create_excel_reports(output_workbooks=output_workbooks)
+    create_excel_reports(output_workbooks=output_workbooks, pipeline_config=pipeline_config)
 
     logger.success("Pipeline complete.")
 
 
 if __name__ == "__main__":
-    amber_report_pipeline()
+    amber_report_pipeline(fin_month="12", fin_year="2425", use_multiprocessing=True)

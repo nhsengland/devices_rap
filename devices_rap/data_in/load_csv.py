@@ -29,6 +29,8 @@ import tqdm
 from nhs_herbot.errors import NoDatasetsProvidedError
 from nhs_herbot.load_csv import load_csv_data
 
+from devices_rap.config import Config
+
 NA_VALUES = [
     "(blank)",
     "tbc",
@@ -59,15 +61,14 @@ NA_VALUES = [
 ]
 
 
-def load_devices_datasets(datasets: Dict[str, Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
+def load_devices_datasets(pipeline_config: Config) -> Dict[str, Dict[str, Any]]:
     """
     Load device datasets from CSV files.
 
     Parameters
     ----------
-    datasets : dict of dict
-        A dictionary where the key is the dataset name (str) and the value is another dictionary
-        containing keyword arguments to be passed to the `load_csv_data` function.
+    pipeline_config : Config
+        The configuration object containing dataset information.
 
     Returns
     -------
@@ -85,8 +86,9 @@ def load_devices_datasets(datasets: Dict[str, Dict[str, Any]]) -> Dict[str, Dict
     The `load_csv_data` function is expected to be defined elsewhere and should handle the
     actual loading of the CSV data based on the provided keyword arguments.
     """
+    datasets = pipeline_config.dataset_config
     if not datasets:
-        raise NoDatasetsProvidedError("No datasets provided.")
+        raise NoDatasetsProvidedError("No datasets provided in the configuration.")
 
     for dataset_name, dataset_kwargs in tqdm.tqdm(datasets.items(), desc="Loading datasets"):
         if "data" in dataset_kwargs:

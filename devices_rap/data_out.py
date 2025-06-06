@@ -4,27 +4,20 @@ Functionality that handle the output of processed data from the pipeline.
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from typing import Dict, Literal, Optional
+from typing import Dict, Literal
 
 import pandas as pd
 import tqdm
 from loguru import logger
 
-from devices_rap.config import (
-    FIN_MONTH,
-    FIN_YEAR,
-    PROCESSED_DATA_DIR,
-    USE_MULTIPROCESSING,
-)
+from devices_rap.config import Config
 
 FormatsDict = Dict[Literal["header", "total", "default", "cost"], object]
 
 
 def create_excel_reports(
     output_workbooks: Dict[str, Dict[str, pd.DataFrame]],
-    output_directory: Optional[Path] = None,
-    fin_year: Optional[str] = None,
-    fin_month: Optional[str] = None,
+    pipeline_config: Config,
 ):
     """
     Create the Excel reports based on the processed data. The function will create an Excel file for
@@ -34,34 +27,26 @@ def create_excel_reports(
     ----------
     output_workbooks : dict
         The processed data for each region
-    output_directory : Path, optional
-        The directory to save the Excel reports to, by default PROCESSED_DATA_DIR
-    fin_year : str, optional
-        The financial year, by default FIN_YEAR
-    fin_month : str, optional
-        The financial month, by default FIN_MONTH
+    pipeline_config : Config
+        The configuration object containing the output directory and other settings
 
     Returns
     -------
     None
     """
-    output_directory = output_directory or PROCESSED_DATA_DIR
-    fin_year = fin_year or FIN_YEAR
-    fin_month = fin_month or FIN_MONTH
-
     logger.info("Creating excel reports")
+    output_directory = pipeline_config.create_output_directory()
+    use_multiprocessing = pipeline_config.use_multiprocessing
 
-    fin_output_directory = output_directory / fin_year / fin_month
-    fin_output_directory.mkdir(parents=True, exist_ok=True)
-
-    if USE_MULTIPROCESSING:
+    if use_multiprocessing:
         with ThreadPoolExecutor() as executor:
             futures = [
                 executor.submit(
                     process_region,
-                    fin_output_directory=fin_output_directory,
+                    output_directory=output_directory,
                     region=region,
                     worksheets=worksheets,
+                    use_multiprocessing=use_multiprocessing,
                 )
                 for region, worksheets in output_workbooks.items()
             ]
@@ -70,34 +55,40 @@ def create_excel_reports(
     else:
         for region, worksheets in output_workbooks.items():
             process_region(
-                fin_output_directory=fin_output_directory,
+                output_directory=output_directory,
                 region=region,
                 worksheets=worksheets,
+                use_multiprocessing=use_multiprocessing,
             )
 
     logger.success("Excel reports created successfully.")
 
 
-def process_region(fin_output_directory: Path, region: str, worksheets: Dict[str, pd.DataFrame]):
+def process_region(
+    output_directory: Path,
+    region: str,
+    worksheets: Dict[str, pd.DataFrame],
+    use_multiprocessing: bool,
+):
     """
     Process the data for a region and create the Excel report.
 
     Parameters
     ----------
-    fin_output_directory : Path
+    output_directory : Path
         The path to save the Excel reports to
     region : str
         The region to process
     worksheets : dict
         The processed data for the region
+    use_multiprocessing : bool
+        Whether to use multiprocessing for writing the Excel file
 
     Returns
     -------
     None
     """
-    output_file = (
-        fin_output_directory / f"{region.upper().replace(' ', '_')}_RAG_STATUS_REPORT.xlsx"
-    )
+    output_file = output_directory / f"{region.upper().replace(' ', '_')}_RAG_STATUS_REPORT.xlsx"
 
     if output_file.exists():
         logger.warning(f"Overwriting the existing Excel file: {output_file}")
@@ -105,12 +96,14 @@ def process_region(fin_output_directory: Path, region: str, worksheets: Dict[str
     else:
         logger.info(f"Creating Excel report for {region}")
 
-    create_excel_file(output_file=output_file, worksheets=worksheets)
+    create_excel_file(
+        output_file=output_file, worksheets=worksheets, use_multiprocessing=use_multiprocessing
+    )
 
     logger.success(f"Excel report for {region} created successfully.")
 
 
-def create_excel_file(output_file: Path, worksheets: Dict[str, pd.DataFrame]):
+def create_excel_file(output_file: Path, worksheets: Dict[str, pd.DataFrame], use_multiprocessing):
     """
     Create an Excel file with the given worksheets.
 
@@ -130,7 +123,7 @@ def create_excel_file(output_file: Path, worksheets: Dict[str, pd.DataFrame]):
         workbook = writer.book
         formats = create_formats(workbook)
 
-        if USE_MULTIPROCESSING:
+        if use_multiprocessing:
             with ThreadPoolExecutor() as executor:
                 futures = [
                     executor.submit(

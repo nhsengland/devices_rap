@@ -24,7 +24,7 @@ from nhs_herbot.utils import (
     sort_by_priority,
 )
 
-from devices_rap.config import RAG_PRIORITIES
+from devices_rap.constants import RAG_PRIORITIES
 
 
 def batch_normalise_column_names(datasets: Dict[str, Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:

@@ -8,8 +8,16 @@ import pandas as pd
 import pytest
 from uuid import uuid4
 
-from devices_rap.config import DATA_DIR
-from devices_rap.data_in.load_csv import NA_VALUES
+
+@pytest.fixture(autouse=True)
+def mock_logger(mocker):
+    """
+    Fixture to mock the loguru.logger object
+    """
+    return mocker.patch(
+        "loguru.logger", side_effect=lambda *args, **kwargs: print("Logger called")
+    )
+
 
 warnings.filterwarnings("ignore", category=DeprecationWarning, message=".*platformdirs.*")
 
@@ -23,35 +31,6 @@ MockLoggerDict = Dict[
     | Literal["debug"],
     Logger,
 ]
-
-
-@pytest.fixture
-def create_temp_csv_file(tmp_path):
-    """
-    Fixture to create a temporary CSV file with test data, returning the file path, and then
-    deleting the file and the _test directory after the test has run.
-    """
-
-    test_csv_data = {
-        "columns": ["column_1", "column_2"],
-        "data": [
-            ("test_valid_1", "foo"),
-            ("test_valid_2", "bar"),
-            ("test_valid_3", "baz"),
-            *[(f"test_{NA_VALUES.index(na_value)}", na_value) for na_value in NA_VALUES],
-            (None, None),
-            (None, None),
-        ],
-    }
-    test_csv_df = pd.DataFrame(**test_csv_data)
-
-    test_csv_file_path = tmp_path / f"_{uuid4()}_test_data.csv"
-
-    assert not test_csv_file_path.exists()
-
-    test_csv_df.to_csv(test_csv_file_path, index=False)
-
-    return test_csv_file_path
 
 
 @pytest.fixture
