@@ -1057,49 +1057,59 @@ class TestInterpretOutputInstructions:
             return_value={"test": pd.DataFrame()},
         )
 
-    def test_logger_called(self, mock_info, mock_process_region):
+    @pytest.fixture
+    def mock_pipeline_config(self, mocker):
+        """
+        Mock the pipeline_config function.
+        """
+        return mocker.MagicMock()
+
+    def test_logger_called(self, mock_info, mock_pipeline_config, mock_process_region):
         """
         Test that the logger is called with the correct message.
         """
         instructions.interpret_output_instructions(
-            instructions={"test": {}}, region_cuts={"test": {"test": pd.DataFrame()}}
+            pipeline_config=mock_pipeline_config, region_cuts={"test": {"test": pd.DataFrame()}}
         )
         actual_message = mock_info.call_args.args[0]
         assert actual_message == "Interpreting output instructions for each region"
 
-    def test_returns_dict(self, mock_process_region):
+    def test_returns_dict(self, mock_info, mock_pipeline_config, mock_process_region):
         """
         Test that the function returns a Dictionary.
         """
         result = instructions.interpret_output_instructions(
-            instructions={"test": {}}, region_cuts={"test": {"test": pd.DataFrame()}}
+            pipeline_config=mock_pipeline_config, region_cuts={"test": {"test": pd.DataFrame()}}
         )
         assert isinstance(result, dict)
 
-    def test_returns_dict_of_dicts(self, mock_process_region):
+    def test_returns_dict_of_dicts(self, mock_info, mock_pipeline_config, mock_process_region):
         """
         Test that the function returns a dictionary of dictionaries.
         """
         result = instructions.interpret_output_instructions(
-            instructions={"test": {}}, region_cuts={"test": {"test": pd.DataFrame()}}
+            pipeline_config=mock_pipeline_config, region_cuts={"test": {"test": pd.DataFrame()}}
         )
         assert all(isinstance(value, dict) for value in result.values())
 
-    def test_process_region_called(self, mock_process_region):
+    def test_process_region_called(self, mock_info, mock_pipeline_config, mock_process_region):
         """
         Test that the process_region function is called with the correct arguments.
         """
+        mock_pipeline_config.amber_report_output_instructions = {"test": {}}
         instructions.interpret_output_instructions(
-            instructions={"test": {}}, region_cuts={"test": {}}
+            pipeline_config=mock_pipeline_config, region_cuts={"test": {}}
         )
 
         mock_process_region.assert_called_once()
         actual_args = mock_process_region.call_args.args
         assert actual_args == ("test", {}, {"test": {}})
 
-    def test_process_region_not_called(self, mock_process_region):
+    def test_process_region_not_called(self, mock_info, mock_pipeline_config, mock_process_region):
         """
         Test that the process_region function is not called when the instructions are empty.
         """
-        instructions.interpret_output_instructions(instructions={}, region_cuts={})
+        instructions.interpret_output_instructions(
+            pipeline_config=mock_pipeline_config, region_cuts={}
+        )
         mock_process_region.assert_not_called()

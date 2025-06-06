@@ -22,11 +22,13 @@ class TestLoadDevicesDatasets:
             "test1": {"filepath_or_buffer": "test1"},
             "test2": {"filepath_or_buffer": "test2"},
         }
+        mock_pipeline_config = mocker.MagicMock()
+        mock_pipeline_config.dataset_config = datasets
 
         mock_df = pd.DataFrame({"col1": [1, 2], "col2": [3, 4]})
         mocker.patch("devices_rap.data_in.load_csv.load_csv_data", return_value=mock_df)
 
-        result = load_devices_datasets(datasets)
+        result = load_devices_datasets(mock_pipeline_config)
         assert set(result.keys()) == set(datasets.keys())
 
     def test_data(self, mocker):
@@ -37,11 +39,13 @@ class TestLoadDevicesDatasets:
             "test1": {"filepath_or_buffer": "test1"},
             "test2": {"filepath_or_buffer": "test2"},
         }
+        mock_pipeline_config = mocker.MagicMock()
+        mock_pipeline_config.dataset_config = datasets
 
         mock_df = pd.DataFrame({"col1": [1, 2], "col2": [3, 4]})
         mocker.patch("devices_rap.data_in.load_csv.load_csv_data", return_value=mock_df)
 
-        result = load_devices_datasets(datasets)
+        result = load_devices_datasets(mock_pipeline_config)
         for dataset in result.values():
             assert "data" in dataset
 
@@ -53,11 +57,13 @@ class TestLoadDevicesDatasets:
             "test1": {"filepath_or_buffer": "test1"},
             "test2": {"filepath_or_buffer": "test2"},
         }
+        mock_pipeline_config = mocker.MagicMock()
+        mock_pipeline_config.dataset_config = datasets
 
         mock_df = pd.DataFrame({"col1": [1, 2], "col2": [3, 4]})
         mocker.patch("devices_rap.data_in.load_csv.load_csv_data", return_value=mock_df)
 
-        result = load_devices_datasets(datasets)
+        result = load_devices_datasets(mock_pipeline_config)
         for dataset in result.values():
             assert dataset["data"].shape == (2, 2)
 
@@ -69,20 +75,28 @@ class TestLoadDevicesDatasets:
             "test1": {"filepath_or_buffer": "test1"},
             "test2": {"filepath_or_buffer": "test2"},
         }
+        mock_pipeline_config = mocker.MagicMock()
+        mock_pipeline_config.dataset_config = datasets
 
         mock_df = pd.DataFrame({"col1": [1, 2], "col2": [3, 4]})
         mocker.patch("devices_rap.data_in.load_csv.load_csv_data", return_value=mock_df)
 
-        result = load_devices_datasets(datasets)
+        result = load_devices_datasets(mock_pipeline_config)
         for dataset in result.values():
             assert isinstance(dataset["data"], pd.DataFrame)
 
-    def test_no_datasets_error(self):
+    def test_no_datasets_error(self, mocker):
         """
         Test that the function raises an AssertionError when no datasets are provided
         """
+        datasets = {}
+        mock_pipeline_config = mocker.MagicMock()
+        mock_pipeline_config.dataset_config = datasets
+
+        
+
         with pytest.raises(NoDatasetsProvidedError):
-            load_devices_datasets({})
+            load_devices_datasets(mock_pipeline_config)
 
     def test_removes_data(self, mocker):
         """
@@ -92,11 +106,13 @@ class TestLoadDevicesDatasets:
         datasets = {
             "test1": {"filepath_or_buffer": "test1", "data": "test_data"},
         }
+        mock_pipeline_config = mocker.MagicMock()
+        mock_pipeline_config.dataset_config = datasets
 
         mock_df = pd.DataFrame({"col1": [1, 2], "col2": [3, 4]})
         mocker.patch("devices_rap.data_in.load_csv.load_csv_data", return_value=mock_df)
 
-        result = load_devices_datasets(datasets)
+        result = load_devices_datasets(mock_pipeline_config)
         dataset = result["test1"]
         assert str(dataset["data"]) != "test_data"
 

@@ -29,21 +29,23 @@ class TestCreateExcelReports:
     def mock_output_directory(self, tmp_path):
         return tmp_path / "test_output"
 
-    def test_create_excel_reports_creates_output_dir(
-        self, mocker, mock_output_directory, mock_process_region
-    ):
+    @pytest.fixture
+    def mock_pipeline_config(self, mocker, mock_output_directory):
         """
-        Test that create_excel_reports creates the output directory
+        Mock the pipeline_config to return a mock output directory.
         """
-        mocker.patch("devices_rap.data_out.PROCESSED_DATA_DIR", mock_output_directory)
-        mocker.patch("devices_rap.data_out.FIN_YEAR", "2021")
-        mocker.patch("devices_rap.data_out.FIN_MONTH", "01")
+        mock_pipeline_config = mocker.MagicMock()
+        mock_pipeline_config.create_output_directory.return_value = mock_output_directory
+        mock_pipeline_config.use_multiprocessing = False
+        return mock_pipeline_config
 
-        expected_output_dir = mock_output_directory / "2021" / "01"
+    def test_calls_create_output_directory(self, mock_pipeline_config, mock_output_directory):
+        """
+        Test that create_excel_reports calls create_output_directory
+        """
+        create_excel_reports(output_workbooks={}, pipeline_config=mock_pipeline_config)
 
-        create_excel_reports({})
-
-        assert expected_output_dir.exists()
+        mock_pipeline_config.create_output_directory.assert_called_once()
 
     @pytest.mark.parametrize("use_multiprocessing", [True, False])
     @pytest.mark.parametrize(
@@ -51,7 +53,7 @@ class TestCreateExcelReports:
     )
     def test_create_excel_reports_calls_process_region(
         self,
-        mocker,
+        mock_pipeline_config,
         mock_output_directory,
         mock_process_region,
         use_multiprocessing,
@@ -61,22 +63,25 @@ class TestCreateExcelReports:
         """
         Test that create_excel_reports calls process_region
         """
-        mocker.patch("devices_rap.data_out.USE_MULTIPROCESSING", use_multiprocessing)
-        create_excel_reports(output_workbooks, output_directory=mock_output_directory)
+        mock_pipeline_config.use_multiprocessing = use_multiprocessing
+        create_excel_reports(
+            output_workbooks=output_workbooks, pipeline_config=mock_pipeline_config
+        )
         assert mock_process_region.call_count == call_count
 
     @pytest.mark.parametrize("use_multiprocessing", [True, False])
     @pytest.mark.parametrize(
         "kwarg, expected_value",
         [
-            ("fin_output_directory", None),
+            ("output_directory", None),
             ("region", "region1"),
             ("worksheets", {"sheet1": pd.DataFrame()}),
+            ("use_multiprocessing", None),
         ],
     )
     def test_create_excel_reports_calls_process_region_with_correct_args(
         self,
-        mocker,
+        mock_pipeline_config,
         mock_output_directory,
         mock_process_region,
         use_multiprocessing,
@@ -86,19 +91,23 @@ class TestCreateExcelReports:
         """
         Test that create_excel_reports calls process_region with the correct arguments
         """
-        mocker.patch("devices_rap.data_out.USE_MULTIPROCESSING", use_multiprocessing)
-        mocker.patch("devices_rap.data_out.FIN_YEAR", "2021")
-        mocker.patch("devices_rap.data_out.FIN_MONTH", "01")
+        mock_pipeline_config.use_multiprocessing = use_multiprocessing
 
         output_workbooks = {"region1": {"sheet1": pd.DataFrame()}}
-        create_excel_reports(output_workbooks, output_directory=mock_output_directory)
+
+        create_excel_reports(
+            output_workbooks=output_workbooks, pipeline_config=mock_pipeline_config
+        )
+
         actual = mock_process_region.call_args[1][kwarg]
 
-        if kwarg == "fin_output_directory":
-            assert actual == mock_output_directory / "2021" / "01"
+        if kwarg == "output_directory":
+            assert actual == mock_output_directory
         elif kwarg == "worksheets":
             assert actual.keys() == expected_value.keys()
             pd.testing.assert_frame_equal(actual["sheet1"], expected_value["sheet1"])
+        elif kwarg == "use_multiprocessing":
+            assert actual == use_multiprocessing
         else:
             assert actual == expected_value
 
@@ -109,7 +118,7 @@ class TestCreateExcelReports:
     def test_log_called(
         self,
         mock_log_levels,
-        mock_output_directory,
+        mock_pipeline_config,
         mock_process_region,
         log_type,
         expected_message,
@@ -117,7 +126,7 @@ class TestCreateExcelReports:
         """
         Test that the loguru.logger is called
         """
-        create_excel_reports({}, output_directory=mock_output_directory)
+        create_excel_reports(output_workbooks={}, pipeline_config=mock_pipeline_config)
 
         mock_log = mock_log_levels[log_type]
 
@@ -130,7 +139,7 @@ class TestProcessRegion:
     """
 
     @pytest.fixture
-    def fin_output_directory(self, tmp_path):
+    def output_directory(self, tmp_path):
         output_directory = tmp_path / "test_output" / "2021" / "01"
         output_directory.mkdir(parents=True, exist_ok=True)
         return output_directory
@@ -139,13 +148,20 @@ class TestProcessRegion:
     def mock_create_excel_file(self, mocker):
         return mocker.patch("devices_rap.data_out.create_excel_file")
 
-    def test_calls_create_excel_file_once(self, fin_output_directory, mock_create_excel_file):
+    def test_calls_create_excel_file_once(self, output_directory, mock_create_excel_file):
         """
         Test that process_region calls create_excel_file once
         """
         region = "region1"
         worksheets = {"sheet1": pd.DataFrame()}
-        process_region(fin_output_directory, region, worksheets)
+        use_multiprocessing = False
+
+        process_region(
+            output_directory=output_directory,
+            region=region,
+            worksheets=worksheets,
+            use_multiprocessing=use_multiprocessing,
+        )
         assert mock_create_excel_file.call_count == 1
 
     @pytest.mark.parametrize(
@@ -153,81 +169,119 @@ class TestProcessRegion:
         [
             ("output_file", "REGION1_RAG_STATUS_REPORT.xlsx"),
             ("worksheets", {"sheet1": pd.DataFrame()}),
+            ("use_multiprocessing", False),
         ],
     )
     def test_calls_create_excel_file_with_correct_args(
-        self, fin_output_directory, mock_create_excel_file, kwarg, expected_value
+        self, output_directory, mock_create_excel_file, kwarg, expected_value
     ):
         """
         Test that process_region calls create_excel_file with the correct arguments
         """
         region = "region1"
         worksheets = {"sheet1": pd.DataFrame()}
-        process_region(fin_output_directory, region, worksheets)
+        use_multiprocessing = False
+
+        process_region(
+            output_directory=output_directory,
+            region=region,
+            worksheets=worksheets,
+            use_multiprocessing=use_multiprocessing,
+        )
+
         actual = mock_create_excel_file.call_args[1][kwarg]
 
         if kwarg == "output_file":
-            assert actual == fin_output_directory / "REGION1_RAG_STATUS_REPORT.xlsx"
-        else:
+            assert actual == output_directory / "REGION1_RAG_STATUS_REPORT.xlsx"
+        elif kwarg == "worksheets":
+            assert isinstance(actual, dict)
             assert actual.keys() == expected_value.keys()
             pd.testing.assert_frame_equal(actual["sheet1"], expected_value["sheet1"])
+        elif kwarg == "use_multiprocessing":
+            assert actual == expected_value
+        else:
+            assert actual == expected_value
 
-    def test_logs_success_message(
-        self, fin_output_directory, mock_create_excel_file, mock_log_levels
-    ):
+    def test_logs_success_message(self, output_directory, mock_create_excel_file, mock_log_levels):
         """
         Test that process_region logs a success message
         """
         region = "region1"
         worksheets = {"sheet1": pd.DataFrame()}
+        use_multiprocessing = False
 
-        process_region(fin_output_directory, region, worksheets)
+        process_region(
+            output_directory=output_directory,
+            region=region,
+            worksheets=worksheets,
+            use_multiprocessing=use_multiprocessing,
+        )
 
         mock_success = mock_log_levels["success"]
         mock_success.assert_called_once_with("Excel report for region1 created successfully.")
 
     def test_logs_info_when_file_does_not_exist(
-        self, fin_output_directory, mock_create_excel_file, mock_log_levels
+        self, output_directory, mock_create_excel_file, mock_log_levels
     ):
         """
         Test that process_region logs an info message when the file does not exist
         """
         region = "region1"
         worksheets = {"sheet1": pd.DataFrame()}
-        process_region(fin_output_directory, region, worksheets)
+        use_multiprocessing = False
+
+        process_region(
+            output_directory=output_directory,
+            region=region,
+            worksheets=worksheets,
+            use_multiprocessing=use_multiprocessing,
+        )
+
         mock_info = mock_log_levels["info"]
         mock_info.assert_called_once_with("Creating Excel report for region1")
 
     def test_logs_warning_when_file_exists(
-        self, fin_output_directory, mock_create_excel_file, mock_log_levels
+        self, output_directory, mock_create_excel_file, mock_log_levels
     ):
         """
         Test that process_region logs an info message when the file does not exist
         """
         region = "region1"
         worksheets = {"sheet1": pd.DataFrame()}
+        use_multiprocessing = False
 
-        output_file = fin_output_directory / "REGION1_RAG_STATUS_REPORT.xlsx"
+        output_file = output_directory / "REGION1_RAG_STATUS_REPORT.xlsx"
         output_file.touch()
 
-        process_region(fin_output_directory, region, worksheets)
+        process_region(
+            output_directory=output_directory,
+            region=region,
+            worksheets=worksheets,
+            use_multiprocessing=use_multiprocessing,
+        )
 
         mock_warning = mock_log_levels["warning"]
         mock_warning.assert_called_once_with(f"Overwriting the existing Excel file: {output_file}")
 
     def test_deletes_file_when_file_exists(
-        self, fin_output_directory, mock_create_excel_file, mock_log_levels
+        self, output_directory, mock_create_excel_file, mock_log_levels
     ):
         """
         Test that process_region logs an info message when the file does not exist
         """
         region = "region1"
         worksheets = {"sheet1": pd.DataFrame()}
+        use_multiprocessing = False
 
-        output_file = fin_output_directory / "REGION1_RAG_STATUS_REPORT.xlsx"
+        output_file = output_directory / "REGION1_RAG_STATUS_REPORT.xlsx"
         output_file.touch()
 
-        process_region(fin_output_directory, region, worksheets)
+        process_region(
+            output_directory=output_directory,
+            region=region,
+            worksheets=worksheets,
+            use_multiprocessing=use_multiprocessing,
+        )
 
         assert not output_file.exists()
 
@@ -261,9 +315,8 @@ class TestCreateExcelFile:
         """
         Test that create_excel_file calls write_worksheet
         """
-        mocker.patch("devices_rap.data_out.USE_MULTIPROCESSING", use_multiprocessing)
         worksheets = {"sheet1": pd.DataFrame()}
-        data_out.create_excel_file(output_file, worksheets)
+        data_out.create_excel_file(output_file, worksheets, use_multiprocessing)
         assert mock_write_worksheet.call_count == 1
 
     @pytest.mark.parametrize("use_multiprocessing", [True, False])
@@ -290,9 +343,8 @@ class TestCreateExcelFile:
         """
         Test that create_excel_file calls write_worksheet with the correct arguments
         """
-        mocker.patch("devices_rap.data_out.USE_MULTIPROCESSING", use_multiprocessing)
         worksheets = {"sheet1": pd.DataFrame()}
-        data_out.create_excel_file(output_file, worksheets)
+        data_out.create_excel_file(output_file, worksheets, use_multiprocessing)
         actual = mock_write_worksheet.call_args[1][kwarg]
 
         if kwarg == "writer":
@@ -311,7 +363,7 @@ class TestCreateExcelFile:
         Test that create_excel_file calls create_formats once
         """
         worksheets = {"sheet1": pd.DataFrame()}
-        data_out.create_excel_file(output_file, worksheets)
+        data_out.create_excel_file(output_file, worksheets, False)
         assert mock_create_formats.call_count == 1
 
     def test_logs_debug(
@@ -321,7 +373,7 @@ class TestCreateExcelFile:
         Test that create_excel_file logs a debug message
         """
         worksheets = {"sheet1": pd.DataFrame()}
-        data_out.create_excel_file(output_file, worksheets)
+        data_out.create_excel_file(output_file, worksheets, False)
         mock_debug = mock_log_levels["debug"]
         mock_debug.assert_called_once_with(f"Creating the Excel file: {output_file}")
 
@@ -585,10 +637,10 @@ class TestApplyExcelFormatting:
     @pytest.mark.parametrize(
         "row_idx, col_name, value, should_format",
         [
-            (2, "Provider Code", "Total123", True),   # Row 2, Provider Code is "Total123"
-            (3, "Region", "Total456", True),          # Row 3, Region is "Total456"
-            (1, "Provider Code", "abc", False),       # Row 1, Provider Code is not total
-            (1, "Region", "xyz", False),              # Row 1, Region is not total
+            (2, "Provider Code", "Total123", True),  # Row 2, Provider Code is "Total123"
+            (3, "Region", "Total456", True),  # Row 3, Region is "Total456"
+            (1, "Provider Code", "abc", False),  # Row 1, Provider Code is not total
+            (1, "Region", "xyz", False),  # Row 1, Region is not total
         ],
     )
     def test_sets_total_row_formatting(

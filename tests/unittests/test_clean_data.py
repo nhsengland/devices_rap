@@ -722,12 +722,16 @@ class TestCheckDuplicates:
         clean_data.check_duplicates(no_duplicates_df, "ERROR")
         mock_error.assert_not_called()
 
-    def test_raises_warning(self, mock_warning, duplicate_df):
+    def test_raises_warning(self, mocker, duplicate_df):
         """
         Test that the function raises a warning when duplicate values are found
         """
+        mock_warn = mocker.patch("devices_rap.clean_data.warnings.warn")
         clean_data.check_duplicates(duplicate_df, "WARNING")
-        mock_warning.assert_called_once_with("Found 2 duplicated rows in the dataset")
+        mock_warn.assert_called_once_with(
+            "Found 2 duplicated rows in the dataset",
+            clean_data.DuplicateDataWarning,
+        )
 
     def test_raises_no_warning(self, mock_warning, no_duplicates_df):
         """
