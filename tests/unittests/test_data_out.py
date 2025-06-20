@@ -859,7 +859,7 @@ class TestCreatePickle:
         """
         Test that create_pickle unlinks the file if it already exists
         """
-        mock_unlink = mocker.patch("os.unlink", return_value=None)  # Mock os.unlink to avoid actual file deletion
+        mock_unlink = mocker.patch("pathlib.Path.unlink", return_value=None)
         output_file = tmp_path / "test_year_test_month_amber_report_all_regions.pkl"
         output_file.touch()
 

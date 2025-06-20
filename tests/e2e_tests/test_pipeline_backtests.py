@@ -47,7 +47,19 @@ def compare_nested_dicts(actual, expected, path=""):
             elif isinstance(expected, pd.DataFrame):
                 assert isinstance(actual, pd.DataFrame), f"{path}: Actual value is not a DataFrame"
                 try:
-                    pd.testing.assert_frame_equal(actual, expected, check_dtype=True)
+                    if sys.version_info >= (3, 11):
+                        # For Python 3.11+, use the new StringDtype metadata comparison
+                        pd.testing.assert_frame_equal(actual, expected, check_dtype=True)
+                    else:
+                        # For Python < 3.11, convert string columns to object dtype to avoid 
+                        # StringDtype metadata issues
+                        def _convert_str_cols(df):
+                            for col in df.select_dtypes(include=["string", "object"]).columns:
+                                df[col] = df[col].astype(object)
+                            return df
+                        actual_fixed = _convert_str_cols(actual.copy())
+                        expected_fixed = _convert_str_cols(expected.copy())
+                        pd.testing.assert_frame_equal(actual_fixed, expected_fixed)
                 except AssertionError as err:
                     errors.append(err)
             else:
@@ -115,14 +127,14 @@ class TestMonth12Year2425PipelineBacktest:
 
         return expected_data
 
-    def test_pipeline_backtest(self, expected_data, tmp_path, mocker):
+    def test_pipeline_backtest(self, expected_data, test_file_paths, mocker):
         """
         Runs the pipeline with the test data and compares the output to the expected data.
         """
         mocker.patch("warnings.warn", return_value=None)  # Suppress warnings for cleaner test output
 
-        raw_data_dir = tmp_path / "input_data"
-        processed_data_dir = tmp_path / "processed_data"
+        raw_data_dir = test_file_paths / "input_data"
+        processed_data_dir = test_file_paths / "processed_data"
         amber_report_pipeline(
             fin_month="12",
             fin_year="2425",
