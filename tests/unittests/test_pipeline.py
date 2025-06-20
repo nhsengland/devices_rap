@@ -354,7 +354,7 @@ class TestAmberReportPipeline:
             region_cuts=mock_pipeline_functions["create_regional_table_cuts"].return_value,
         )
 
-    def test_calls_output_data_with_correct_kwards(
+    def test_calls_output_data_with_correct_kwargs(
         self, amber_report_pipeline_args, mock_pipeline_functions
     ):
         """
