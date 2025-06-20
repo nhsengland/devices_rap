@@ -2,10 +2,8 @@
 Tests for devices_rap/data_out.py
 """
 
-from uuid import uuid4
 import pytest
 import pandas as pd
-from xlsxwriter.format import Format
 
 from devices_rap import data_out
 from devices_rap.data_out import create_excel_reports, process_region

@@ -31,7 +31,9 @@ if sys.version_info < (3, 11):
 
 
 FinMonths = Literal["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
-FinYears = Literal["2425", "2526"]
+FinYears = Literal["2425", "2526", "2627", "2728", "2829", "2930", "3031", "3132"]
+OutputFormats = Literal["excel", "pickle", "csv", "sql", "excel_zip"]
+PipelineOutputs = OutputFormats | List[OutputFormats]
 
 
 class ConfigError(LoggedException):
@@ -96,6 +98,7 @@ class Config:
         fin_month: FinMonths,
         fin_year: FinYears,
         use_multiprocessing: bool = True,
+        outputs: PipelineOutputs = "excel",
         raw_data_dir: Path = RAW_DATA_DIR,
         processed_data_dir: Path = PROCESSED_DATA_DIR,
         amber_report_excel_config_path: Path = AMBER_REPORT_EXCEL_CONFIG_PATH,
@@ -131,6 +134,7 @@ class Config:
         self.fin_month = fin_month
         self.fin_year = fin_year
         self.use_multiprocessing = use_multiprocessing
+        self.outputs = outputs
         self.raw_data_dir = raw_data_dir
         self.processed_data_dir = processed_data_dir
         self.amber_report_excel_config_path = amber_report_excel_config_path

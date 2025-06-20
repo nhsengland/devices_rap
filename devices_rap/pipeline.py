@@ -12,10 +12,10 @@ from devices_rap.clean_data import (
     cleanse_master_data,
     cleanse_master_joined_dataset,
 )
-from devices_rap.config import Config, FinMonths, FinYears
+from devices_rap.config import Config, FinMonths, FinYears, PipelineOutputs
 from devices_rap.create_cuts import create_regional_table_cuts
 from devices_rap.data_in.load_csv import load_devices_datasets
-from devices_rap.data_out import create_excel_reports
+from devices_rap.data_out import output_data
 from devices_rap.interpret_output_instructions import interpret_output_instructions
 from devices_rap.joins import (
     join_device_taxonomy,
@@ -31,7 +31,7 @@ from devices_rap.summary_tables import (
 
 @timeit
 def amber_report_pipeline(
-    fin_month: FinMonths, fin_year: FinYears, use_multiprocessing: bool
+    fin_month: FinMonths, fin_year: FinYears, outputs: PipelineOutputs = "excel", **config_kwargs
 ) -> None:
     """
     Pipeline to create the monthly Amber Device Reports for all Regions.
@@ -49,7 +49,10 @@ def amber_report_pipeline(
 
     # Load the pipeline configuration
     pipeline_config = Config(
-        fin_month=fin_month, fin_year=fin_year, use_multiprocessing=use_multiprocessing
+        fin_month=fin_month,
+        fin_year=fin_year,
+        outputs=outputs,
+        **config_kwargs,
     )
 
     datasets = load_devices_datasets(pipeline_config=pipeline_config)
@@ -109,10 +112,15 @@ def amber_report_pipeline(
         pipeline_config=pipeline_config, region_cuts=regional_table_cuts
     )
 
-    create_excel_reports(output_workbooks=output_workbooks, pipeline_config=pipeline_config)
+    output_data(
+        output_workbooks=output_workbooks,
+        pipeline_config=pipeline_config,
+    )
 
     logger.success("Pipeline complete.")
 
 
 if __name__ == "__main__":
-    amber_report_pipeline(fin_month="12", fin_year="2425", use_multiprocessing=True)
+    amber_report_pipeline(
+        fin_month="12", fin_year="2425", use_multiprocessing=True, outputs=["pickle"]
+    )

@@ -15,13 +15,15 @@ from devices_rap.config import Config
 FormatsDict = Dict[Literal["header", "total", "default", "cost"], object]
 
 
-def create_excel_reports(
+def output_data(
     output_workbooks: Dict[str, Dict[str, pd.DataFrame]],
     pipeline_config: Config,
-):
+) -> None:
     """
-    Create the Excel reports based on the processed data. The function will create an Excel file for
-    each region containing the processed worksheets for that region.
+    Handle the output of processed data from the pipeline. This function will create the Excel
+    reports and pickle files based on the processed data for each region. It will check the
+    configuration to determine which outputs to create (Excel, pickle, or both) and will create the
+    output directory if it does not exist.
 
     Parameters
     ----------
@@ -34,9 +36,57 @@ def create_excel_reports(
     -------
     None
     """
-    logger.info("Creating excel reports")
+    outputs = pipeline_config.outputs
+
+    if not outputs:
+        logger.warning("No outputs configured. Skipping output data.")
+        return
+
     output_directory = pipeline_config.create_output_directory()
-    use_multiprocessing = pipeline_config.use_multiprocessing
+
+    if "excel" in outputs:
+        use_multiprocessing = pipeline_config.use_multiprocessing
+        create_excel_reports(
+            output_workbooks=output_workbooks,
+            output_directory=output_directory,
+            use_multiprocessing=use_multiprocessing,
+        )
+    if "pickle" in outputs:
+        fin_month = pipeline_config.fin_month
+        fin_year = pipeline_config.fin_year
+        create_pickle(
+            output_workbooks=output_workbooks,
+            output_directory=output_directory,
+            fin_month=fin_month,
+            fin_year=fin_year,
+        )
+    if "sql" in outputs:
+        logger.warning("SQL output is not implemented yet. Skipping SQL output.")
+
+
+def create_excel_reports(
+    output_workbooks: Dict[str, Dict[str, pd.DataFrame]],
+    output_directory: Path,
+    use_multiprocessing: bool,
+):
+    """
+    Create the Excel reports based on the processed data. The function will create an Excel file for
+    each region containing the processed worksheets for that region.
+
+    Parameters
+    ----------
+    output_workbooks : dict
+        The processed data for each region
+    output_directory : Path
+        The path to save the Excel reports to
+    use_multiprocessing : bool
+        Whether to use multiprocessing for writing the Excel files.
+
+    Returns
+    -------
+    None
+    """
+    logger.info("Creating excel reports")
 
     if use_multiprocessing:
         with ThreadPoolExecutor() as executor:
@@ -291,3 +341,38 @@ def write_worksheet(
     )
 
     logger.debug(f"Worksheet {sheet_name} written to the Excel file: {output_file}")
+
+
+def create_pickle(
+    output_workbooks: Dict[str, Dict[str, pd.DataFrame]],
+    output_directory: Path,
+    fin_month: str,
+    fin_year: str,
+):
+    """
+    Create pickle files for each region containing the processed data.
+
+    Parameters
+    ----------
+    output_workbooks : dict
+        The processed data for each region
+    pipeline_config : Config
+        The configuration object containing the output directory and other settings
+
+    Returns
+    -------
+    None
+    """
+    logger.info("Creating pickle file")
+
+    output_file = output_directory / f"{fin_year}_{fin_month}_amber_report_all_regions.pkl"
+    if output_file.exists():
+        logger.warning(f"Overwriting the existing pickle file: {output_file}")
+        output_file.unlink()
+    else:
+        logger.info(f"Creating pickle file for all regions for {fin_month} {fin_year}")
+
+    with open(output_file, "wb") as f:
+        pd.to_pickle(output_workbooks, f)
+
+    logger.success(f"Pickle file for all regions for {fin_month} {fin_year} created successfully.")
