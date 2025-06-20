@@ -20,6 +20,8 @@ if sys.version_info < (3, 11):
     # For Python versions < 3.11, use the backport of ExceptionGroup
     from exceptiongroup import ExceptionGroup
 
+pytestmark = pytest.mark.data_needed
+
 
 def compare_nested_dicts(actual, expected, path=""):
     """
@@ -142,4 +144,3 @@ class TestMonth12Year2425PipelineBacktest:
         assert isinstance(actual_data, dict), "Actual data should be a dictionary."
         
         compare_nested_dicts(actual_data, expected_data)
-
