@@ -354,14 +354,19 @@ def create_pickle(
     fin_year: str,
 ):
     """
-    Create pickle files for each region containing the processed data.
+    Create a pickle file containing the processed data for all regions. The pickle file will be saved
+    in the output directory with a name that includes the financial year and month.
 
     Parameters
     ----------
     output_workbooks : dict
         The processed data for each region
-    pipeline_config : Config
-        The configuration object containing the output directory and other settings
+    output_directory : Path
+        The path to save the pickle file to
+    fin_month : str
+        The financial month for which the data is being processed
+    fin_year : str
+        The financial year for which the data is being processed
 
     Returns
     -------
