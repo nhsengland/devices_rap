@@ -44,24 +44,28 @@ def output_data(
 
     output_directory = pipeline_config.create_output_directory()
 
-    if "excel" in outputs:
-        use_multiprocessing = pipeline_config.use_multiprocessing
-        create_excel_reports(
-            output_workbooks=output_workbooks,
-            output_directory=output_directory,
-            use_multiprocessing=use_multiprocessing,
-        )
-    if "pickle" in outputs:
-        fin_month = pipeline_config.fin_month
-        fin_year = pipeline_config.fin_year
-        create_pickle(
-            output_workbooks=output_workbooks,
-            output_directory=output_directory,
-            fin_month=fin_month,
-            fin_year=fin_year,
-        )
-    if "sql" in outputs:
-        logger.warning("SQL output is not implemented yet. Skipping SQL output.")
+    for output_format in outputs:
+        if output_format == "excel":
+            use_multiprocessing = pipeline_config.use_multiprocessing
+            create_excel_reports(
+                output_workbooks=output_workbooks,
+                output_directory=output_directory,
+                use_multiprocessing=use_multiprocessing,
+            )
+        elif output_format == "pickle":
+            fin_month = pipeline_config.fin_month
+            fin_year = pipeline_config.fin_year
+            create_pickle(
+                output_workbooks=output_workbooks,
+                output_directory=output_directory,
+                fin_month=fin_month,
+                fin_year=fin_year,
+            )
+        else:
+            logger.warning(
+                f"{output_format} output is not implemented yet. "
+                f"Skipping {output_format} output."
+            )
 
 
 def create_excel_reports(

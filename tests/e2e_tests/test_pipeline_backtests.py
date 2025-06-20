@@ -1,5 +1,5 @@
 """
-Backtests for the pipeline using month 12 data frome the financial year 2024-2025.
+Backtests for the pipeline using month 12 data from the financial year 2024-2025.
 This file contains end-to-end tests for the pipeline, ensuring that it can handle the data correctly
 and produce the expected results.
 """
@@ -64,7 +64,6 @@ def compare_nested_dicts(actual, expected, path=""):
             "Nested dictionary comparison failed",
             errors
         )
-        # raise ExceptionGroup("Nested dictionary comparison failed", errors)
 
 
 class TestMonth12Year2425PipelineBacktest:
@@ -116,10 +115,12 @@ class TestMonth12Year2425PipelineBacktest:
 
         return expected_data
 
-    def test_pipeline_backtest(self, expected_data, tmp_path):
+    def test_pipeline_backtest(self, expected_data, tmp_path, mocker):
         """
         Runs the pipeline with the test data and compares the output to the expected data.
         """
+        mocker.patch("warnings.warn", return_value=None)  # Suppress warnings for cleaner test output
+
         raw_data_dir = tmp_path / "input_data"
         processed_data_dir = tmp_path / "processed_data"
         amber_report_pipeline(

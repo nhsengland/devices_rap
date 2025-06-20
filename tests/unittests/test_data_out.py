@@ -2,6 +2,7 @@
 Tests for devices_rap/data_out.py
 """
 
+from unittest import mock
 import pytest
 import pandas as pd
 
@@ -12,6 +13,119 @@ from devices_rap.data_out import create_excel_reports, process_region
 
 
 pytestmark = pytest.mark.no_data_needed
+
+
+class TestOutputData:
+    """
+    Test class for data_out.output_data
+    """
+
+    # Mock pipeline_config fixture
+
+    @pytest.fixture
+    def mock_pipeline_config(self, mocker, tmp_path):
+        """
+        Mock the pipeline_config to return a mock output directory.
+        """
+        mock_pipeline_config = mocker.MagicMock()
+        mock_pipeline_config.create_output_directory.return_value = tmp_path
+        mock_pipeline_config.use_multiprocessing = False
+        mock_pipeline_config.fin_month = "test_month"
+        mock_pipeline_config.fin_year = "test_year"
+
+        return mock_pipeline_config
+
+    @pytest.fixture
+    def mock_create_excel_reports(self, mocker):
+        """
+        Mock the create_excel_reports function.
+        """
+        return mocker.patch("devices_rap.data_out.create_excel_reports", return_value=None)
+
+    @pytest.fixture
+    def mock_create_pickle(self, mocker):
+        """
+        Mock the create_pickle function.
+        """
+        return mocker.patch("devices_rap.data_out.create_pickle", return_value=None)
+
+    # Test logs warning when pipeline_config.outputs is empty
+    def test_output_data_logs_warning_when_outputs_empty(self, mock_pipeline_config, mock_warning):
+        """
+        Test that output_data logs a warning when pipeline_config.outputs is empty
+        """
+        mock_pipeline_config.outputs = []
+        data_out.output_data(
+            output_workbooks={},
+            pipeline_config=mock_pipeline_config,
+        )
+        mock_warning.assert_called_once_with("No outputs configured. Skipping output data.")
+
+    # Test does not log warning when pipeline_config.outputs is not empty
+    def test_output_data_does_not_log_warning_when_outputs_not_empty(
+        self, mock_pipeline_config, mock_warning
+    ):
+        """
+        Test that output_data does not log a warning when pipeline_config.outputs is not empty
+        """
+        mock_pipeline_config.outputs = ["excel"]
+        data_out.output_data(
+            output_workbooks={},
+            pipeline_config=mock_pipeline_config,
+        )
+        mock_warning.assert_not_called()
+
+    # Test calls implemented output functions based on pipeline_config.outputs
+    @pytest.mark.parametrize(
+        "outputs, expected_calls",
+        [
+            (["excel"], ["create_excel_reports"]),
+            (["pickle"], ["create_pickle"]),
+            (["excel", "pickle"], ["create_excel_reports", "create_pickle"]),
+        ],
+    )
+    def test_output_data_calls_implemented_outputs(
+        self,
+        mock_pipeline_config,
+        mock_create_excel_reports,
+        mock_create_pickle,
+        outputs,
+        expected_calls,
+    ):
+        """
+        Test that output_data calls the implemented output functions based on pipeline_config.outputs
+        """
+        mock_pipeline_config.outputs = outputs
+
+        data_out.output_data(
+            output_workbooks={},
+            pipeline_config=mock_pipeline_config,
+        )
+
+        for call in expected_calls:
+            if call == "create_excel_reports":
+                mock_create_excel_reports.assert_called_once()
+            elif call == "create_pickle":
+                mock_create_pickle.assert_called_once()
+
+    # Test logs warning for unimplemented outputs
+    @pytest.mark.parametrize("output", ["csv", "sql", "excel_zip"])
+    def test_output_data_logs_warning_for_unimplemented_outputs(
+        self, mock_pipeline_config, mock_warning, output
+    ):
+        """
+        Test that output_data logs a warning for unimplemented outputs
+        """
+        mock_pipeline_config.outputs = [output]
+
+        data_out.output_data(
+            output_workbooks={},
+            pipeline_config=mock_pipeline_config,
+        )
+
+        mock_warning.assert_called_once_with(
+            f"{output} output is not implemented yet. Skipping {output} output."
+        )
 
 
 class TestCreateExcelReports:
@@ -37,14 +151,6 @@ class TestCreateExcelReports:
         mock_pipeline_config.use_multiprocessing = False
         return mock_pipeline_config
 
-    def test_calls_create_output_directory(self, mock_pipeline_config, mock_output_directory):
-        """
-        Test that create_excel_reports calls create_output_directory
-        """
-        create_excel_reports(output_workbooks={}, pipeline_config=mock_pipeline_config)
-
-        mock_pipeline_config.create_output_directory.assert_called_once()
-
     @pytest.mark.parametrize("use_multiprocessing", [True, False])
     @pytest.mark.parametrize(
         "output_workbooks, call_count", [({}, 0), ({"region1": {"sheet1": pd.DataFrame()}}, 1)]
@@ -61,9 +167,10 @@ class TestCreateExcelReports:
         """
         Test that create_excel_reports calls process_region
         """
-        mock_pipeline_config.use_multiprocessing = use_multiprocessing
         create_excel_reports(
-            output_workbooks=output_workbooks, pipeline_config=mock_pipeline_config
+            output_workbooks=output_workbooks,
+            output_directory=mock_output_directory,
+            use_multiprocessing=use_multiprocessing,
         )
         assert mock_process_region.call_count == call_count
 
@@ -94,7 +201,9 @@ class TestCreateExcelReports:
         output_workbooks = {"region1": {"sheet1": pd.DataFrame()}}
 
         create_excel_reports(
-            output_workbooks=output_workbooks, pipeline_config=mock_pipeline_config
+            output_workbooks=output_workbooks,
+            output_directory=mock_output_directory,
+            use_multiprocessing=use_multiprocessing,
         )
 
         actual = mock_process_region.call_args[1][kwarg]
@@ -118,13 +227,18 @@ class TestCreateExcelReports:
         mock_log_levels,
         mock_pipeline_config,
         mock_process_region,
+        mock_output_directory,
         log_type,
         expected_message,
     ):
         """
         Test that the loguru.logger is called
         """
-        create_excel_reports(output_workbooks={}, pipeline_config=mock_pipeline_config)
+        create_excel_reports(
+            output_workbooks={},
+            output_directory=mock_output_directory,
+            use_multiprocessing=False,
+        )
 
         mock_log = mock_log_levels[log_type]
 
@@ -686,6 +800,94 @@ class TestApplyExcelFormatting:
         ws.autofit.assert_called_once_with()
 
 
-if __name__ == "__main__":
-    # This code allows the tests in the file to be run by running the file itself.
-    pytest.main([__file__])
+class TestCreatePickle:
+    """
+    Test class for data_out.create_pickle
+    """
+
+    @pytest.fixture
+    def mock_to_pickle(self, mocker):
+        return mocker.patch("pandas.to_pickle", return_value=None)
+
+    @pytest.fixture
+    def default_args(self, tmp_path):
+        """
+        Fixture to return the default arguments for create_pickle function
+        """
+        return {
+            "output_workbooks": {
+                "test": {"test": pd.DataFrame(columns=["col1", "col2"], data=[["val1", "val2"]])}
+            },
+            "output_directory": tmp_path,
+            "fin_year": "test_year",
+            "fin_month": "test_month",
+        }
+
+    @pytest.mark.parametrize(
+        "call_count, expected_message",
+        [
+            (0, "Creating pickle file"),
+            (1, "Creating pickle file for all regions for test_month test_year"),
+        ],
+    )
+    def test_log_info_called(self, mock_log_levels, default_args, call_count, expected_message):
+        """
+        Test that create_pickle logs the correct info message
+        """
+        data_out.create_pickle(**default_args)
+        mock_info = mock_log_levels["info"]
+
+        assert mock_info.call_args_list[call_count][0][0] == expected_message
+
+    def test_calls_warning_if_file_already_exists(
+        self, mock_log_levels, default_args, mock_warning, tmp_path
+    ):
+        """
+        Test that create_pickle logs a warning if the file already exists
+        """
+        output_file = tmp_path / "test_year_test_month_amber_report_all_regions.pkl"
+
+        output_file.touch()  # Create the file to simulate it already existing
+        data_out.create_pickle(**default_args)
+        mock_warning.assert_called_once_with(
+            f"Overwriting the existing pickle file: {output_file}"
+        )
+
+    def test_unlinks_file_if_already_exists(
+        self, mock_log_levels, default_args, tmp_path, mock_to_pickle, mocker
+    ):
+        """
+        Test that create_pickle unlinks the file if it already exists
+        """
+        mock_unlink = mocker.patch("os.unlink", return_value=None)  # Mock os.unlink to avoid actual file deletion
+        output_file = tmp_path / "test_year_test_month_amber_report_all_regions.pkl"
+        output_file.touch()
+
+        data_out.create_pickle(**default_args)
+
+        mock_unlink.assert_called_once()
+
+    def test_calls_to_pickle(self, default_args, mock_to_pickle, tmp_path):
+        """
+        Test that create_pickle calls to_pickle with the correct arguments
+        """
+        data_out.create_pickle(**default_args)
+
+        mock_to_pickle.assert_called_once()
+
+        expected_file = tmp_path / "test_year_test_month_amber_report_all_regions.pkl"
+
+        assert mock_to_pickle.call_args.args[0] == default_args["output_workbooks"]
+        assert mock_to_pickle.call_args.args[1].name == str(expected_file)
+
+    def test_calls_logger_success(self, mock_log_levels, default_args):
+        """
+        Test that create_pickle logs a success message
+        """
+        data_out.create_pickle(**default_args)
+
+        mock_success = mock_log_levels["success"]
+        expected_message = (
+            "Pickle file for all regions for test_month test_year created successfully."
+        )
+        mock_success.assert_called_once_with(expected_message)

@@ -29,9 +29,9 @@ from devices_rap.constants import (
 if sys.version_info < (3, 11):
     from exceptiongroup import ExceptionGroup  # type: ignore
 
-
 FinMonths = Literal["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
 FinYears = Literal["2425", "2526", "2627", "2728", "2829", "2930", "3031", "3132"]
+
 OutputFormats = Literal["excel", "pickle", "csv", "sql", "excel_zip"]
 PipelineOutputs = OutputFormats | List[OutputFormats]
 
@@ -134,7 +134,7 @@ class Config:
         self.fin_month = fin_month
         self.fin_year = fin_year
         self.use_multiprocessing = use_multiprocessing
-        self.outputs = outputs
+        self.outputs = outputs if isinstance(outputs, list) else [outputs]
         self.raw_data_dir = raw_data_dir
         self.processed_data_dir = processed_data_dir
         self.amber_report_excel_config_path = amber_report_excel_config_path
