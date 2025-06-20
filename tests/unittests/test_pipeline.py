@@ -2,11 +2,8 @@
 Tests for devices_rap/pipeline.py
 """
 
-from unittest import mock
 import pandas as pd
-import pip
 import pytest
-import test
 
 from devices_rap import pipeline
 
@@ -58,7 +55,7 @@ class TestAmberReportPipeline:
         "interpret_output_instructions": {
             "region_1": {"test": pd.DataFrame(columns=["interpret_output_instructions"])}
         },
-        "create_excel_reports": None,
+        "output_data": None,
     }
 
     @pytest.fixture
@@ -88,7 +85,7 @@ class TestAmberReportPipeline:
         return {
             "fin_month": "test",
             "fin_year": "test",
-            "use_multiprocessing": False,
+            "outputs": "test",
         }
 
     @pytest.mark.parametrize("function", pipeline_functions.keys())
@@ -113,7 +110,7 @@ class TestAmberReportPipeline:
         mock_pipeline_functions["Config"].assert_called_once_with(
             fin_month=amber_report_pipeline_args["fin_month"],
             fin_year=amber_report_pipeline_args["fin_year"],
-            use_multiprocessing=amber_report_pipeline_args["use_multiprocessing"],
+            outputs=amber_report_pipeline_args["outputs"],
         )
 
     def test_calls_load_devices_datasets_with_correct_args(
@@ -357,7 +354,7 @@ class TestAmberReportPipeline:
             region_cuts=mock_pipeline_functions["create_regional_table_cuts"].return_value,
         )
 
-    def test_calls_create_excel_reports_with_correct_args(
+    def test_calls_output_data_with_correct_kwargs(
         self, amber_report_pipeline_args, mock_pipeline_functions
     ):
         """
@@ -365,7 +362,7 @@ class TestAmberReportPipeline:
         """
         pipeline.amber_report_pipeline(**amber_report_pipeline_args)
 
-        mock_pipeline_functions["create_excel_reports"].assert_called_once_with(
+        mock_pipeline_functions["output_data"].assert_called_once_with(
             output_workbooks=mock_pipeline_functions["interpret_output_instructions"].return_value,
             pipeline_config=mock_pipeline_functions["Config"].return_value,
         )
