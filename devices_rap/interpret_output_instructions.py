@@ -87,6 +87,9 @@ def filter_data(
                 worksheet_data = worksheet_data[~worksheet_data[column].isin(filter_values["not"])]
             elif isinstance(filter_values, list):
                 worksheet_data = worksheet_data[worksheet_data[column].isin(filter_values)]
+            elif isinstance(filter_values, (str, int, float, bool)):
+                # If the filter value is a boolean, we assume it is a filter to keep rows with True values.
+                worksheet_data = worksheet_data[worksheet_data[column] == filter_values]
             else:
                 raise ValueError(f"Invalid filter value for column {column}: {filter_values}")
     except KeyError as e:
