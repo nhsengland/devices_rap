@@ -258,15 +258,15 @@ def cleanse_device_taxonomy(device_taxonomy: pd.DataFrame) -> pd.DataFrame:
     Cleanses the device taxonomy DataFrame by converting 'Y'/'N' string values
     in specific columns to boolean values.
 
-    This function processes the 'migrated_catergories' and 'non_migrated_categories'
+    This function processes the 'migrated_categories' and 'non_migrated_categories'
     columns, converting their values to True for 'Y', False for 'N', and None for any
     other value. The results are stored in new columns:
-    'upd_migrated_catergories' and 'upd_non_migrated_categories'.
+    'upd_migrated_categories' and 'upd_non_migrated_categories'.
 
     Parameters
     ----------
     device_taxonomy : pd.DataFrame
-        The DataFrame containing device taxonomy data with 'migrated_catergories' and
+        The DataFrame containing device taxonomy data with 'migrated_categories' and
         'non_migrated_categories' columns.
 
     Returns
@@ -287,16 +287,16 @@ def cleanse_device_taxonomy(device_taxonomy: pd.DataFrame) -> pd.DataFrame:
         return None
 
     try:
-        device_taxonomy["upd_migrated_catergories"] = device_taxonomy[
-            "migrated_catergories"
-        ].apply(_yn_to_bool)
+        device_taxonomy["upd_migrated_categories"] = device_taxonomy["migrated_categories"].apply(
+            _yn_to_bool
+        )
         device_taxonomy["upd_non_migrated_categories"] = device_taxonomy[
             "non_migrated_categories"
         ].apply(_yn_to_bool)
     except KeyError as e:
         raise ColumnsNotFoundError(
             dataset_columns=device_taxonomy.columns,
-            clean_columns=["migrated_catergories", "non_migrated_categories"],
+            clean_columns=["migrated_categories", "non_migrated_categories"],
         ) from e
 
     return device_taxonomy
