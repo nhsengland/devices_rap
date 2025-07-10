@@ -71,21 +71,51 @@ STANDARD_SORT_COLUMNS: &standard_sort_columns
   - upd_high_level_device_type
   - rag_status
 
+MIGRATED_DEVICE_TYPES: &migrated_device_types
+  - DEV01
+  - DEV02
+  - DEV05
+  - DEV06
+  - DEV08
+  - DEV09
+  - DEV10
+  - DEV11
+  - DEV12
+  - DEV13
+  - DEV15
+  - DEV16
+  - DEV17
+  - DEV18
+  - DEV20
+  - DEV29
+  - DEV30
+  - DEV32
+  - DEV33
+  - DEV34
+  - DEV35
+  - DEV36
+  - DEV37
+  - DEV38
+  - DEV39
+  - DEV40
+  - DEV41
+  - DEV51
+  - DEV53
+  - DEV56
+  - DEV57
+
 NON_MIGRATED_DEVICE_TYPES: &non_migrated_device_types
   - DEV03
   - DEV04
   - DEV14
-  - DEV20
   - DEV22
   - DEV23
   - DEV26
   - DEV27
-  - DEV29
   - DEV50
   - DEV52
   - DEV58
   - DEV59
-
 
 WORKSHEET_CONFIG:
   AMBER Summary:
@@ -93,8 +123,7 @@ WORKSHEET_CONFIG:
     columns: *amber_summary_columns
     filters:
       rag_status: ["AMBER"]
-      upd_high_level_device_type: 
-        not: ["NULL", "DEV98", "DEV99"]
+      upd_high_level_device_type: *migrated_device_types
     sub-totals: *standard_sub_totals
     sort_columns: *standard_sort_columns
   AMBER Detailed:
@@ -102,8 +131,7 @@ WORKSHEET_CONFIG:
     columns: *detailed_columns
     filters:
       rag_status: ["AMBER"]
-      upd_high_level_device_type: 
-        not: ["NULL", "DEV98", "DEV99"]
+      upd_high_level_device_type: *migrated_device_types
     sub-totals: *standard_sub_totals
     sort_columns: *standard_sort_columns
   RED Summary:
@@ -111,8 +139,7 @@ WORKSHEET_CONFIG:
     columns: *summary_columns
     filters:
       rag_status: ["RED", "YELLOW"]
-      upd_high_level_device_type: 
-        not: ["NULL", "DEV98", "DEV99", "DEV19", "DEV21", "DEV24", "DEV28", "DEV31"]
+      upd_high_level_device_type: *migrated_device_types
     sub-totals: *standard_sub_totals
     sort_columns: *standard_sort_columns
   RED Detailed:
@@ -120,8 +147,7 @@ WORKSHEET_CONFIG:
     columns: *detailed_columns
     filters:
       rag_status: ["RED", "YELLOW"]
-      upd_high_level_device_type: 
-        not: ["NULL", "DEV98", "DEV99", "DEV19", "DEV21", "DEV24", "DEV28", "DEV31"]
+      upd_high_level_device_type: *migrated_device_types
     sub-totals: *standard_sub_totals
     sort_columns: *standard_sort_columns
   NON-MIGRATED Summary:
