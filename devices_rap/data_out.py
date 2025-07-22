@@ -2,6 +2,7 @@
 Functionality that handle the output of processed data from the pipeline.
 """
 
+import zipfile
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Dict, Literal
@@ -45,13 +46,21 @@ def output_data(
     output_directory = pipeline_config.create_output_directory()
 
     for output_format in outputs:
-        if output_format == "excel":
+        if output_format.startswith("excel"):
             use_multiprocessing = pipeline_config.use_multiprocessing
             create_excel_reports(
                 output_workbooks=output_workbooks,
                 output_directory=output_directory,
                 use_multiprocessing=use_multiprocessing,
             )
+            if output_format == "excel_zip":
+                fin_month = pipeline_config.fin_month
+                fin_year = pipeline_config.fin_year
+                create_excel_zip_reports(
+                    output_directory=output_directory,
+                    fin_month=fin_month,
+                    fin_year=fin_year,
+                )
         elif output_format == "pickle":
             fin_month = pipeline_config.fin_month
             fin_year = pipeline_config.fin_year
@@ -385,3 +394,46 @@ def create_pickle(
         pd.to_pickle(output_workbooks, f)
 
     logger.success(f"Pickle file for all regions for {fin_month} {fin_year} created successfully.")
+
+
+def create_excel_zip_reports(
+    output_directory: Path,
+    fin_month: str,
+    fin_year: str,
+):
+    """
+    Create a zip file containing all the Excel reports for each region. The zip file will be saved in
+    the output directory with a name that includes the financial year and month.
+
+    This function will gather all the Excel files created for each region and compress them into a
+    single zip file.
+
+    Parameters
+    ----------
+    output_directory : Path
+        The output directory where the Excel files are saved and where the zip file will be created
+    fin_month : str
+        The financial month for which the data is being processed
+    fin_year : str
+        The financial year for which the data is being processed
+
+    Returns
+    -------
+    None
+    """
+    logger.info("Creating zip file for Excel reports")
+    output_file = output_directory / f"{fin_year}_M{fin_month}_AMBER_REPORTS_ALL_REGIONS.zip"
+    if output_file.exists():
+        logger.warning(f"Overwriting the existing zip file: {output_file}")
+        output_file.unlink()
+    else:
+        logger.info(f"Creating zip file for all regions for {fin_month} {fin_year}")
+
+    excel_files = tqdm.tqdm(list(output_directory.glob("*_RAG_STATUS_REPORT.xlsx")))
+    with zipfile.ZipFile(output_file, "w", zipfile.ZIP_DEFLATED) as zip_file:
+        for excel_file in excel_files:
+            zip_file.write(excel_file, arcname=excel_file.name)
+
+    logger.success(
+        f"Zip file for all regions for {fin_month} {fin_year} created successfully at {output_file}."
+    )

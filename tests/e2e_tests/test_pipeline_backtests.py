@@ -51,7 +51,7 @@ def compare_nested_dicts(actual, expected, path=""):
                         # For Python 3.11+, use the new StringDtype metadata comparison
                         pd.testing.assert_frame_equal(actual, expected, check_dtype=True)
                     else:
-                        # For Python < 3.11, convert string columns to object dtype to avoid 
+                        # For Python < 3.11, convert string columns to object dtype to avoid
                         # StringDtype metadata issues
                         def _convert_str_cols(df):
                             for col in df.select_dtypes(include=["string", "object"]).columns:

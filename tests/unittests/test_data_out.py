@@ -2,12 +2,14 @@
 Tests for devices_rap/data_out.py
 """
 
-from unittest import mock
+import zipfile
 import pytest
 import pandas as pd
 
 from devices_rap import data_out
 from devices_rap.data_out import create_excel_reports, process_region
+from pathlib import Path
+from devices_rap.data_out import create_excel_zip_reports
 
 # from devices_rap import data_out
 
@@ -41,6 +43,13 @@ class TestOutputData:
         Mock the create_excel_reports function.
         """
         return mocker.patch("devices_rap.data_out.create_excel_reports", return_value=None)
+    
+    @pytest.fixture
+    def mock_create_excel_zip_reports(self, mocker):
+        """
+        Mock the create_excel_zip_reports function.
+        """
+        return mocker.patch("devices_rap.data_out.create_excel_zip_reports", return_value=None)
 
     @pytest.fixture
     def mock_create_pickle(self, mocker):
@@ -82,6 +91,7 @@ class TestOutputData:
             (["excel"], ["create_excel_reports"]),
             (["pickle"], ["create_pickle"]),
             (["excel", "pickle"], ["create_excel_reports", "create_pickle"]),
+            (["excel_zip"], ["create_excel_reports", "create_excel_zip_reports"]),
         ],
     )
     def test_output_data_calls_implemented_outputs(
@@ -89,6 +99,7 @@ class TestOutputData:
         mock_pipeline_config,
         mock_create_excel_reports,
         mock_create_pickle,
+        mock_create_excel_zip_reports,
         outputs,
         expected_calls,
     ):
@@ -107,9 +118,13 @@ class TestOutputData:
                 mock_create_excel_reports.assert_called_once()
             elif call == "create_pickle":
                 mock_create_pickle.assert_called_once()
+            elif call == "create_excel_zip_reports":
+                mock_create_excel_zip_reports.assert_called_once()
+            else:
+                raise ValueError(f"Unexpected call: {call}")
 
     # Test logs warning for unimplemented outputs
-    @pytest.mark.parametrize("output", ["csv", "sql", "excel_zip"])
+    @pytest.mark.parametrize("output", ["csv", "sql"])
     def test_output_data_logs_warning_for_unimplemented_outputs(
         self, mock_pipeline_config, mock_warning, output
     ):
@@ -891,3 +906,114 @@ class TestCreatePickle:
             "Pickle file for all regions for test_month test_year created successfully."
         )
         mock_success.assert_called_once_with(expected_message)
+
+
+class TestCreateExcelZipReports:
+    """
+    Test class for data_out.create_excel_zip_reports
+    """
+
+    @pytest.fixture
+    def mock_zipfile(self, mocker):
+        return mocker.patch("zipfile.ZipFile", autospec=True)
+
+    @pytest.fixture
+    def mock_tqdm(self, mocker):
+        return mocker.patch("tqdm.tqdm", side_effect=lambda x, **kwargs: x)
+
+    @pytest.fixture
+    def output_directory(self, tmp_path):
+        d = tmp_path / "output"
+        d.mkdir(parents=True, exist_ok=True)
+        return d
+
+    @pytest.fixture
+    def excel_files(self, output_directory):
+        files = []
+        for name in ["A_RAG_STATUS_REPORT.xlsx", "B_RAG_STATUS_REPORT.xlsx"]:
+            f = output_directory / name
+            f.touch()
+            files.append(f)
+        return files
+
+    def test_logs_info_and_success(
+        self, mocker, output_directory, excel_files, mock_zipfile, mock_tqdm, mock_log_levels
+    ):
+        """
+        Test that logger.info and logger.success are called with correct messages
+        """
+        data_out.create_excel_zip_reports(
+            output_directory=output_directory, fin_month="01", fin_year="2023"
+        )
+        mock_info = mock_log_levels["info"]
+        mock_success = mock_log_levels["success"]
+        assert mock_info.call_args_list[0][0][0] == "Creating zip file for Excel reports"
+        assert mock_success.call_args[0][0].startswith(
+            "Zip file for all regions for 01 2023 created successfully at"
+        )
+
+    def test_creates_zip_with_excel_files(
+        self, mocker, output_directory, excel_files, mock_zipfile, mock_tqdm
+    ):
+        """
+        Test that all Excel files are added to the zip archive
+        """
+        zip_mock = mock_zipfile.return_value.__enter__.return_value
+        data_out.create_excel_zip_reports(
+            output_directory=output_directory, fin_month="01", fin_year="2023"
+        )
+        # Should call write for each excel file
+        written_files = [call.kwargs.get("arcname") or call.args[1] for call in zip_mock.write.call_args_list]
+        expected_files = [f.name for f in excel_files]
+        assert set(written_files) == set(expected_files)
+
+    def test_output_file_is_named_correctly(self, output_directory, excel_files, mock_zipfile, mock_tqdm):
+        """
+        Test that the output zip file is named as expected
+        """
+        fin_month = "01"
+        fin_year = "2023"
+        expected_zip = output_directory / f"{fin_year}_M{fin_month}_AMBER_REPORTS_ALL_REGIONS.zip"
+        data_out.create_excel_zip_reports(
+            output_directory=output_directory, fin_month=fin_month, fin_year=fin_year
+        )
+        mock_zipfile.assert_called_once_with(expected_zip, "w", zipfile.ZIP_DEFLATED)
+
+    def test_logs_warning_and_unlinks_if_zip_exists(
+        self, mocker, output_directory, excel_files, mock_zipfile, mock_tqdm, mock_log_levels
+    ):
+        """
+        Test that a warning is logged and the file is unlinked if the zip already exists
+        """
+        fin_month = "01"
+        fin_year = "2023"
+        output_file = output_directory / f"{fin_year}_M{fin_month}_AMBER_REPORTS_ALL_REGIONS.zip"
+        output_file.touch()
+        mock_unlink = mocker.patch("pathlib.Path.unlink")
+        data_out.create_excel_zip_reports(
+            output_directory=output_directory, fin_month=fin_month, fin_year=fin_year
+        )
+        mock_log_levels["warning"].assert_called_once_with(
+            f"Overwriting the existing zip file: {output_file}"
+        )
+        mock_unlink.assert_called_once()
+
+    def test_logs_info_if_zip_does_not_exist(
+        self, mocker, output_directory, excel_files, mock_zipfile, mock_tqdm, mock_log_levels
+    ):
+        """
+        Test that info is logged if the zip does not exist
+        """
+        fin_month = "01"
+        fin_year = "2023"
+        output_file = output_directory / f"{fin_year}_M{fin_month}_AMBER_REPORTS_ALL_REGIONS.zip"
+        if output_file.exists():
+            output_file.unlink()
+        data_out.create_excel_zip_reports(
+            output_directory=output_directory, fin_month=fin_month, fin_year=fin_year
+        )
+        # The second info call is for creating the zip file
+        assert any(
+            f"Creating zip file for all regions for {fin_month} {fin_year}" in str(call)
+            for call in mock_log_levels["info"].call_args_list
+        )

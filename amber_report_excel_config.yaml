@@ -71,30 +71,14 @@ STANDARD_SORT_COLUMNS: &standard_sort_columns
   - upd_high_level_device_type
   - rag_status
 
-NON_MIGRATED_DEVICE_TYPES: &non_migrated_device_types
-  - DEV03
-  - DEV04
-  - DEV14
-  - DEV20
-  - DEV22
-  - DEV23
-  - DEV26
-  - DEV27
-  - DEV29
-  - DEV50
-  - DEV52
-  - DEV58
-  - DEV59
-
-
 WORKSHEET_CONFIG:
   AMBER Summary:
     type: "summary"
     columns: *amber_summary_columns
     filters:
       rag_status: ["AMBER"]
-      upd_high_level_device_type: 
-        not: ["NULL", "DEV98", "DEV99"]
+      # upd_high_level_device_type: *migrated_device_types
+      upd_migrated_categories: True
     sub-totals: *standard_sub_totals
     sort_columns: *standard_sort_columns
   AMBER Detailed:
@@ -102,8 +86,7 @@ WORKSHEET_CONFIG:
     columns: *detailed_columns
     filters:
       rag_status: ["AMBER"]
-      upd_high_level_device_type: 
-        not: ["NULL", "DEV98", "DEV99"]
+      upd_migrated_categories: True
     sub-totals: *standard_sub_totals
     sort_columns: *standard_sort_columns
   RED Summary:
@@ -111,8 +94,7 @@ WORKSHEET_CONFIG:
     columns: *summary_columns
     filters:
       rag_status: ["RED", "YELLOW"]
-      upd_high_level_device_type: 
-        not: ["NULL", "DEV98", "DEV99", "DEV19", "DEV21", "DEV24", "DEV28", "DEV31"]
+      upd_migrated_categories: True
     sub-totals: *standard_sub_totals
     sort_columns: *standard_sort_columns
   RED Detailed:
@@ -120,8 +102,7 @@ WORKSHEET_CONFIG:
     columns: *detailed_columns
     filters:
       rag_status: ["RED", "YELLOW"]
-      upd_high_level_device_type: 
-        not: ["NULL", "DEV98", "DEV99", "DEV19", "DEV21", "DEV24", "DEV28", "DEV31"]
+      upd_migrated_categories: True
     sub-totals: *standard_sub_totals
     sort_columns: *standard_sort_columns
   NON-MIGRATED Summary:
@@ -130,7 +111,7 @@ WORKSHEET_CONFIG:
     filters:
       rag_status: 
         not: ["NULL"]
-      upd_high_level_device_type: *non_migrated_device_types
+      upd_non_migrated_categories: True
     sub-totals: *standard_sub_totals
     sort_columns: *standard_sort_columns
   NON-MIGRATED Detailed:
@@ -139,7 +120,7 @@ WORKSHEET_CONFIG:
     filters:
       rag_status: 
         not: ["NULL"]
-      upd_high_level_device_type: *non_migrated_device_types
+      upd_non_migrated_categories: True
     sub-totals: *standard_sub_totals
     sort_columns: *standard_sort_columns
   Data:

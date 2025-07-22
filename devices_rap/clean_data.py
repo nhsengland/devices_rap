@@ -253,6 +253,55 @@ def cleanse_exceptions(
     return exceptions_df
 
 
+def cleanse_device_taxonomy(device_taxonomy: pd.DataFrame) -> pd.DataFrame:
+    """
+    Cleanses the device taxonomy DataFrame by converting 'Y'/'N' string values
+    in specific columns to boolean values.
+
+    This function processes the 'migrated_categories' and 'non_migrated_categories'
+    columns, converting their values to True for 'Y', False for 'N', and None for any
+    other value. The results are stored in new columns:
+    'upd_migrated_categories' and 'upd_non_migrated_categories'.
+
+    Parameters
+    ----------
+    device_taxonomy : pd.DataFrame
+        The DataFrame containing device taxonomy data with 'migrated_categories' and
+        'non_migrated_categories' columns.
+
+    Returns
+    -------
+    pd.DataFrame
+        The updated DataFrame with new columns for migrated and non-migrated categories
+        containing boolean values.
+    """
+
+    def _yn_to_bool(val):
+        """
+        Convert 'Y'/'N' strings to True/False (boolean values), or None if not applicable.
+        """
+        if "Y" in str(val).strip().upper():
+            return True
+        if "N" in str(val).strip().upper():
+            return False
+        return None
+
+    try:
+        device_taxonomy["upd_migrated_categories"] = device_taxonomy["migrated_categories"].apply(
+            _yn_to_bool
+        )
+        device_taxonomy["upd_non_migrated_categories"] = device_taxonomy[
+            "non_migrated_categories"
+        ].apply(_yn_to_bool)
+    except KeyError as e:
+        raise ColumnsNotFoundError(
+            dataset_columns=device_taxonomy.columns,
+            clean_columns=["migrated_categories", "non_migrated_categories"],
+        ) from e
+
+    return device_taxonomy
+
+
 def convert_date_columns_to_datetime(data: pd.DataFrame, date_columns: List[str]) -> pd.DataFrame:
     """
     Convert specified date columns in the dataframe to datetime format using the parse_dates
