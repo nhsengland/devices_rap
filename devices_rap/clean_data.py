@@ -278,7 +278,7 @@ def cleanse_device_taxonomy(device_taxonomy: pd.DataFrame) -> pd.DataFrame:
 
     def _yn_to_bool(val):
         """
-        Convert 'Y'/'N' strings to 1/0, or None if not applicable.
+        Convert 'Y'/'N' strings to True/False (boolean values), or None if not applicable.
         """
         if "Y" in str(val).strip().upper():
             return True
