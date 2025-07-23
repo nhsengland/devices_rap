@@ -37,6 +37,7 @@ class TestAmberReportPipeline:
             },
         },
         "cleanse_master_data": pd.DataFrame(columns=["cleanse_master_data"]),
+        "cleanse_device_taxonomy": pd.DataFrame(columns=["cleanse_device_taxonomy"]),
         "cleanse_exceptions": pd.DataFrame(columns=["cleanse_exceptions"]),
         "join_provider_codes_lookup": pd.DataFrame(columns=["join_provider_codes_lookup"]),
         "join_device_taxonomy": pd.DataFrame(columns=["join_device_taxonomy"]),
@@ -67,10 +68,8 @@ class TestAmberReportPipeline:
         for function, return_value in self.pipeline_functions.items():
             if function == "Config":
                 # Mock the Config class to return a mock object
-                mock_functions[function] = mocker.patch(
-                    "devices_rap.pipeline.Config"
-                )
-            else: 
+                mock_functions[function] = mocker.patch("devices_rap.pipeline.Config")
+            else:
                 mock_functions[function] = mocker.patch(
                     f"devices_rap.pipeline.{function}", return_value=return_value
                 )
@@ -162,6 +161,21 @@ class TestAmberReportPipeline:
 
         pd.testing.assert_frame_equal(actual, expected)
 
+    def test_calls_cleanse_device_taxonomy_with_correct_args(
+        self, amber_report_pipeline_args, mock_pipeline_functions
+    ):
+        """
+        Test that amber_report_pipeline calls cleanse_device_taxonomy with the correct arguments
+        """
+        pipeline.amber_report_pipeline(**amber_report_pipeline_args)
+
+        actual = mock_pipeline_functions["cleanse_device_taxonomy"].call_args.args[0]
+        expected = self.pipeline_functions["batch_normalise_column_names"]["device_taxonomy"][
+            "data"
+        ]
+
+        pd.testing.assert_frame_equal(actual, expected)
+
     @pytest.mark.parametrize("arg", [0, 1])
     def test_calls_join_provider_codes_lookup_with_correct_args(
         self, amber_report_pipeline_args, mock_pipeline_functions, arg
@@ -195,7 +209,7 @@ class TestAmberReportPipeline:
         expected = (
             self.pipeline_functions["join_provider_codes_lookup"]
             if arg == 0
-            else self.pipeline_functions["batch_normalise_column_names"]["device_taxonomy"]["data"]
+            else self.pipeline_functions["cleanse_device_taxonomy"]
         )
 
         pd.testing.assert_frame_equal(actual, expected)
@@ -290,7 +304,7 @@ class TestAmberReportPipeline:
             ),
             (
                 "device_taxonomy",
-                pipeline_functions["batch_normalise_column_names"]["device_taxonomy"]["data"],
+                pipeline_functions["cleanse_device_taxonomy"],
             ),
             ("exceptions", pipeline_functions["cleanse_exceptions"]),
             ("include_exception_notes", None),

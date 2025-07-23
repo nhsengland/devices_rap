@@ -262,8 +262,17 @@ class TestJoinMiniDeviceTaxonomy:
         Return a device_taxonomy DataFrame for testing.
         """
         return pd.DataFrame(
-            columns=["dev_code", "description_in_title_case"],
-            data=[("type1", "desc1"), ("type2", "desc2"), ("type3", "desc3")],
+            columns=[
+                "dev_code",
+                "description_in_title_case",
+                "upd_migrated_categories",
+                "upd_non_migrated_categories",
+            ],
+            data=[
+                ("type1", "desc1", "migrated1", "non_migrated1"),
+                ("type2", "desc2", "migrated2", "non_migrated2"),
+                ("type3", "desc3", "migrated3", "non_migrated3"),
+            ],
         )
 
     def test_returns_dataframe(self, master_devices, device_taxonomy, mocker):
@@ -273,7 +282,12 @@ class TestJoinMiniDeviceTaxonomy:
         mocker.patch(
             "devices_rap.joins.join_device_taxonomy",
             return_value=pd.DataFrame(
-                columns=["upd_high_level_device_type", "description_in_title_case"]
+                columns=[
+                    "dev_code",
+                    "description_in_title_case",
+                    "upd_migrated_categories",
+                    "upd_non_migrated_categories",
+                ]
             ),
         )
         actual = joins.join_mini_device_taxonomy(master_devices, device_taxonomy)
@@ -289,7 +303,9 @@ class TestJoinMiniDeviceTaxonomy:
         joins.join_mini_device_taxonomy(master_devices, device_taxonomy)
 
         mock_logger.assert_called_once_with(
-            "Reducing the device_taxonomy table down to only join on the required columns: ['dev_code', 'description_in_title_case']"
+            "Reducing the device_taxonomy table down to only join on the required columns: "
+            "['dev_code', 'description_in_title_case', 'upd_migrated_categories', "
+            "'upd_non_migrated_categories']"
         )
 
     def test_calls_join_device_taxonomy(self, master_devices, device_taxonomy, mocker):
@@ -311,26 +327,34 @@ class TestJoinMiniDeviceTaxonomy:
         with pytest.raises(ColumnsNotFoundError):
             joins.join_mini_device_taxonomy(master_devices, device_taxonomy)
 
-    def test_correct_columns_passed_to_join_device_taxonomy(self, master_devices, mocker):
+    def test_correct_columns_passed_to_join_device_taxonomy(
+        self, 
+        master_devices, 
+        device_taxonomy, 
+        mocker
+    ):
         """
         Test that the correct columns are passed to join_device_taxonomy.
         """
-        device_taxonomy = pd.DataFrame(
-            columns=["dev_code", "description_in_title_case", "extra_column"],
+        input_device_taxonomy = pd.DataFrame(
+            columns=[
+                "dev_code",
+                "description_in_title_case",
+                "upd_migrated_categories",
+                "upd_non_migrated_categories",
+                "extra_column",
+            ],
             data=[
-                ("type1", "desc1", "extra1"),
-                ("type2", "desc2", "extra2"),
-                ("type3", "desc3", "extra3"),
+                ("type1", "desc1", "migrated1", "non_migrated1", "extra1"),
+                ("type2", "desc2", "migrated2", "non_migrated2", "extra2"),
+                ("type3", "desc3", "migrated3", "non_migrated3", "extra3"),
             ],
         )
-        expected_device_taxonomy = pd.DataFrame(
-            columns=["dev_code", "description_in_title_case"],
-            data=[("type1", "desc1"), ("type2", "desc2"), ("type3", "desc3")],
-        )
+        expected_device_taxonomy = device_taxonomy
 
         mock_join_device_taxonomy = mocker.patch("devices_rap.joins.join_device_taxonomy")
 
-        joins.join_mini_device_taxonomy(master_devices, device_taxonomy)
+        joins.join_mini_device_taxonomy(master_devices, input_device_taxonomy)
 
         actual = mock_join_device_taxonomy.call_args.kwargs["device_taxonomy"]
         pd.testing.assert_frame_equal(actual, expected_device_taxonomy)

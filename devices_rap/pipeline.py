@@ -8,6 +8,7 @@ from nhs_herbot.utils import timeit
 
 from devices_rap.clean_data import (
     batch_normalise_column_names,
+    cleanse_device_taxonomy,
     cleanse_exceptions,
     cleanse_master_data,
     cleanse_master_joined_dataset,
@@ -62,7 +63,7 @@ def amber_report_pipeline(
     master_devices = normalised_datasets["master_devices"]["data"].pipe(cleanse_master_data)
 
     provider_codes_lookup = normalised_datasets["provider_codes_lookup"]["data"]
-    device_taxonomy = normalised_datasets["device_taxonomy"]["data"]
+    device_taxonomy = normalised_datasets["device_taxonomy"]["data"].pipe(cleanse_device_taxonomy)
     exceptions = normalised_datasets["exceptions"]["data"].pipe(cleanse_exceptions)
 
     master_provider_devices = join_provider_codes_lookup(master_devices, provider_codes_lookup)
@@ -122,5 +123,5 @@ def amber_report_pipeline(
 
 if __name__ == "__main__":
     amber_report_pipeline(
-        fin_month="12", fin_year="2425", use_multiprocessing=True, outputs=["pickle"]
+        fin_month="02", fin_year="2526", use_multiprocessing=True, outputs=["excel_zip"]
     )

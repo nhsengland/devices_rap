@@ -219,7 +219,12 @@ def join_mini_device_taxonomy(
     ColumnsNotFoundError
         If the required columns are not present in the device_taxonomy dataset.
     """
-    mini_taxonomy_columns = ["dev_code", "description_in_title_case"]
+    mini_taxonomy_columns = [
+        "dev_code",
+        "description_in_title_case",
+        "upd_migrated_categories",
+        "upd_non_migrated_categories",
+    ]
 
     logger.info(
         f"Reducing the device_taxonomy table down to only join on the required columns: {mini_taxonomy_columns}"
