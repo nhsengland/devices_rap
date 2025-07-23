@@ -77,7 +77,6 @@ WORKSHEET_CONFIG:
     columns: *amber_summary_columns
     filters:
       rag_status: ["AMBER"]
-      # upd_high_level_device_type: *migrated_device_types
       upd_migrated_categories: True
     sub-totals: *standard_sub_totals
     sort_columns: *standard_sort_columns
