@@ -1,33 +1,36 @@
 site_name: devices_rap
+site_description: NHS England Direct Commissioning - Devices RAP
 site_author: NHS England - Direct Commissioning
+site_url: https://nhsengland.github.io/devices_rap
+repo_url: https://github.com/nhsengland/devices_rap
+repo_name: devices_rap
+edit_uri: edit/main/docs/
 docs_dir: docs
 
 theme:
   name: material
-  features:
-    - navigation.tabs
-    - navigation.sections
-    - toc.integrate
-    - navigation.top
-    - search.suggest
-    - search.highlight
-    - content.tabs.link
-    - content.code.annotation
-    - content.code.copy
   language: en
+  custom_dir: overrides
   palette:
-    - scheme: default
-      toggle:
-        icon: material/toggle-switch-off-outline 
-        name: Switch to dark mode
-      primary: teal
-      accent: purple 
-    - scheme: slate 
-      toggle:
-        icon: material/toggle-switch
-        name: Switch to light mode    
-      primary: teal
-      accent: lime
+    scheme: default
+    primary: indigo
+  font:
+    text: Arial
+  logo: images/logo/nhs-blue-on-white.jpg
+  favicon: images/favicon/favicon.ico
+  features:
+    - search.share
+    - content.code.annotate
+    - content.tabs.link
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.indexes
+    - navigation.path
+    - navigation.top
+    - toc.integrate
+  icon:
+    admonition:
+      <type>: material/alert
 
 plugins:
   - search
@@ -63,19 +66,41 @@ nav:
       - pipeline: api_reference/pipeline.md
       - summary_tables: api_reference/summary_tables.md
 
+extra_css:
+  - stylesheets/nhs_style.css
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/nhsengland/devices_rap
+    - icon: fontawesome/solid/envelope
+      link: mailto:datascience@nhs.net
+  generator: false
+
+copyright: Copyright &copy; 2025 Crown Copyright (NHS England)
+
 markdown_extensions:
+  - tables
+  - attr_list
+  - pymdownx.emoji
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - admonition
+  - pymdownx.details
+  - pymdownx.mark
+  - md_in_html
+  - footnotes
   - pymdownx.highlight:
       anchor_linenums: true
   - pymdownx.inlinehilite
   - pymdownx.snippets
-  - admonition
   - pymdownx.arithmatex:
       generic: true
-  - footnotes
-  - pymdownx.details
-  - pymdownx.superfences
-  - pymdownx.mark
   - pymdownx.critic
   - pymdownx.caret
   - pymdownx.keys
   - pymdownx.tilde
+
+watch:
+  - overrides

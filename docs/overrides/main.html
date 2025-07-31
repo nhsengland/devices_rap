@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% if page.nb_url %}
+    <a href="{{ page.nb_url }}" title="Download Notebook" class="md-content__button md-icon">
+        {% include ".icons/material/download.svg" %}
+    </a>
+{% endif %}
+
+
+{% if page and page.meta and page.meta.summary %}
+    <h1> {{ page.meta.title }} </h1>
+    <blockquote> {{ page.meta.summary }} </blockquote>
+
+{% endif %}
+    
+{{ super() }}
+{% endblock content %}
