@@ -48,6 +48,7 @@ plugins:
 nav:
   - Home: index.md
   - Usage: usage.md
+  - Worksheet Documentation: worksheet_output_documentation.md
   - API Reference: 
     - api_reference/index.md
     - Modules:
