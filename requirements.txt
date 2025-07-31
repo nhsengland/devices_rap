@@ -9,6 +9,8 @@ jupyterlab
 loguru
 matplotlib
 mkdocs
+mkdocs-material
+mkdocstrings[python]
 notebook
 numpy
 pandas
