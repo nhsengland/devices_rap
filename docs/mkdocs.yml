@@ -1,4 +1,81 @@
 site_name: devices_rap
-# 
 site_author: NHS England - Direct Commissioning
-# 
+docs_dir: docs
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - toc.integrate
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - content.code.annotation
+    - content.code.copy
+  language: en
+  palette:
+    - scheme: default
+      toggle:
+        icon: material/toggle-switch-off-outline 
+        name: Switch to dark mode
+      primary: teal
+      accent: purple 
+    - scheme: slate 
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to light mode    
+      primary: teal
+      accent: lime
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: numpy
+            members_order: source
+            show_source: true
+            show_bases: true
+            extra:
+              show_inheritance: true
+
+nav:
+  - Home: index.md
+  - Usage: usage.md
+  - API Reference: 
+    - api_reference/index.md
+    - Modules:
+      - clean_data: api_reference/clean_data.md
+      - config: api_reference/config.md
+      - constants: api_reference/constants.md
+      - create_cuts: api_reference/create_cuts.md
+      - data_in: 
+        - api_reference/data_in/index.md
+        - load_csv: api_reference/data_in/load_csv.md
+        - load_sql: api_reference/data_in/load_sql.md
+      - data_out: api_reference/data_out.md
+      - exception_notes: api_reference/exception_notes.md
+      - interpret_output_instructions: api_reference/interpret_output_instructions.md
+      - joins: api_reference/joins.md
+      - pipeline: api_reference/pipeline.md
+      - summary_tables: api_reference/summary_tables.md
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - admonition
+  - pymdownx.arithmatex:
+      generic: true
+  - footnotes
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.mark
+  - pymdownx.critic
+  - pymdownx.caret
+  - pymdownx.keys
+  - pymdownx.tilde
