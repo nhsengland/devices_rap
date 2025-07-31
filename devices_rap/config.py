@@ -65,7 +65,7 @@ def create_directory(directory_path: Path | List[Path]):
 
     Parameters
     ----------
-    directory_paths : Path | List[Path]
+    directory_path : Path | List[Path]
         A single Path object or a list of Path objects representing the directories to be created.
 
     Raises

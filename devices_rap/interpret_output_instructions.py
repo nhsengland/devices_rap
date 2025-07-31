@@ -109,7 +109,7 @@ def add_subtotals(
 
     Parameters
     ----------
-    pivoted_data : pd.DataFrame
+    worksheet_data : pd.DataFrame
         The pivoted DataFrame to which subtotals will be added.
     subtotal_columns : List[str]
         List of columns to group by and add subtotals for.

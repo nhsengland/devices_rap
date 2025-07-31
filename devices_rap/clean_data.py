@@ -127,7 +127,7 @@ def cleanse_master_joined_dataset(master_joined_df: pd.DataFrame) -> pd.DataFram
 
     Parameters
     ----------
-    master_df : pd.DataFrame
+    master_joined_df : pd.DataFrame
         The joined dataset to be cleaned. Must contain the following columns:
         - region
         - nhs_england_region
@@ -310,7 +310,7 @@ def convert_date_columns_to_datetime(data: pd.DataFrame, date_columns: List[str]
 
     Parameters
     ----------
-    df : pd.DataFrame
+    data : pd.DataFrame
         The dataframe containing the date columns to be converted.
     date_columns : List[str]
         A list of column names to be converted to datetime.
