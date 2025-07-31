@@ -161,14 +161,6 @@ Summary and detailed worksheets include sub-totals grouped by:
 
 Datetime columns use the default format "%b %Y" (e.g., "Jan 2025") unless otherwise specified.
 
-## RAG Status Categories
-
-- **AMBER**: Items requiring attention or monitoring
-- **RED**: Critical items requiring immediate action
-- **YELLOW**: Warning items (grouped with RED for reporting)
-- **GREEN**: Items in good standing (typically not included in these reports)
-- **NULL**: Items without assigned status
-
 ## Migration Categories
 
 The worksheets distinguish between:
