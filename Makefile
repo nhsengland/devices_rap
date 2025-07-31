@@ -68,14 +68,26 @@ pre-commits: requirements_quiet
 
 .PHONY: create_branch
 branch:
-	@read -p "Enter your name: " name; \
-	read -p "Enter JIRA ticket number: " ticket; \
-	read -p "Enter branch description: " desc; \
-	if [ -z "$$ticket" ]; then \
-		git checkout -b $$(echo "$$name/$$desc" | tr ' ' '-'); \
-	else \
-		git checkout -b $$(echo "$$name/$$ticket-$$desc" | tr ' ' '-'); \
-	fi
+	git checkout -b ${name}
+
+## Generate API reference documentation files
+.PHONY: docs-generate
+docs-generate:
+	$(PYTHON_INTERPRETER) docs/gen_ref_pages.py
+
+## Build documentation
+.PHONY: docs-build  
+docs-build:
+	mkdocs build --config-file docs/mkdocs.yml
+
+## Serve documentation locally
+.PHONY: docs-serve
+docs-serve:
+	mkdocs serve --config-file docs/mkdocs.yml
+
+## Generate API docs and serve locally
+.PHONY: docs
+docs: docs-generate docs-serve
 
 
 ## Create test files for all python files in the project
