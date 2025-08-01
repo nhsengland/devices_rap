@@ -58,24 +58,25 @@ docs/
 
 1. Add NumPy-style docstrings to Python code:
 
-```python
-def my_function(param1: str, param2: int) -> bool:
-    """Brief description of the function.
-    
-    Parameters
-    ----------
-    param1 : str
-        Description of param1
-    param2 : int
-        Description of param2
+    ```python
+    def my_function(param1: str, param2: int) -> bool:
+        """
+        Brief description of the function.
         
-    Returns
-    -------
-    bool
-        Description of return value
-    """
-    pass
-```
+        Parameters
+        ----------
+        param1 : str
+            Description of param1
+        param2 : int
+            Description of param2
+            
+        Returns
+        -------
+        bool
+            Description of return value
+        """
+        pass
+    ```
 
 2. Run `make docs-generate` to create API reference files
 3. New modules automatically appear in documentation
