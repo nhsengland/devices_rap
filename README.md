@@ -248,6 +248,40 @@ Part of the end-to-end tests will include backtests where we use historial input
 
 Unit tests, test discrete parts of the pipeline, usually a function at a time. Each function will have multiple tests, testing the expected and unexpected cases the function will encounter.
 
+## Documentation
+
+This project includes comprehensive documentation built with MkDocs, featuring:
+
+* **Auto-generated API documentation** from NumPy-style docstrings
+* **Usage guides** and setup instructions
+* **Excel output specifications** describing report worksheets
+* **Professional NHS England branding** and styling
+
+### Viewing Documentation
+
+The documentation is available at: [https://nhsengland.github.io/devices_rap](https://nhsengland.github.io/devices_rap)
+
+### Building Documentation Locally
+
+```bash
+# Generate API reference files from code
+make docs-generate
+
+# Build static documentation
+make docs-build
+
+# Start local development server with live reload
+make docs-serve
+```
+
+### Adding Documentation
+
+* **API docs**: Add NumPy-style docstrings to your Python functions and run `make docs-generate`
+* **New pages**: Add markdown files to `docs/content/` and update navigation in `docs/mkdocs.yml`
+* **Images/CSS**: Add assets to `docs/content/images/` or `docs/content/stylesheets/`
+
+For more details, see [`docs/STRUCTURE.md`](docs/STRUCTURE.md).
+
 --------
 
 ## Licence
