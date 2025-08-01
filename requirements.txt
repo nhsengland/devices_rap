@@ -11,6 +11,7 @@ matplotlib
 mkdocs
 mkdocs-material
 mkdocstrings[python]
+pymdown-extensions
 notebook
 numpy
 pandas
