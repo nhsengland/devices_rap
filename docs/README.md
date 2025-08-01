@@ -19,7 +19,7 @@ make docs-build       # Build static site
 docs/
 ├── mkdocs.yml                    # MkDocs configuration
 ├── gen_ref_pages.py             # API reference generator script
-├── STRUCTURE.md                 # This file - complete documentation guide
+├── README.md                    # This file - complete documentation guide
 ├── overrides/                   # Theme customizations
 │   ├── main.html               # Main template override
 │   └── partials/               # Template partials
