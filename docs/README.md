@@ -1,13 +1,32 @@
-# Documentation Generation
+# Documentation Structure
 
-This project uses MkDocs with mkdocstrings to automatically generate API documentation from Python docstrings.
+This directory contains the complete MkDocs documentation system for the Devices RAP project.
 
-## Quick Start
+## Directory Structure
 
-### Generate and serve documentation locally
-
-```bash
-make docs
+```text
+docs/
+├── mkdocs.yml                    # MkDocs configuration file
+├── gen_ref_pages.py             # Script to generate API reference files
+├── overrides/                   # MkDocs theme customizations
+│   ├── main.html               # Main template override
+│   └── partials/               # Template partials
+│       ├── header.html         # Custom header with NHS branding
+│       └── footer.html         # Custom footer with NHS branding
+├── assets/                     # Static assets (not rendered as pages)
+│   ├── images/                 # Images and logos
+│   │   ├── logo/              # NHS England logos
+│   │   └── favicon/           # Favicon files
+│   └── stylesheets/           # CSS files
+│       └── nhs_style.css      # NHS England custom styling
+├── content/                    # Documentation content (rendered as pages)
+│   ├── index.md               # Homepage
+│   ├── usage.md               # Usage guide
+│   ├── worksheet_output_documentation.md # Excel output docs
+│   ├── api_reference/         # Auto-generated API documentation
+│   ├── functional_process_maps/ # Process documentation
+│   └── user_guide/            # User guides
+└── site/                      # Generated static site (build output)
 ```
 
 ### Individual commands

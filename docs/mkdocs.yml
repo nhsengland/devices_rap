@@ -4,8 +4,8 @@ site_author: NHS England - Direct Commissioning
 site_url: https://nhsengland.github.io/devices_rap
 repo_url: https://github.com/nhsengland/devices_rap
 repo_name: devices_rap
-edit_uri: edit/main/docs/
-docs_dir: docs
+edit_uri: edit/main/docs/content/
+docs_dir: content
 
 theme:
   name: material

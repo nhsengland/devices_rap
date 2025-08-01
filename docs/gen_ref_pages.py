@@ -25,7 +25,7 @@ def create_api_reference_files():
     script_dir = Path(__file__).parent
     project_root = script_dir.parent
     src_path = project_root / "devices_rap"
-    docs_api_ref = script_dir / "docs" / "api_reference"
+    docs_api_ref = script_dir / "content" / "api_reference"
 
     # Ensure the api_reference directory exists
     docs_api_ref.mkdir(parents=True, exist_ok=True)
