@@ -13,6 +13,8 @@ make docs-generate    # Generate API reference from docstrings
 make docs-build       # Build static site
 ```
 
+**Live Documentation**: The documentation is automatically deployed to [GitHub Pages](https://nhsengland.github.io/devices_rap) when changes are pushed to the main branch.
+
 ## Directory Structure
 
 ```text
