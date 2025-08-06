@@ -61,9 +61,10 @@ def batch_normalise_column_names(datasets: Dict[str, Dict[str, Any]]) -> Dict[st
 def cleanse_master_data(master_df: pd.DataFrame) -> pd.DataFrame:
     """
     Clean the master dataset ready for processing. This function will:
-    - Convert high level device type values
-    - Convert activity year values without century
-    - Convert activity date values to datetime
+
+    * Convert high level device type values
+    * Convert activity year values without century
+    * Convert activity date values to datetime
 
     Parameters
     ----------
@@ -116,14 +117,15 @@ def cleanse_master_data(master_df: pd.DataFrame) -> pd.DataFrame:
 def cleanse_master_joined_dataset(master_joined_df: pd.DataFrame) -> pd.DataFrame:
     """
     Clean the joined dataset ready for pivoting. This function will:
-    - Consolidate region columns into a single column, 'upd_region'
-    - Fix inconsistent 'upd_region' values by replacing '&' with 'and'
-    - Fill missing 'rag_status' values with 'RED' where 'upd_high_level_device_type' is missing
-    - Fill missing values with 'NULL' in the columns:
-        - rag_status
-        - upd_high_level_device
-        - cln_manufacturer
-        - cln_manufacturer_device_name
+
+    * Consolidate region columns into a single column, 'upd_region'
+    * Fix inconsistent 'upd_region' values by replacing '&' with 'and'
+    * Fill missing 'rag_status' values with 'RED' where 'upd_high_level_device_type' is missing
+    * Fill missing values with 'NULL' in the columns:
+        * rag_status
+        * upd_high_level_device
+        * cln_manufacturer
+        * cln_manufacturer_device_name
 
     Parameters
     ----------
@@ -205,9 +207,10 @@ def cleanse_exceptions(
     combination with the highest RAG status as defined the rag_priorities variable.
 
     The rag_priorities variable is a list of RAG status priorities, with the default being:
-    - "AMBER"
-    - "RED"
-    - "YELLOW"
+
+    * "AMBER"
+    * "RED"
+    * "YELLOW"
 
     If the dataset contains additional RAG statuses, they will be added to the end of the list in
     alphabetical order.
@@ -216,9 +219,11 @@ def cleanse_exceptions(
     ----------
     exceptions_df : pd.DataFrame
         The exceptions dataset to be cleaned. Must contain the following columns:
-        - provider_code
-        - dev_code
-        - rag_status
+
+        * provider_code
+        * dev_code
+        * rag_status
+
     rag_priorities : List[str], optional
         The list of RAG status priorities, by default RAG_PRIORITIES
 

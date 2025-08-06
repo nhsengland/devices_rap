@@ -38,13 +38,15 @@ def amber_report_pipeline(
     Pipeline to create the monthly Amber Device Reports for all Regions.
 
     The pipeline will:
-    - Check the required paths exist
-    - Load the raw data
-    - Cleanse the data by normalising column names and converting values in the master dataset
-    - Join the datasets together to create the master devices dataset
-    - Create the summary and detailed tables for the device report
-    - Create the regional tables for each region from the summary, detailed and master datasets
-    - Create the Excel reports for each region based on the regional tables and output instructions
+
+    * Check the required paths exist
+    * Load the raw data
+    * Cleanse the data by normalising column names and converting values in the master dataset
+    * Join the datasets together to create the master devices dataset
+    * Create the summary and detailed tables for the device report
+    * Create the regional tables for each region from the summary, detailed and master datasets
+    * Create the Excel reports for each region based on the regional tables and output instructions
+
     """
     logger.info("Starting the Amber Report Pipeline")
 

@@ -1,26 +1,15 @@
 """
 Module for loading CSV data into pandas DataFrames with custom error handling and logging.
 
-This module provides functionality to load CSV data into pandas DataFrames, with support for
-custom NA values and logging. It also includes custom exceptions for handling cases where
-no file path or datasets are provided.
-
-Classes
-NoFilePathProvidedError(Exception)
-NoDatasetsProvidedError(Exception)
-
 Functions
----------
-load_csv_data(dataset_name: str, **read_csv_kwargs) -> pd.DataFrame
-load_devices_datasets(datasets: Dict[str, Dict[str, Any]]) -> Dict[str, Dict[str, Any]]
+-------
+load_devices_datasets(pipeline_config: Config) -> Dict[str, Dict[str, Any]]
+    Loads device datasets from CSV files specified in the pipeline configuration.
 
 Constants
----------
-NA_VALUES : list
-    A list of strings representing custom NA values to be used when loading CSV data.
-DATASETS : dict
-    A dictionary containing dataset names and their corresponding file paths and read_csv arguments.
-
+-------
+NA_VALUES : List[str]
+    A list of strings that should be treated as NA values when loading CSV files.
 """
 
 from typing import Any, Dict
@@ -63,7 +52,24 @@ NA_VALUES = [
 
 def load_devices_datasets(pipeline_config: Config) -> Dict[str, Dict[str, Any]]:
     """
-    Load device datasets from CSV files.
+    Loads the device datasets from CSV files specified in the pipeline configuration.
+
+    Expected the `pipeline_config` to contain a `dataset_config` dictionary with dataset names as
+    keys and their respective loading parameters as values, for example:
+
+    ```python
+    pipeline_config.dataset_config = {
+        "dataset_name": {
+            "file_path": "path/to/csv_file.csv",
+            # Additional parameters for loading the CSV file can be included here.
+        },
+        ...
+    }
+    ```
+
+    The function will load each dataset into a pandas DataFrame and add it to the `datasets`
+    dictionary under the key "data". If a dataset already contains a "data" key, it will be removed
+    before loading the new DataFrame.
 
     Parameters
     ----------
@@ -72,7 +78,7 @@ def load_devices_datasets(pipeline_config: Config) -> Dict[str, Dict[str, Any]]:
 
     Returns
     -------
-    dict of dict
+    Dict[str, Dict[str, Any]]
         The input dictionary with an additional key "data" in each inner dictionary,
         containing the loaded DataFrame.
 
@@ -80,11 +86,6 @@ def load_devices_datasets(pipeline_config: Config) -> Dict[str, Dict[str, Any]]:
     ------
     NoDatasetsProvidedError
         If the `datasets` dictionary is empty.
-
-    Notes
-    -----
-    The `load_csv_data` function is expected to be defined elsewhere and should handle the
-    actual loading of the CSV data based on the provided keyword arguments.
     """
     datasets = pipeline_config.dataset_config
     if not datasets:

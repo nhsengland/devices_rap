@@ -2,6 +2,21 @@
 This module contains the configuration for the devices RAP project.
 It includes setup for logging, directory creation, and dataset paths.
 It also provides a Config class to manage dataset configurations and paths.
+
+Classes
+-------
+ConfigError
+    Custom exception class for configuration errors.
+Config
+    Configuration class for the project, managing financial month/year,
+    dataset paths, and Amber Report Excel configuration.
+
+Functions
+---------
+config_logger
+    Configures the logging for the project using loguru.
+create_directory
+    Creates directories if they do not already exist.
 """
 
 import sys
