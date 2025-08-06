@@ -118,7 +118,5 @@ This project implements Reproducible Analytical Pipeline (RAP) principles. Learn
 - **Issues**: Use GitHub Issues for bug reports and feature requests
 - **Email**: [datascience@nhs.net](mailto:datascience@nhs.net)
 
----
 
-*This documentation is automatically generated from the codebase using MkDocs and reflects the current state of the Devices RAP pipeline.*
 

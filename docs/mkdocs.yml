@@ -1,4 +1,4 @@
-site_name: devices_rap
+site_name: Devices RAP Documentation
 site_description: NHS England Direct Commissioning - Devices RAP
 site_author: NHS England - Direct Commissioning
 site_url: https://nhsengland.github.io/devices_rap
@@ -15,7 +15,7 @@ theme:
     scheme: default
     primary: indigo
   font:
-    text: Arial
+    text: Roboto
   logo: images/logo/nhs-blue-on-white.jpg
   favicon: images/favicon/favicon.ico
   features:
@@ -48,7 +48,9 @@ plugins:
 nav:
   - Home: index.md
   - Usage: usage.md
-  - Worksheet Documentation: worksheet_output_documentation.md
+  - Amber Report Excel Output: worksheet_output_documentation.md
+  - Data Dictionary: data_dictionary.md
+  - Process Map: amber_report_process_map.md
   - API Reference: 
     - api_reference/index.md
     - Modules:
@@ -84,7 +86,11 @@ markdown_extensions:
   - tables
   - attr_list
   - pymdownx.emoji
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.tabbed:
       alternate_style: true
   - admonition
@@ -102,6 +108,9 @@ markdown_extensions:
   - pymdownx.caret
   - pymdownx.keys
   - pymdownx.tilde
+
+extra_javascript:
+  - javascripts/mermaid.mjs
 
 watch:
   - overrides

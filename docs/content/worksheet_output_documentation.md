@@ -4,14 +4,24 @@ This document describes the structure and content of each worksheet in the Amber
 
 ## Overview
 
-The Excel output contains multiple worksheets, each configured with specific columns, filters, and sorting criteria. The worksheets are designed to provide different views of the device data based on RAG (Red, Amber, Green) status and migration categories.
+The Excel output contains multiple worksheets, each configured with specific columns, filters, and sorting criteria. The worksheets are designed to provide different views of the device data based on RAG status and migration status.
+
+## Types of Worksheets
+
+The Amber Report Excel output includes the following types of worksheets:
+
+| Worksheet Type   | Aggregation |
+|------------------|-------------|
+ Summary | Sum Total Cost per Month. <br>Grouped by Region, Provider Code, High-Level Device Type, RAG Status | <!-- markdownlint-disable-line MD033 MD056 MD055-->
+| Detailed | Sum Total Cost per Month. <br>Grouped by Region, Provider Code, High-Level Device Type, Manufacturer, Manufacturer Device Name, RAG Status | <!-- markdownlint-disable-line MD033 MD056 MD055-->
+| Data | No Aggregation, a raw view of the underlying data |
 
 ## Worksheet Descriptions
 
 ### AMBER Summary
 
 - **Type**: Summary view
-- **Purpose**: Provides a high-level summary of devices with AMBER status
+- **Purpose**: Provides a [summary](#types-of-worksheets) view of AMBER status migrated devices, showing total cost per month over the last 12 months.
 - **Filters**:
     - RAG Status: AMBER only
     - Migration Status: Migrated categories only (`upd_migrated_categories: True`)
@@ -24,6 +34,7 @@ The Excel output contains multiple worksheets, each configured with specific col
     - RAG Status
     - ZCM Handover Date
     - VCM Handover Date
+    - Total Cost (showing the last 12 months of data)
     - Exception Notes
     - Change from Previous Month
 - **Sorting**: By Region, Provider Code, High Level Device Type, RAG Status
@@ -32,7 +43,7 @@ The Excel output contains multiple worksheets, each configured with specific col
 ### AMBER Detailed
 
 - **Type**: Detailed view
-- **Purpose**: Provides detailed device information for AMBER status items
+- **Purpose**: Provides a [detailed](#types-of-worksheets) view of AMBER status migrated devices, showing total cost per month over the last 12 months.
 - **Filters**:
     - RAG Status: AMBER only
     - Migration Status: Migrated categories only (`upd_migrated_categories: True`)
@@ -45,13 +56,14 @@ The Excel output contains multiple worksheets, each configured with specific col
     - Manufacturer
     - Manufacturer Device Name
     - RAG Status
+    - Total Cost (showing the last 12 months of data)
 - **Sorting**: By Region, Provider Code, High Level Device Type, RAG Status
 - **Sub-totals**: Grouped by Region and Provider Code
 
 ### RED Summary
 
 - **Type**: Summary view
-- **Purpose**: Provides a high-level summary of devices with RED or YELLOW status
+- **Purpose**: Provides a [summary](#types-of-worksheets) view of RED and YELLOW status migrated devices, showing total cost per month over the last 12 months.
 - **Filters**:
     - RAG Status: RED and YELLOW
     - Migration Status: Migrated categories only (`upd_migrated_categories: True`)
@@ -64,13 +76,14 @@ The Excel output contains multiple worksheets, each configured with specific col
     - RAG Status
     - ZCM Handover Date
     - VCM Handover Date
+    - Total Cost (showing the last 12 months of data)
 - **Sorting**: By Region, Provider Code, High Level Device Type, RAG Status
 - **Sub-totals**: Grouped by Region and Provider Code
 
 ### RED Detailed
 
 - **Type**: Detailed view
-- **Purpose**: Provides detailed device information for RED and YELLOW status items
+- **Purpose**: Provides a [detailed](#types-of-worksheets) view of RED and YELLOW status migrated devices, showing total cost per month over the last 12 months.
 - **Filters**:
     - RAG Status: RED and YELLOW
     - Migration Status: Migrated categories only (`upd_migrated_categories: True`)
@@ -83,13 +96,14 @@ The Excel output contains multiple worksheets, each configured with specific col
     - Manufacturer
     - Manufacturer Device Name
     - RAG Status
+    - Total Cost (showing the last 12 months of data)
 - **Sorting**: By Region, Provider Code, High Level Device Type, RAG Status
 - **Sub-totals**: Grouped by Region and Provider Code
 
 ### NON-MIGRATED Summary
 
 - **Type**: Summary view
-- **Purpose**: Provides a high-level summary of non-migrated device categories
+- **Purpose**: Provides a [summary](#types-of-worksheets) view of non-migrated devices, showing total cost per month over the last 12 months.
 - **Filters**:
     - RAG Status: All except NULL values (using `not: ["NULL"]`)
     - Migration Status: Non-migrated categories only (`upd_non_migrated_categories: True`)
@@ -102,13 +116,14 @@ The Excel output contains multiple worksheets, each configured with specific col
     - RAG Status
     - ZCM Handover Date
     - VCM Handover Date
+    - Total Cost (showing the last 12 months of data)
 - **Sorting**: By Region, Provider Code, High Level Device Type, RAG Status
 - **Sub-totals**: Grouped by Region and Provider Code
 
 ### NON-MIGRATED Detailed
 
 - **Type**: Detailed view
-- **Purpose**: Provides detailed device information for non-migrated categories
+- **Purpose**: Provides a [detailed](#types-of-worksheets) view of non-migrated devices, showing total cost per month over the last 12 months.
 - **Filters**:
     - RAG Status: All except NULL values (using `not: ["NULL"]`)
     - Migration Status: Non-migrated categories only (`upd_non_migrated_categories: True`)
@@ -129,13 +144,32 @@ The Excel output contains multiple worksheets, each configured with specific col
 - **Type**: Raw data export
 - **Purpose**: Contains comprehensive device data with all available fields
 - **Filters**: None (all data included)
-- **Columns**: All available data columns including:
-    - Basic information (Region, Provider Code, Provider Name, Device Category)
-    - Device details (Manufacturer, Device Name, Serial Number, Size, Quantity)
-    - Financial data (Unit Prices, Total Cost, VAT information)
-    - Temporal data (Activity Year/Month, Device Insertion Date)
-    - Administrative data (Commissioner Code, Service Categories, GP Practice Code)
-    - Technical identifiers (Devices Ident, Attendance Identifier)
+- **Columns**:
+    - Region
+    - Provider Code
+    - Provider Name
+    - High Level Device Type
+    - Device Category
+    - Manufacturer
+    - Manufacturer Device Name
+    - Activity Year
+    - Activity Month
+    - Devices Ident
+    - Device Insertion Date
+    - Purchase Device Contract
+    - Device Serial Number
+    - Size
+    - Quantity
+    - Supplier Unit Price
+    - Commissioner Unit Price
+    - Total Cost
+    - Commissioner Code
+    - NHSE Service Line
+    - GP Practice Code
+    - High Level Device Type
+    - Purchase Device Contract
+    - VAT Charged
+    - Attendance Identifier
 - **Sorting**: No specific sorting applied
 - **Sub-totals**: None
 
@@ -159,11 +193,11 @@ Summary and detailed worksheets include sub-totals grouped by:
 
 ### Date Formatting
 
-Datetime columns use the default format "%b %Y" (e.g., "Jan 2025") unless otherwise specified.
+Column with a Datetime name use the default format "%b %Y" (e.g., "Jan 2025") unless otherwise specified.
 
 ## Migration Categories
 
 The worksheets distinguish between:
 
-- **Migrated Categories** (`upd_migrated_categories: True`): Device categories that have been migrated to the new system
+- **Migrated Categories** (`upd_migrated_categories: True`): Device categories that have been migrated to the NHS Supply Chain
 - **Non-migrated Categories** (`upd_non_migrated_categories: True`): Device categories that have not yet been migrated

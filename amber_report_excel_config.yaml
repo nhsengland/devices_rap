@@ -33,11 +33,7 @@ DETAILED_COLUMNS: &detailed_columns
   datetime_columns: *default_datetime_column_format
 
 DATA_COLUMNS: &data_columns
-  upd_region: "Region"
-  der_provider_code: "Provider Code"
-  current_name_in_proper_case: "Provider Name"
-  upd_high_level_device_type: "High Level Device Type"
-  description_in_title_case: "Device Category"
+  <<: *base_columns_start
   cln_manufacturer: "Manufacturer"
   cln_manufacturer_device_name: "Manufacturer Device Name"
   cln_activity_year: "Activity Year"

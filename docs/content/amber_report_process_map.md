@@ -249,5 +249,6 @@ flowchart TD
     pickle@{ shape: stored-data}
 ```
 
-## Additional Notes
+!!! Note
+    If you want to get further details on the steps of the Amber Report Pipeline, it is recommend you look at the codebase or the [API Reference](api_reference/index.md) documentation.
 
