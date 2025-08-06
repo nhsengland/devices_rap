@@ -108,7 +108,7 @@ This project follows NHS England RAP standards and coding practices:
 
 ## RAP Compliance
 
-[![RAP Status: Work in Progress](https://img.shields.io/badge/RAP_Status-WIP-red)](https://nhsdigital.github.io/rap-community-of-practice/introduction_to_RAP/levels_of_RAP/)
+[![RAP Status: Gold](https://img.shields.io/badge/RAP_Status-Gold-gold)](https://nhsdigital.github.io/rap-community-of-practice/introduction_to_RAP/levels_of_RAP/#gold-rap---analysis-as-a-product, "Gold RAP")
 
 This project implements Reproducible Analytical Pipeline (RAP) principles. Learn more about RAP at the [NHS Digital RAP Community of Practice](https://nhsdigital.github.io/rap-community-of-practice/).
 
