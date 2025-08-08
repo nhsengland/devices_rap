@@ -9,18 +9,64 @@
 [![JIRA EPIC: DC-477](https://img.shields.io/badge/JIRA-DC--477-purple?link=https%3A%2F%2Fnhsd-jira.digital.nhs.uk%2Fbrowse%2FDC-477)](https://nhsd-jira.digital.nhs.uk/browse/DC-477 "DC-477")
 [![Tests and Linting](https://github.com/nhsengland/devices_rap/actions/workflows/python-package.yml/badge.svg?branch=main)](https://github.com/nhsengland/devices_rap/actions/workflows/python-package.yml)
 
-This is the RAP rework of the Specialised Services Devices Programming (SSDP) reporting pipeline.
+This is the RAP rework of the Specialised Services Devices Programming (SSDP) reporting pipeline. Current this repository automates the generation of the Amber Devices Report, however, there is scope to expand the pipeline to generate other reports.
+
+This repository is a [RAP Gold](https://nhsdigital.github.io/rap-community-of-practice/introduction_to_RAP/levels_of_RAP/#gold-rap---analysis-as-a-product) project, meaning it is a fully reproducible analytical pipeline that can be used to generate reports and insights from the data.
+
+## About the Reports
+
+### Amber Devices Report
+
+The Amber Report is a monthly summary of high-cost excluded device claims submitted by providers to NHS England, covering the past 12 months. It aggregates data by region, provider, RAG status, and device category, including cost summaries for each month and device-level details.
+
+The report primarily focuses on Amber RAG status devices with exceptions, which NHS England may cover, based on monthly updates from the finance team. It is used in discussions with regional teams, who then engage with providers to clarify what NHS England is paying for and what should be transitioned to the NHS Supply Chain.
+
+The Amber status report monitors devices that have transitioned to the SSDP (formerly HCTED) and highlights issues with those processed through the DePLCM passthrough. It aims to identify key device details such as supplier, device name, and any exceptions agreed upon by NHS England and the Trusts. The report also includes devices that have not yet migrated or those that may be considered for future migration.
 
 ## What is RAP?
 
 Reproducible Analytical Pipelines is a set of tools, principles, and techniques to help you improve your analytical processes.
 Learn more about RAP on the [RAP Community of Practice Website](https://nhsdigital.github.io/rap-community-of-practice/)
 
+This project is built to be compliant with the [RAP Gold](https://nhsdigital.github.io/rap-community-of-practice/introduction_to_RAP/levels_of_RAP/#gold-rap---analysis-as-a-product) standard, meaning it is a fully reproducible analytical pipeline meets the following criteria:
+
+* Data is produced by code in an open-source language (e.g. Python, R, SQL)
+* Code is version controlled
+* Repository includes a README.md file meets the NHS Open Source Policy section on README files
+* Code has been peer reviewed
+* Code is published in the open
+* Outputs are produced by code with minimal manual intervention
+* Code is well-documentation including user guidance, explanation of the code structure & methodology, and docstrings for functions
+* Code is well-organised following standard directory format.
+* Reusable functions and/or classes are used where appropriate.
+* Code adheres to agreed coding standards (e.g PEP8, style guide for Pyspark).
+* Pipeline includes a testing framework (unit tests, back tests).
+* Repository includes dependency information (e.g. requirements.txt, PipFile, environment.yml).
+* Logs are automatically recorded by the pipeline to ensure outputs are as expected.
+* Data is handled and output in a Tidy data format.
+* Code is fully packaged.
+* Repository automatically runs tests etc. via CI/CD or a different integration/deployment tool e.g. GitHub Actions.
+* Process runs based on event-based triggers (e.g., new data in database) or on a schedule.
+* Changes to the RAP are clearly signposted
+
 ## Prerequisites
 
-To use this repository you will need access to:
+To use this repository you will need access to a number of resources and tools.
 
-* Python 3.12
+### Software Dependencies
+
+  * Python 3.12 (although the code may work with Python 3.10 and 3.11, it is recommended to use Python 3.12)
+  * [pip](https://pypi.org/project/pip/) - Python package manager
+
+### Data Dependencies
+
+The pipeline is designed to run in two modes: local and production. In local mode, the data is stored as CSV files in the `data/raw` folder. In production mode, the data is stored in a SQL database. The pipeline can be run in either mode, but you will need to ensure you have the relevant data available.
+
+
+* Data dependencies:
+  * If you are running the pipeline in local mode (i.e. data is stored as CSVs in the `data` folder), you will need to download the data from the Direct Commissioning SharePoint and place it in the `data/raw` folder.
+  * If you are running the pipeline in production mode (i.e. data is stored in a SQL database), you will need access to the SQL database and the relevant connection details.
+  * In both cases, you will need to provide a 
 <!-- TODO Add additional requirements regarding access to the SQL Databases and any config env files -->
 
 It is recommended you have access to:
