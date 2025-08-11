@@ -4,23 +4,6 @@ Module for loading CSV data into pandas DataFrames with custom error handling an
 This module provides functionality to load CSV data into pandas DataFrames, with support for
 custom NA values and logging. It also includes custom exceptions for handling cases where
 no file path or datasets are provided.
-
-Classes
-NoFilePathProvidedError(Exception)
-NoDatasetsProvidedError(Exception)
-
-Functions
----------
-load_csv_data(dataset_name: str, **read_csv_kwargs) -> pd.DataFrame
-load_devices_datasets(datasets: Dict[str, Dict[str, Any]]) -> Dict[str, Dict[str, Any]]
-
-Constants
----------
-NA_VALUES : list
-    A list of strings representing custom NA values to be used when loading CSV data.
-DATASETS : dict
-    A dictionary containing dataset names and their corresponding file paths and read_csv arguments.
-
 """
 
 from typing import Any, Dict
@@ -30,35 +13,7 @@ from nhs_herbot.errors import NoDatasetsProvidedError
 from nhs_herbot.load_csv import load_csv_data
 
 from devices_rap.config import Config
-
-NA_VALUES = [
-    "(blank)",
-    "tbc",
-    "-",
-    "......................",
-    "NA",
-    "n/a",
-    "Not Specified",
-    "tbc ",
-    "…...................",
-    # "00:00.0",
-    "(NOT KNOWN)",
-    "unknown",
-    "UNKNOWN",
-    "na",
-    "Not Known",
-    "N/a",
-    "NOT KNOWN",
-    "<r>",
-    "Not known",
-    "***NOT LISTED/UNKNOWN/999999***",
-    " -   ",
-    " - ",
-    " -",
-    "-  ",
-    "- ",
-    " -  ",
-]
+from devices_rap.data_io.utils import NA_VALUES
 
 
 def load_devices_datasets(pipeline_config: Config) -> Dict[str, Dict[str, Any]]:

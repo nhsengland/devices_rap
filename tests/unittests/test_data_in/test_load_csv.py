@@ -6,7 +6,7 @@ import pandas as pd
 import pytest
 
 from nhs_herbot.errors import NoDatasetsProvidedError
-from devices_rap.data_in.load_csv import load_devices_datasets
+from devices_rap.data_io.input.csv_loader import load_devices_datasets
 
 
 class TestLoadDevicesDatasets:
@@ -92,8 +92,6 @@ class TestLoadDevicesDatasets:
         datasets = {}
         mock_pipeline_config = mocker.MagicMock()
         mock_pipeline_config.dataset_config = datasets
-
-        
 
         with pytest.raises(NoDatasetsProvidedError):
             load_devices_datasets(mock_pipeline_config)

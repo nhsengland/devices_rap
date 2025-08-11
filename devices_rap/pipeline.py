@@ -13,10 +13,15 @@ from devices_rap.clean_data import (
     cleanse_master_data,
     cleanse_master_joined_dataset,
 )
-from devices_rap.config import Config, FinMonths, FinYears, PipelineOutputs
+from devices_rap.config import (
+    Config,
+    FinMonths,
+    FinYears,
+    PipelineMode,
+    PipelineOutputs,
+)
 from devices_rap.create_cuts import create_regional_table_cuts
-from devices_rap.data_in.load_csv import load_devices_datasets
-from devices_rap.data_out import output_data
+from devices_rap.data_io import load_data, output_data
 from devices_rap.interpret_output_instructions import interpret_output_instructions
 from devices_rap.joins import (
     join_device_taxonomy,
@@ -32,7 +37,11 @@ from devices_rap.summary_tables import (
 
 @timeit
 def amber_report_pipeline(
-    fin_month: FinMonths, fin_year: FinYears, outputs: PipelineOutputs = "excel", **config_kwargs
+    fin_month: FinMonths,
+    fin_year: FinYears,
+    mode: PipelineMode = "local",
+    outputs: PipelineOutputs = "excel",
+    **config_kwargs,
 ) -> None:
     """
     Pipeline to create the monthly Amber Device Reports for all Regions.
@@ -52,11 +61,12 @@ def amber_report_pipeline(
     pipeline_config = Config(
         fin_month=fin_month,
         fin_year=fin_year,
+        mode=mode,
         outputs=outputs,
         **config_kwargs,
     )
 
-    datasets = load_devices_datasets(pipeline_config=pipeline_config)
+    datasets = load_data(pipeline_config=pipeline_config)
 
     normalised_datasets = batch_normalise_column_names(datasets)
 
