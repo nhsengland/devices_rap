@@ -51,7 +51,7 @@ class TestOutputData:
         Mock the create_excel_reports function.
         """
         return mocker.patch(
-            "devices_rap.data_io.output.excel_writer.create_excel_reports", return_value=None
+            "devices_rap.data_io.core.create_excel_reports", return_value=None
         )
 
     @pytest.fixture
@@ -60,7 +60,7 @@ class TestOutputData:
         Mock the create_excel_zip_reports function.
         """
         return mocker.patch(
-            "devices_rap.data_io.output.excel_writer.create_excel_zip_reports", return_value=None
+            "devices_rap.data_io.core.create_excel_zip_reports", return_value=None
         )
 
     @pytest.fixture
@@ -69,7 +69,7 @@ class TestOutputData:
         Mock the create_pickle function.
         """
         return mocker.patch(
-            "devices_rap.data_io.output.pickle_writer.create_pickle", return_value=None
+            "devices_rap.data_io.core.create_pickle", return_value=None
         )
 
     # Test logs warning when pipeline_config.outputs is empty
@@ -289,7 +289,7 @@ class TestProcessRegion:
 
     @pytest.fixture
     def mock_create_excel_file(self, mocker):
-        return mocker.patch("devices_rap.create_excel_file")
+        return mocker.patch("devices_rap.data_io.output.excel_writer.create_excel_file")
 
     def test_calls_create_excel_file_once(self, output_directory, mock_create_excel_file):
         """
@@ -440,11 +440,11 @@ class TestCreateExcelFile:
 
     @pytest.fixture
     def mock_create_formats(self, mocker):
-        return mocker.patch("devices_rap.create_formats", return_value="formats")
+        return mocker.patch("devices_rap.data_io.output.excel_writer.create_formats", return_value="formats")
 
     @pytest.fixture
     def mock_write_worksheet(self, mocker):
-        return mocker.patch("devices_rap.write_worksheet", return_value=None)
+        return mocker.patch("devices_rap.data_io.output.excel_writer.write_worksheet", return_value=None)
 
     @pytest.mark.parametrize("use_multiprocessing", [True, False])
     def test_calls_write_worksheet(
@@ -602,7 +602,7 @@ class TestWriteWorksheet:
 
     @pytest.fixture
     def mock_apply_excel_formatting(self, mocker):
-        return mocker.patch("devices_rap.apply_excel_formatting", return_value=None)
+        return mocker.patch("devices_rap.data_io.output.excel_writer.apply_excel_formatting", return_value=None)
 
     @pytest.fixture
     def mock_writer(self, mocker):

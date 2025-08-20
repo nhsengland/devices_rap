@@ -172,11 +172,11 @@ class TestConfig:
     """
 
     @pytest.fixture
-    def mock_define_dataset_paths(self, mocker):
+    def mock_define_dataset_config(self, mocker):
         """
-        Mock the define_dataset_paths method.
+        Mock the define_dataset_config method.
         """
-        return mocker.patch("devices_rap.config.Config._define_dataset_paths")
+        return mocker.patch("devices_rap.config.Config._define_dataset_config")
 
     @pytest.fixture
     def mock_check_paths(self, mocker):
@@ -230,7 +230,7 @@ class TestConfig:
 
     def test_init_calls_define_dataset_paths(
         self,
-        mock_define_dataset_paths,
+        mock_define_dataset_config,
         mock_check_paths,
         mock_load_amber_report_excel_config,
         mock_create_output_directory,
@@ -240,11 +240,11 @@ class TestConfig:
         """
         Config(fin_month="01", fin_year="2425")
 
-        mock_define_dataset_paths.assert_called_once()
+        mock_define_dataset_config.assert_called_once()
 
     def test_init_calls_load_amber_report_excel_config(
         self,
-        mock_define_dataset_paths,
+        mock_define_dataset_config,
         mock_check_paths,
         mock_load_amber_report_excel_config,
         mock_create_output_directory,
@@ -265,7 +265,7 @@ class TestConfig:
     )
     def test_init_calls_logger(
         self,
-        mock_define_dataset_paths,
+        mock_define_dataset_config,
         mock_check_paths,
         mock_load_amber_report_excel_config,
         mock_create_output_directory,
@@ -339,7 +339,7 @@ class TestConfig:
     )
     def test_init_sets_properties(
         self,
-        mock_define_dataset_paths,
+        mock_define_dataset_config,
         mock_check_paths,
         mock_load_amber_report_excel_config,
         mock_create_output_directory,
@@ -579,7 +579,7 @@ class TestConfig:
             self,
             mocker,
             mock_amber_report_path,
-            mock_define_dataset_paths,
+            mock_define_dataset_config,
             mock_check_paths,
             mock_create_output_directory,
             mock_raw_path,
@@ -768,7 +768,7 @@ class TestConfig:
             self,
             mocker,
             mock_amber_report_path,
-            mock_define_dataset_paths,
+            mock_define_dataset_config,
             mock_check_paths,
             mock_load_amber_report_excel_config,
             mock_raw_path,
