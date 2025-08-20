@@ -90,7 +90,7 @@ def cleanse_master_data(master_df: pd.DataFrame) -> pd.DataFrame:
         logger.info("Converting high level device type values")
         master_df["upd_high_level_device_type"] = master_df[
             "der_high_level_device_type"
-        ].progress_apply(convert_values_to)
+        ].progress_apply(convert_values_to, match=["DEV34", "DEV35"], to="DEV02")
 
         logger.info("Converting activity year values without century")
         master_df["upd_activity_year"] = master_df["cln_activity_year"].progress_apply(
@@ -98,7 +98,11 @@ def cleanse_master_data(master_df: pd.DataFrame) -> pd.DataFrame:
         )
 
         logger.info("Converting activity date values to datetime")
-        master_df["activity_date"] = convert_fin_dates_vectorised(master_df)
+        master_df["activity_date"] = convert_fin_dates_vectorised(
+            master_df,
+            fin_month_col="cln_activity_month",
+            fin_year_col="upd_activity_year",
+        )
 
         logger.info(
             "Converting total cost values to numeric, removing commas and converting to float"
