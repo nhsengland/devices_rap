@@ -18,6 +18,7 @@ PROJ_ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = PROJ_ROOT / "data"
 RAW_DATA_DIR = DATA_DIR / "raw"
 PROCESSED_DATA_DIR = DATA_DIR / "processed"
+SQL_DIR = PROJ_ROOT / "sql"
 
 MODELS_DIR = PROJ_ROOT / "models"
 
@@ -30,6 +31,10 @@ MASTER_DEVICES_CSV_NAME = "master_data.csv"
 EXCEPTIONS_CSV_NAME = "exception_report.csv"
 PROVIDER_CODES_LOOKUP_CSV_NAME = "provider_codes_lookup.csv"
 DEVICE_TAXONOMY_CSV_NAME = "device_taxonomy.csv"
+
+# SQL file names
+MASTER_DEVICES_SQL_NAME = "query_devices_reporting_amber.sql"
+PROVIDER_CODES_LOOKUP_SQL_NAME = "query_provider_codes_lookup.sql"
 
 # Config paths
 AMBER_REPORT_EXCEL_CONFIG_PATH = PROJ_ROOT / "amber_report_excel_config.yaml"
