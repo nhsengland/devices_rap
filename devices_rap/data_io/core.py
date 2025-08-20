@@ -20,6 +20,9 @@ def load_data(pipeline_config: Config) -> Dict[str, Dict[str, Any]]:
     """
     Load data based on the pipeline configuration.
 
+    Uses the hybrid loader that can handle both CSV files and SQL queries
+    based on the dataset configuration keys.
+
     Parameters
     ----------
     pipeline_config : Config
@@ -28,10 +31,9 @@ def load_data(pipeline_config: Config) -> Dict[str, Dict[str, Any]]:
     Returns
     -------
     dict
-        The loaded datasets
+        The loaded datasets with "data" key containing DataFrames
     """
-    # For now, we only support CSV loading mode
-    # In the future, we can add conditional logic based on pipeline_config.mode
+    logger.info(f"Loading data in {pipeline_config.mode} mode")
     return load_devices_datasets(pipeline_config)
 
 
