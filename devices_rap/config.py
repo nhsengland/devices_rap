@@ -165,7 +165,6 @@ class Config:
         self.sql_server = None
         if mode == "remote":
             self._connect_to_sql_server()
-            assert isinstance(self.sql_server, SQLServer), "SQL Server connection failed."
 
         logger.success("Pipeline configuration loaded successfully.")
 
@@ -235,14 +234,14 @@ class Config:
         queries while exceptions and device_taxonomy remain as CSV files.
         """
 
-        year_data_dir = self.raw_data_dir / self.fin_year
-        month_data_dir = year_data_dir / self.fin_month
-
         # Set up paths based on mode
         if self.mode == "local":
-            self.master_devices_path = month_data_dir / self.master_devices_csv_name
-            self.provider_codes_lookup_path = (
-                self.raw_data_dir / self.provider_codes_lookup_csv_name
+            # Use hierarchical search for CSV files (most specific first)
+            self.master_devices_path = self._find_csv_file_hierarchical(
+                self.master_devices_csv_name
+            )
+            self.provider_codes_lookup_path = self._find_csv_file_hierarchical(
+                self.provider_codes_lookup_csv_name
             )
             config_key = "filepath_or_buffer"
         else:  # remote mode
@@ -250,18 +249,18 @@ class Config:
             self.provider_codes_lookup_path = self.sql_dir / self.provider_codes_lookup_sql_name
             config_key = "sql_query_path"
 
-        # These are always CSV files regardless of mode
-        self.exceptions_path = month_data_dir / self.exceptions_csv_name
-        self.device_taxonomy_path = year_data_dir / self.device_taxonomy_csv_name
+        # These are always CSV files regardless of mode - also use hierarchical search
+        self.exceptions_path = self._find_csv_file_hierarchical(self.exceptions_csv_name)
+        self.device_taxonomy_path = self._find_csv_file_hierarchical(self.device_taxonomy_csv_name)
 
-        # Check all paths exist
-        paths_to_check = [
-            self.master_devices_path,
-            self.exceptions_path,
-            self.provider_codes_lookup_path,
-            self.device_taxonomy_path,
-        ]
-        self._check_paths(paths_to_check)
+        # For remote mode, we still need to check SQL file paths exist
+        if self.mode == "remote":
+            sql_paths_to_check = [
+                self.master_devices_path,
+                self.provider_codes_lookup_path,
+            ]
+            self._check_paths(sql_paths_to_check)
+        # Note: CSV paths are validated during hierarchical search
 
         # Load SQL replacements for remote mode
         sql_replacements = {}
@@ -284,6 +283,51 @@ class Config:
         }
 
         logger.debug("Dataset configuration loaded successfully")
+
+    def _find_csv_file_hierarchical(self, filename: str) -> Path:
+        """
+        Search for a CSV file in hierarchical order of specificity.
+
+        Searches in the following order (most specific first):
+        1. fin_month directory: raw_data/{fin_year}/{fin_month}/{filename}
+        2. fin_year directory: raw_data/{fin_year}/{filename}
+        3. raw_data directory: raw_data/{filename}
+
+        Parameters
+        ----------
+        filename : str
+            The name of the CSV file to search for
+
+        Returns
+        -------
+        Path
+            The path to the first file found in the hierarchy
+
+        Raises
+        ------
+        PathNotFoundError
+            If the file is not found in any of the search locations
+        """
+        year_data_dir = self.raw_data_dir / self.fin_year
+        month_data_dir = year_data_dir / self.fin_month
+
+        # Search locations in order of specificity (most specific first)
+        search_locations = [
+            month_data_dir / filename,  # Most specific: month-level
+            year_data_dir / filename,  # Year-level
+            self.raw_data_dir / filename,  # Most general: raw data root
+        ]
+
+        for file_path in search_locations:
+            if file_path.exists():
+                logger.debug(f"Found {filename} at {file_path}")
+                return file_path
+
+        # If we get here, file wasn't found anywhere
+        searched_paths = [str(path) for path in search_locations]
+        raise PathNotFoundError(
+            f"Could not find {filename} in any of the following locations: {searched_paths}"
+        )
 
     def _load_sql_replacements(self) -> Dict[str, str]:
         """
