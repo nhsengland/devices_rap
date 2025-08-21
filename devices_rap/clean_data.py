@@ -306,6 +306,28 @@ def cleanse_device_taxonomy(device_taxonomy: pd.DataFrame) -> pd.DataFrame:
     return device_taxonomy
 
 
+def cleanse_provider_codes_lookup(provider_codes_lookup: pd.DataFrame) -> pd.DataFrame:
+    """
+    Cleanses the provider codes lookup DataFrame by ensuring the 'current_name_in_proper_case'
+    column is present and formatted correctly. If the column does not exist, it will be created
+    by converting the 'Org_Name' column to title case, replacing 'Nhs' with 'NHS'.
+    """
+    try:
+        if "current_name_in_proper_case" not in provider_codes_lookup.columns:
+            provider_codes_lookup["current_name_in_proper_case"] = (
+                provider_codes_lookup["org_name"]
+                .str.title()
+                .str.replace(r"\bNhs\b", "NHS", regex=True)
+            )
+    except KeyError as e:
+        raise ColumnsNotFoundError(
+            dataset_columns=provider_codes_lookup.columns,
+            clean_columns=["org_name"],
+        ) from e
+
+    return provider_codes_lookup
+
+
 def convert_date_columns_to_datetime(data: pd.DataFrame, date_columns: List[str]) -> pd.DataFrame:
     """
     Convert specified date columns in the dataframe to datetime format using the parse_dates

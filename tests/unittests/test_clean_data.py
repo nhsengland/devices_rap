@@ -7,7 +7,6 @@ import pytest
 
 from devices_rap import clean_data
 
-
 pytestmark = pytest.mark.no_data_needed
 
 

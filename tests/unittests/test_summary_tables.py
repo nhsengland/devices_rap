@@ -6,10 +6,9 @@ import re
 
 import pandas as pd
 import pytest
-
-from devices_rap import summary_tables
 from nhs_herbot.errors import ColumnsNotFoundError
 
+from devices_rap import summary_tables
 
 pytestmark = pytest.mark.no_data_needed
 

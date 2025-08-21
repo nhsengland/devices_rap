@@ -12,6 +12,7 @@ from devices_rap.clean_data import (
     cleanse_exceptions,
     cleanse_master_data,
     cleanse_master_joined_dataset,
+    cleanse_provider_codes_lookup,
 )
 from devices_rap.config import (
     Config,
@@ -87,7 +88,9 @@ def amber_report_pipeline(
 
         master_devices = normalised_datasets["master_devices"]["data"].pipe(cleanse_master_data)
 
-        provider_codes_lookup = normalised_datasets["provider_codes_lookup"]["data"]
+        provider_codes_lookup = normalised_datasets["provider_codes_lookup"]["data"].pipe(
+            cleanse_provider_codes_lookup
+        )
         device_taxonomy = normalised_datasets["device_taxonomy"]["data"].pipe(
             cleanse_device_taxonomy
         )
@@ -150,5 +153,9 @@ def amber_report_pipeline(
 
 if __name__ == "__main__":
     amber_report_pipeline(
-        fin_month="02", fin_year="2526", use_multiprocessing=True, outputs=["pickle"]
+        fin_month="03",
+        fin_year="2526",
+        use_multiprocessing=True,
+        outputs=["pickle"],
+        mode="remote",
     )

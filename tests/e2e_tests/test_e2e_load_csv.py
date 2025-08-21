@@ -3,9 +3,9 @@ Perform end-to-end tests for the load_csv module.
 """
 
 from uuid import uuid4
+
 import pandas as pd
 import pytest
-
 from nhs_herbot.load_csv import load_csv_data
 
 from devices_rap.data_io.utils import NA_VALUES

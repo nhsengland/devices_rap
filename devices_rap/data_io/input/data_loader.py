@@ -61,7 +61,7 @@ def load_devices_datasets(pipeline_config: Config) -> Dict[str, Dict[str, Any]]:
 
             sql_server = pipeline_config.sql_server
 
-            dataset_df = sql_server.load_from_sql_query(  # type: ignore
+            dataset_df = sql_server.query_from_file(  # type: ignore
                 file_path=dataset_kwargs["sql_query_path"],
                 replacements=dataset_kwargs.get("replacements", {}),
             )
