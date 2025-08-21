@@ -2,13 +2,14 @@
 Tests for devices_rap/create_cuts.py
 """
 
-import sys
 import re
-import pytest
+import sys
+
 import pandas as pd
+import pytest
+from nhs_herbot.errors import ColumnsNotFoundError
 
 from devices_rap import create_cuts
-from nhs_herbot.errors import ColumnsNotFoundError
 
 if sys.version_info < (3, 11):
     from exceptiongroup import ExceptionGroup  # type: ignore

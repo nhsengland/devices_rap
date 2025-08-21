@@ -4,8 +4,8 @@ Tests for devices_rap/data_io/input/data_loader.py
 
 import pandas as pd
 import pytest
-
 from nhs_herbot.errors import NoDatasetsProvidedError
+
 from devices_rap.data_io.input.data_loader import load_devices_datasets
 
 

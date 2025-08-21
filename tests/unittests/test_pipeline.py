@@ -7,7 +7,6 @@ import pytest
 
 from devices_rap import pipeline
 
-
 pytestmark = pytest.mark.no_data_needed
 
 

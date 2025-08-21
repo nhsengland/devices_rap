@@ -2,15 +2,15 @@
 Tests for devices_rap.config module.
 """
 
+import sys
 from pathlib import Path
 from typing import Literal
-import sys
 
 import pytest
 import yaml
-from nhs_herbot.errors import PathNotFoundError, LoggedWarning
+from nhs_herbot.errors import LoggedWarning, PathNotFoundError
 
-from devices_rap.config import ConfigError, config_logger, create_directory, Config
+from devices_rap.config import Config, ConfigError, config_logger, create_directory
 from devices_rap.constants import (
     DEVICE_TAXONOMY_CSV_NAME,
     EXCEPTIONS_CSV_NAME,

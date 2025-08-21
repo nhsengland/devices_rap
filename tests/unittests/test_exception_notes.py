@@ -3,10 +3,12 @@ Tests for the devices_rap/exception_notes.py module.
 """
 
 import re
-import pytest
+
 import pandas as pd
-from devices_rap import exception_notes
+import pytest
 from nhs_herbot.errors import ColumnsNotFoundError
+
+from devices_rap import exception_notes
 
 
 class TestColumnSummaryNotes:
