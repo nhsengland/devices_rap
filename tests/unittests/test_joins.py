@@ -9,7 +9,6 @@ from nhs_herbot.errors import ColumnsNotFoundError
 
 from devices_rap import joins
 
-
 pytestmark = pytest.mark.no_data_needed
 
 
@@ -328,10 +327,7 @@ class TestJoinMiniDeviceTaxonomy:
             joins.join_mini_device_taxonomy(master_devices, device_taxonomy)
 
     def test_correct_columns_passed_to_join_device_taxonomy(
-        self, 
-        master_devices, 
-        device_taxonomy, 
-        mocker
+        self, master_devices, device_taxonomy, mocker
     ):
         """
         Test that the correct columns are passed to join_device_taxonomy.

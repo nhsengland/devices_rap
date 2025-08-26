@@ -2,11 +2,13 @@
 Perform end-to-end tests for the load_csv module.
 """
 
-import pandas as pd
-import pytest
 from uuid import uuid4
 
-from devices_rap.data_in.load_csv import NA_VALUES, load_csv_data
+import pandas as pd
+import pytest
+from nhs_herbot.load_csv import load_csv_data
+
+from devices_rap.data_io.utils import NA_VALUES
 
 
 @pytest.fixture

@@ -4,17 +4,16 @@ This file contains end-to-end tests for the pipeline, ensuring that it can handl
 and produce the expected results.
 """
 
+import pickle
 import sys
 import zipfile
-import pickle
 from pathlib import Path
 
-import pytest
 import pandas as pd
+import pytest
 
-from devices_rap.pipeline import amber_report_pipeline
 from devices_rap.constants import DATA_DIR
-
+from devices_rap.pipeline import amber_report_pipeline
 
 if sys.version_info < (3, 11):
     # For Python versions < 3.11, use the backport of ExceptionGroup
@@ -57,6 +56,7 @@ def compare_nested_dicts(actual, expected, path=""):
                             for col in df.select_dtypes(include=["string", "object"]).columns:
                                 df[col] = df[col].astype(object)
                             return df
+
                         actual_fixed = _convert_str_cols(actual.copy())
                         expected_fixed = _convert_str_cols(expected.copy())
                         pd.testing.assert_frame_equal(actual_fixed, expected_fixed)
@@ -72,10 +72,7 @@ def compare_nested_dicts(actual, expected, path=""):
     _compare(actual, expected, path)
 
     if errors:
-        raise AssertionError from ExceptionGroup(
-            "Nested dictionary comparison failed",
-            errors
-        )
+        raise AssertionError from ExceptionGroup("Nested dictionary comparison failed", errors)
 
 
 class TestMonth12Year2425PipelineBacktest:
@@ -131,7 +128,9 @@ class TestMonth12Year2425PipelineBacktest:
         """
         Runs the pipeline with the test data and compares the output to the expected data.
         """
-        mocker.patch("warnings.warn", return_value=None)  # Suppress warnings for cleaner test output
+        mocker.patch(
+            "warnings.warn", return_value=None
+        )  # Suppress warnings for cleaner test output
 
         raw_data_dir = test_file_paths / "input_data"
         processed_data_dir = test_file_paths / "processed_data"
@@ -155,5 +154,5 @@ class TestMonth12Year2425PipelineBacktest:
             actual_data = pickle.load(f)
 
         assert isinstance(actual_data, dict), "Actual data should be a dictionary."
-        
+
         compare_nested_dicts(actual_data, expected_data)

@@ -55,19 +55,20 @@ To use this repository you will need access to a number of resources and tools.
 
 ### Software Dependencies
 
-  * Python 3.12 (although the code may work with Python 3.10 and 3.11, it is recommended to use Python 3.12)
-  * [pip](https://pypi.org/project/pip/) - Python package manager
+* Python 3.10+ (Python 3.12 recommended)
+* [uv](https://docs.astral.sh/uv/) - A fast Python package manager (recommended)
+    * Install: `pip install uv` or see [installation guide](https://docs.astral.sh/uv/getting-started/installation/)
+<!-- TODO Add additional requirements regarding access to the SQL Databases and any config env files -->
 
 ### Data Dependencies
 
 The pipeline is designed to run in two modes: local and production. In local mode, the data is stored as CSV files in the `data/raw` folder. In production mode, the data is stored in a SQL database. The pipeline can be run in either mode, but you will need to ensure you have the relevant data available.
 
-
 * Data dependencies:
   * If you are running the pipeline in local mode (i.e. data is stored as CSVs in the `data` folder), you will need to download the data from the Direct Commissioning SharePoint and place it in the `data/raw` folder.
   * If you are running the pipeline in production mode (i.e. data is stored in a SQL database), you will need access to the SQL database and the relevant connection details.
   * In both cases, you will need to provide a 
-<!-- TODO Add additional requirements regarding access to the SQL Databases and any config env files -->
+
 
 It is recommended you have access to:
 
@@ -85,46 +86,55 @@ git clone https://github.com/nhsengland/devices_rap.git
 
 ### 2 Set up your environment
 
-_Either_ use [pip](https://pypi.org/project/pip/) or make (if you are using a linux based development environment this will be already installed). For more information on how to use virtual environments and why they are important,. see the [virtual environments guide](https://nhsdigital.github.io/rap-community-of-practice/training_resources/python/virtual-environments/why-use-virtual-environments/).
+We recommend using [uv](https://docs.astral.sh/uv/) for fast dependency management. All dependencies are now managed in `pyproject.toml`.
 
-#### Using pip
+#### Using uv (Recommended)
 
-If using Windows Powershell:
+```bash
+# Install all dependencies (production only)
+uv sync
 
-``` powershell
+# Install with development tools (for contributors)
+uv sync --dev
+```
+
+#### Alternative: Using pip
+
+If you prefer pip, you can still use it with the `pyproject.toml`:
+
+**Windows PowerShell:**
+
+```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
+pip install -e .
 ```
 
-If using Linux:
+**Linux/macOS:**
 
-``` bash
+```bash
 python -m venv .venv
 source .venv/bin/activate
-python -m pip install -r requirements.txt
+pip install -e .
 ```
 
-#### Using `make`
+For development with testing tools:
 
-There is a handy `Makefile` with commands form `make` to use to set up and run the environment:
+```bash
+pip install -e ".[dev]"
+```
 
-``` bash
+#### Legacy: Using make
+
+The `Makefile` is still available for backwards compatibility:
+
+```bash
 make create-environment
 source .venv/bin/activate
 make requirements
 ```
 
-These commands:
-
-1. Creates a virtual environment in `.venv`
-2. Activates the environment
-3. Updates pip
-4. Installs from `requirements.txt`
-
-Make can also do other stuff, which will be touched on later, in the meantime, use `make help` to see the commands that can be run.
-
-> For Visual Studio Code it is necessary that you change your default interpreter to the virtual environment you just created .venv. To do this use the shortcut Ctrl-Shift-P, search for Python: Select interpreter and select .venv from the list. Sometimes it is nice as asks you once you create the environment, the eager to help thing.
+> **Note:** For Visual Studio Code, ensure you select the correct Python interpreter from your virtual environment (.venv). Use Ctrl-Shift-P, search for "Python: Select Interpreter" and choose the .venv option.
 
 ### 3 Set up Pre-commits (Only needed for developers not users of the pipeline)
 
@@ -135,13 +145,21 @@ Pre-commits allow us to automatically check our code before we commit changes. T
 
 To set up the pre-commits run the following commands:
 
-* If using a shell with `make` installed:
+#### Using uv for pre-commits (Recommended)
+
+```bash
+uv run pre-commit autoupdate
+uv run pre-commit install
+uv run pre-commit run --all-files
+```
+
+#### Using make for pre-commits
 
 ```bash
 make pre-commits
 ```
 
-* Otherwise:
+#### Manual pre-commit setup
 
 ```bash
 pre-commit autoupdate
@@ -149,17 +167,62 @@ pre-commit install
 pre-commit run --all-files
 ```
 
+#### Platform-specific Git-Secrets Configuration
+
+The project includes NHS git-secrets scanning with separate configurations for different platforms.
+
+**Linux/macOS (Default):** The main `.pre-commit-config.yaml` uses bash implementation
+
+* No additional setup required for Linux/macOS
+* Works with standard Unix environments
+
+**Windows:** Use the Windows-optimized configuration
+
+```bash
+# Use the Windows configuration directly
+uv run pre-commit install --config .pre-commit-config-windows.yaml
+uv run pre-commit run --config .pre-commit-config-windows.yaml --all-files
+
+# Or for manual setup
+pre-commit install --config .pre-commit-config-windows.yaml
+pre-commit run --config .pre-commit-config-windows.yaml --all-files
+```
+
+Both implementations respect the same `.gitallowed` exclusion patterns.
+
+> **Note:** The repository defaults to Linux/macOS configuration. Windows users should copy the Windows-specific config before running pre-commit setup.
+
+## Notes for Migration
+
+This project has been migrated from using `requirements.txt` to `pyproject.toml` + `uv.lock` for modern Python dependency management. The old `requirements.txt` file is still present for compatibility but can be removed once you're confident the new setup works for your use case.
+
+To remove the legacy file:
+
+```bash
+rm requirements.txt  # On Unix/macOS/WSL
+# or
+del requirements.txt  # On Windows
+```
+
 ## Running the code
 
-Now the pipeline is set up and ready to run, use the following command to run the pipeline:
+Now the pipeline is set up and ready to run. Choose your preferred method:
+
+### With uv
+
+```bash
+uv run python devices_rap/pipeline.py
+```
+
+### Using make
 
 If using a shell with `make` installed:
 
-``` bash
+```bash
 make run_pipeline
 ```
 
-Otherwise:
+### Direct Python execution
 
 ```bash
 python devices_rap/pipeline.py
@@ -169,9 +232,24 @@ python devices_rap/pipeline.py
 
 When developing the code (or before you run the code), it is important to test the code to ensure it is working as expected. Regularly run the relevant commands.
 
+#### With uv (Recommended)
+
+```bash
+# Run all tests
+uv run pytest
+
+# Run only unit tests
+uv run pytest tests/unittests 
+
+# Run only end-to-end tests
+uv run pytest tests/e2e_tests
+```
+
+#### With make
+
 If using a shell with `make` installed:
 
-``` bash
+```bash
 make test
 
 # To only run unittests
@@ -181,9 +259,9 @@ make unittest
 make e2e
 ```
 
-Otherwise run `pytest` directly:
+#### Direct pytest execution
 
-``` bash
+```bash
 pytest
 
 # To only run unittests
@@ -192,6 +270,16 @@ pytest tests/unittests
 # To only run end-to-end tests
 pytest tests/e2e_tests
 ```
+
+## Data Wrangler Compatibility
+
+This project is fully compatible with [VS Code Data Wrangler](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.datawrangler) for interactive data exploration and analysis. All required dependencies (pandas, numpy, matplotlib, seaborn, jupyter, ipykernel) are included.
+
+To use Data Wrangler:
+
+1. Ensure you have the environment set up with `uv sync --dev`
+2. Install the Data Wrangler extension in VS Code
+3. Open any Python file or Jupyter notebook and start exploring your data interactively
 
 ## Project Organisation
 
@@ -220,7 +308,8 @@ DEVICES_RAP
 ├── references
 ├── reports
 │   └── figures
-├── requirements.txt
+├── pyproject.toml
+├── uv.lock
 ├── setup.cfg
 └── tests
     ├── e2e_tests
@@ -250,8 +339,8 @@ This is the highest level of the repository containing the general files of proj
 * LICENCE - This tells others what they can and can't do with the project code.
 * Makefile - Defines a series of convenient commands like `make create_environment` and `make run_pipeline`
 * README.md - Top level information about this project for users and developers.
-* pyproject.toml - Project configuration file with package metadata and configuration for tools like black
-* requirements.txt - The requirements file for reproducing the analysis environment.
+* pyproject.toml - Project configuration file with package metadata, dependencies, and tool configuration (replaces requirements.txt)
+* uv.lock - Lock file with exact dependency versions for reproducible installations
 * setup.cfg - configuration file for flake8, a linting tool (makes sure the code is layed out cleanly)
 
 The root directory also contains empty folders ready for future use:

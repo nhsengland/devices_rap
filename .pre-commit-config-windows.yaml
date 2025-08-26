@@ -21,8 +21,8 @@ repos:
     hooks:
       - id: git-secrets
         name: Git Secrets
-        description: git-secrets scans commits, commit messages, and--no-ff merges to prevent adding secrets into your git repositories.
-        entry: bash
-        args: [nhsd-git-secrets/pre-commit.sh]
+        description: git-secrets scans commits, commit messages, and --no-ff merges to prevent adding secrets into your git repositories.
+        entry: powershell
+        args: [-ExecutionPolicy, Bypass, -File, nhsd-git-secrets/pre-commit.ps1]
         language: system
         always_run: true

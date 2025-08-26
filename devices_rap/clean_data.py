@@ -91,7 +91,7 @@ def cleanse_master_data(master_df: pd.DataFrame) -> pd.DataFrame:
         logger.info("Converting high level device type values")
         master_df["upd_high_level_device_type"] = master_df[
             "der_high_level_device_type"
-        ].progress_apply(convert_values_to)
+        ].progress_apply(convert_values_to, match=["DEV34", "DEV35"], to="DEV02")
 
         logger.info("Converting activity year values without century")
         master_df["upd_activity_year"] = master_df["cln_activity_year"].progress_apply(
@@ -99,7 +99,11 @@ def cleanse_master_data(master_df: pd.DataFrame) -> pd.DataFrame:
         )
 
         logger.info("Converting activity date values to datetime")
-        master_df["activity_date"] = convert_fin_dates_vectorised(master_df)
+        master_df["activity_date"] = convert_fin_dates_vectorised(
+            master_df,
+            fin_month_col="cln_activity_month",
+            fin_year_col="upd_activity_year",
+        )
 
         logger.info(
             "Converting total cost values to numeric, removing commas and converting to float"
@@ -305,6 +309,28 @@ def cleanse_device_taxonomy(device_taxonomy: pd.DataFrame) -> pd.DataFrame:
         ) from e
 
     return device_taxonomy
+
+
+def cleanse_provider_codes_lookup(provider_codes_lookup: pd.DataFrame) -> pd.DataFrame:
+    """
+    Cleanses the provider codes lookup DataFrame by ensuring the 'current_name_in_proper_case'
+    column is present and formatted correctly. If the column does not exist, it will be created
+    by converting the 'Org_Name' column to title case, replacing 'Nhs' with 'NHS'.
+    """
+    try:
+        if "current_name_in_proper_case" not in provider_codes_lookup.columns:
+            provider_codes_lookup["current_name_in_proper_case"] = (
+                provider_codes_lookup["org_name"]
+                .str.title()
+                .str.replace(r"\bNhs\b", "NHS", regex=True)
+            )
+    except KeyError as e:
+        raise ColumnsNotFoundError(
+            dataset_columns=provider_codes_lookup.columns,
+            clean_columns=["org_name"],
+        ) from e
+
+    return provider_codes_lookup
 
 
 def convert_date_columns_to_datetime(data: pd.DataFrame, date_columns: List[str]) -> pd.DataFrame:

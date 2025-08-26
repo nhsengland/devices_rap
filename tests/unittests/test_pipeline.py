@@ -7,7 +7,6 @@ import pytest
 
 from devices_rap import pipeline
 
-
 pytestmark = pytest.mark.no_data_needed
 
 
@@ -19,7 +18,7 @@ class TestAmberReportPipeline:
     # We want to define the pipeline functions and their return values in a list of tuples
     pipeline_functions = {
         "Config": None,
-        "load_devices_datasets": "datasets",
+        "load_data": "datasets",
         "batch_normalise_column_names": {
             "master_devices": {
                 "data": pd.DataFrame(columns=["batch_normalise_column_names.master_devices"])
@@ -109,19 +108,20 @@ class TestAmberReportPipeline:
         mock_pipeline_functions["Config"].assert_called_once_with(
             fin_month=amber_report_pipeline_args["fin_month"],
             fin_year=amber_report_pipeline_args["fin_year"],
+            mode="local",
             outputs=amber_report_pipeline_args["outputs"],
         )
 
-    def test_calls_load_devices_datasets_with_correct_args(
+    def test_calls_load_data_with_correct_args(
         self, amber_report_pipeline_args, mock_pipeline_functions
     ):
         """
-        Test that amber_report_pipeline calls load_devices_datasets with the correct arguments
+        Test that amber_report_pipeline calls load_data with the correct arguments
         """
-
         pipeline.amber_report_pipeline(**amber_report_pipeline_args)
-        mock_pipeline_functions["load_devices_datasets"].assert_called_once_with(
-            pipeline_config=mock_pipeline_functions["Config"].return_value
+
+        mock_pipeline_functions["load_data"].assert_called_once_with(
+            pipeline_config=mock_pipeline_functions["Config"].return_value.__enter__.return_value
         )
 
     def test_calls_batch_normalise_column_names_with_correct_args(
@@ -364,7 +364,7 @@ class TestAmberReportPipeline:
         """
         pipeline.amber_report_pipeline(**amber_report_pipeline_args)
         mock_pipeline_functions["interpret_output_instructions"].assert_called_once_with(
-            pipeline_config=mock_pipeline_functions["Config"].return_value,
+            pipeline_config=mock_pipeline_functions["Config"].return_value.__enter__.return_value,
             region_cuts=mock_pipeline_functions["create_regional_table_cuts"].return_value,
         )
 
@@ -378,7 +378,7 @@ class TestAmberReportPipeline:
 
         mock_pipeline_functions["output_data"].assert_called_once_with(
             output_workbooks=mock_pipeline_functions["interpret_output_instructions"].return_value,
-            pipeline_config=mock_pipeline_functions["Config"].return_value,
+            pipeline_config=mock_pipeline_functions["Config"].return_value.__enter__.return_value,
         )
 
     def test_calls_logger_success_with_correct_message(

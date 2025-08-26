@@ -1,0 +1,38 @@
+/*
+    This SQL query retrieves the device records from the already curated selection of the last 12
+    months of PLCM Devices data.
+    For security and obscuration, the schema and table names are placeholders and should be replaced 
+    with actual values in the environment where this query is executed.
+*/
+SELECT [Devices_ident]
+    ,[CLN_Activity_Month]
+    ,[CLN_Activity_Year]
+    ,[CLN_Device_Insertion_Date]
+    ,[CLN_Purchased_Device_Contract]
+    ,[CLN_Manufacturer]
+    ,[CLN_Manufacturer_Device_Name]
+    ,[CLN_Device_Serial_Number]
+    ,[CLN_Size]
+    ,[CLN_Quantity]
+    ,[CLN_Supplier_Unit_Price]
+    ,[CLN_Commissioner_Unit_Price]
+    ,[CLN_VAT_Charged]
+    ,[CLN_Total_Cost]
+    ,[Der_Provider_Code]
+    ,[Der_Provider_Name]
+    ,[Der_Region_Code]
+    ,[Der_Region_Name]
+    ,[CLN_Commissioner_Code]
+    ,[Der_Commissioner_Code]
+    ,[Der_NHSE_ServiceCategory]
+    ,[Der_NHSE_ServiceLine]
+    ,[Der_GP_Practice_Code]
+    ,[Der_High_Level_Device_Type]
+    ,[Der_Subsidiary_Device_Type]
+    ,[Der_Purchased_Device_Contract]
+    ,[Der_VAT_Charged]
+    ,[CLN_High_Level_Device_Type]
+    ,[RAW_Attendance_Identifier]
+    ,[CLN_Attendance_Identifier]
+    ,[RAW_Created_Datetime]
+FROM [{report_schema_placeholder}].[{curated_devices_placeholder}]

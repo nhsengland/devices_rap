@@ -3,11 +3,12 @@ Tests for the interpret_output_instructions module.
 """
 
 import re
-import pytest
+
 import pandas as pd
+import pytest
+from nhs_herbot.errors import ColumnsNotFoundError, DataSetNotFoundError
 
 from devices_rap import interpret_output_instructions as instructions
-from nhs_herbot.errors import ColumnsNotFoundError, DataSetNotFoundError
 
 
 class TestFilterData:

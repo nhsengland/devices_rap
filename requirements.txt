@@ -2,7 +2,7 @@
 black
 exceptiongroup
 flake8
-git+https://github.com/nhsengland/nhs_herbot.git@20250328
+git+https://github.com/nhsengland/nhs_herbot.git@2025.08.12
 ipython
 isort
 jupyterlab

@@ -2,11 +2,11 @@
 This module contains fixtures that are used by the test modules in the tests/ directory.
 """
 
-from typing import Any, Dict, Literal
 import warnings
+from typing import Any, Dict, Literal
+
 import pandas as pd
 import pytest
-from uuid import uuid4
 
 
 @pytest.fixture(autouse=True)
