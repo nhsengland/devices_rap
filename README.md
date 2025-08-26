@@ -271,16 +271,6 @@ pytest tests/unittests
 pytest tests/e2e_tests
 ```
 
-## Data Wrangler Compatibility
-
-This project is fully compatible with [VS Code Data Wrangler](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.datawrangler) for interactive data exploration and analysis. All required dependencies (pandas, numpy, matplotlib, seaborn, jupyter, ipykernel) are included.
-
-To use Data Wrangler:
-
-1. Ensure you have the environment set up with `uv sync --dev`
-2. Install the Data Wrangler extension in VS Code
-3. Open any Python file or Jupyter notebook and start exploring your data interactively
-
 ## Project Organisation
 
 ```text
