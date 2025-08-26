@@ -20,13 +20,13 @@ The Devices RAP pipeline:
 
 1. **Ingests** raw device data from multiple sources (CSV files, SQL databases)
 2. **Cleanses** and normalizes data using standardized taxonomies
-3. **Joins** datasets including provider lookups, exceptions, and device taxonomies
-4. **Analyzes** device performance using RAG (Red/Amber/Green) status indicators
-5. **Generates** comprehensive Excel reports with multiple specialized worksheets:
-   - **AMBER Summary/Detailed**: Devices requiring attention
-   - **RED Summary/Detailed**: High-priority devices needing immediate action
-   - **NON-MIGRATED Summary/Detailed**: Devices not yet migrated to new systems
-   - **Data**: Complete raw data export
+3. **Joins** on relevant datasets and lookup tables to enrich information
+4. **Summarises** monthly total costs on a summary and detailed level by region and provider.
+5. **Generates** comprehensive Excel reports with multiple specialized worksheets based on configured instructions:
+   - **AMBER Summary/Detailed**: Devices with Amber RAG status on the NHS Supply Chain and their payment exceptions.
+   - **RED Summary/Detailed**: Devices with Red or Yellow RAG status on the NHS Supply Chain
+   - **NON-MIGRATED Summary/Detailed**: Devices not yet migrated to the NHS Supply Chain
+   - **Data**: Underlying data export for further analysis
 
 ## Quick Start
 
