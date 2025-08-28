@@ -47,6 +47,10 @@ plugins:
 
 nav:
   - Home: index.md
+  - User Guide:
+    - user_guide/index.md
+    - User: user_guide/user.md
+    - Developer: user_guide/developer.md
   - Usage: usage.md
   - Amber Report Excel Output: worksheet_output_documentation.md
   - Data Dictionary: data_dictionary.md
@@ -58,11 +62,13 @@ nav:
       - config: api_reference/config.md
       - constants: api_reference/constants.md
       - create_cuts: api_reference/create_cuts.md
-      - data_in: 
-        - api_reference/data_in/index.md
-        - load_csv: api_reference/data_in/load_csv.md
-        - load_sql: api_reference/data_in/load_sql.md
-      - data_out: api_reference/data_out.md
+      - data_io:
+        - api_reference/data_io/index.md
+        - input:
+          - api_reference/data_io/input/data_loader.md
+        - output:
+          - api_reference/data_io/output/excel_writer.md
+          - api_reference/data_io/output/pickle_writer.md
       - exception_notes: api_reference/exception_notes.md
       - interpret_output_instructions: api_reference/interpret_output_instructions.md
       - joins: api_reference/joins.md

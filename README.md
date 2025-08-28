@@ -47,7 +47,7 @@ This project is built to be compliant with the [RAP Gold](https://nhsdigital.git
 * Code is fully packaged.
 * Repository automatically runs tests etc. via CI/CD or a different integration/deployment tool e.g. GitHub Actions.
 * Process runs based on event-based triggers (e.g., new data in database) or on a schedule.
-* Changes to the RAP are clearly signposted
+* Changes to the Pipeline are clearly signposted
 
 ## Prerequisites
 
@@ -56,23 +56,17 @@ To use this repository you will need access to a number of resources and tools.
 ### Software Dependencies
 
 * Python 3.10+ (Python 3.12 recommended)
-* [uv](https://docs.astral.sh/uv/) - A fast Python package manager (recommended)
-    * Install: `pip install uv` or see [installation guide](https://docs.astral.sh/uv/getting-started/installation/)
-<!-- TODO Add additional requirements regarding access to the SQL Databases and any config env files -->
+* [uv](https://docs.astral.sh/uv/) - A fast Python package manager and virtual environment tool that makes it easy and fast to install the dependencies for this project and run the pipeline.
+    * See [installation guide](https://docs.astral.sh/uv/getting-started/installation/)
+    * Alternatively, you can use `pip` and `venv` to manage dependencies and virtual environments.
+* [Git](https://git-scm.com/) - A version control system.
+    * See [installation guide](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
 
 ### Data Dependencies
 
-The pipeline is designed to run in two modes: local and production. In local mode, the data is stored as CSV files in the `data/raw` folder. In production mode, the data is stored in a SQL database. The pipeline can be run in either mode, but you will need to ensure you have the relevant data available.
-
-* Data dependencies:
-  * If you are running the pipeline in local mode (i.e. data is stored as CSVs in the `data` folder), you will need to download the data from the Direct Commissioning SharePoint and place it in the `data/raw` folder.
-  * If you are running the pipeline in production mode (i.e. data is stored in a SQL database), you will need access to the SQL database and the relevant connection details.
-  * In both cases, you will need to provide a 
+The pipeline is designed to run in two modes: local and production. In local mode, all of the data is stored in CSV file within the `data/raw/` directory. In `remote` (production) mode, some of the data is pulled from the SQL Server database on UDAL while 
 
 
-It is recommended you have access to:
-
-* A Linux based development environment: e.g. [WSL](https://learn.microsoft.com/en-us/windows/wsl/), [GitHub Codespaces](https://github.com/features/codespaces), etc.
 
 ## Getting Started
 
@@ -191,18 +185,6 @@ pre-commit run --config .pre-commit-config-windows.yaml --all-files
 Both implementations respect the same `.gitallowed` exclusion patterns.
 
 > **Note:** The repository defaults to Linux/macOS configuration. Windows users should copy the Windows-specific config before running pre-commit setup.
-
-## Notes for Migration
-
-This project has been migrated from using `requirements.txt` to `pyproject.toml` + `uv.lock` for modern Python dependency management. The old `requirements.txt` file is still present for compatibility but can be removed once you're confident the new setup works for your use case.
-
-To remove the legacy file:
-
-```bash
-rm requirements.txt  # On Unix/macOS/WSL
-# or
-del requirements.txt  # On Windows
-```
 
 ## Running the code
 

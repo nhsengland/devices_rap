@@ -104,32 +104,6 @@ Key commands include:
 | `make docs-build` | Build static documentation |
 | `make clean` | Clean up temporary files and caches |
 
-## 📊 Understanding the Output
-
-### Excel Report Structure
-
-The pipeline generates Excel workbooks containing multiple specialized worksheets:
-
-#### Summary Worksheets
-- **AMBER Summary**: High-level view of devices requiring attention
-- **RED Summary**: Critical devices needing immediate action  
-- **NON-MIGRATED Summary**: Devices not yet migrated to new systems
-
-#### Detailed Worksheets
-- **AMBER Detailed**: Comprehensive amber device information
-- **RED Detailed**: Detailed critical device data
-- **NON-MIGRATED Detailed**: Complete non-migrated device records
-
-#### Raw Data
-- **Data**: Complete dataset export for further analysis
-
-### Output Locations
-
-By default, outputs are saved to:
-- **Reports**: `data/processed/YYYY/MM/` directory
-- **Logs**: `logs/` directory  
-- **Temporary files**: `data/interim/` directory
-
 ## ⚙️ Configuration
 
 ### Environment Variables
