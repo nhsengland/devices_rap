@@ -2,11 +2,10 @@
 Functions for cleaning and cleansing datasets
 """
 
+import re
+from typing import Any, Literal
 import warnings
-from typing import Any, Dict, List, Literal, Optional
 
-import pandas as pd
-import tqdm
 from loguru import logger
 from nhs_herbot.errors import (
     ColumnsNotFoundError,
@@ -23,11 +22,13 @@ from nhs_herbot.utils import (
     parse_dates,
     sort_by_priority,
 )
+import pandas as pd
+import tqdm
 
 from devices_rap.constants import RAG_PRIORITIES
 
 
-def batch_normalise_column_names(datasets: Dict[str, Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
+def batch_normalise_column_names(datasets: dict[str, dict[str, Any]]) -> dict[str, dict[str, Any]]:
     """
     Normalise the column names for all datasets in the provided dictionary
 
@@ -46,12 +47,12 @@ def batch_normalise_column_names(datasets: Dict[str, Dict[str, Any]]) -> Dict[st
 
     dataset_items = tqdm.tqdm(datasets.items(), desc="Normalising column names")
 
-    for name, df in dataset_items:
+    for name, _ in dataset_items:
         logger.info(f"Normalising column names for the {name} dataset")
         try:
-            df = datasets[name]["data"]
-            assert isinstance(df, pd.DataFrame)
-            datasets[name]["data"] = normalise_column_names(df)
+            dataset_df = datasets[name]["data"]
+            assert isinstance(dataset_df, pd.DataFrame)
+            datasets[name]["data"] = normalise_column_names(dataset_df)
         except (KeyError, AssertionError) as e:
             raise NoDataProvidedError(f"No data provided for the {name} dataset.") from e
 
@@ -94,14 +95,39 @@ def cleanse_master_data(master_df: pd.DataFrame) -> pd.DataFrame:
         ].progress_apply(convert_values_to, match=["DEV34", "DEV35"], to="DEV02")
 
         logger.info("Converting activity year values without century")
-        master_df["upd_activity_year"] = master_df["cln_activity_year"].progress_apply(
-            convert_values_to, match=[2425], to=202425
+        if "cln_activity_year" in master_df.columns:
+            master_df["upd_activity_year"] = master_df["cln_activity_year"].progress_apply(
+                convert_values_to, match=[2425], to=202425
+            )
+        else:
+            logger.info(
+                "Deriving activity year from der_activity_year where cln_activity_year is missing"
+            )
+
+            def _der_year_to_upd(val):
+                if pd.isna(val):
+                    return val
+                s = str(val).strip()
+                # Handle "24/25" format
+                if "/" in s and len(s) == 5:
+                    year1, year2 = s.split("/")
+                    return int(f"20{year1}{year2}")
+                # Handle numeric values
+                digits = re.sub(r"\D", "", s)
+                return int(digits) if digits else None
+
+            master_df["upd_activity_year"] = master_df["der_activity_year"].apply(_der_year_to_upd)
+
+        activity_month_column = (
+            "cln_activity_month"
+            if "cln_activity_month" in master_df.columns
+            else "der_activity_month"
         )
 
         logger.info("Converting activity date values to datetime")
         master_df["activity_date"] = convert_fin_dates_vectorised(
             master_df,
-            fin_month_col="cln_activity_month",
+            fin_month_col=activity_month_column,
             fin_year_col="upd_activity_year",
         )
 
@@ -201,7 +227,7 @@ def cleanse_master_joined_dataset(master_joined_df: pd.DataFrame) -> pd.DataFram
 
 
 def cleanse_exceptions(
-    exceptions_df: pd.DataFrame, rag_priorities: Optional[List[str]] = None
+    exceptions_df: pd.DataFrame, rag_priorities: list[str] | None = None
 ) -> pd.DataFrame:
     """
     Clean the exceptions dataset ready for processing.
@@ -252,14 +278,12 @@ def cleanse_exceptions(
     )
 
     logger.info("Resolving duplicates in the exceptions dataset.")
-    exceptions_df = drop_duplicates_on_priority(
+    return drop_duplicates_on_priority(
         data=exceptions_df,
         subset=["provider_code", "dev_code"],
         priority_column="rag_status",
         priority_order=rag_priorities,
     )
-
-    return exceptions_df
 
 
 def cleanse_device_taxonomy(device_taxonomy: pd.DataFrame) -> pd.DataFrame:
@@ -333,7 +357,7 @@ def cleanse_provider_codes_lookup(provider_codes_lookup: pd.DataFrame) -> pd.Dat
     return provider_codes_lookup
 
 
-def convert_date_columns_to_datetime(data: pd.DataFrame, date_columns: List[str]) -> pd.DataFrame:
+def convert_date_columns_to_datetime(data: pd.DataFrame, date_columns: list[str]) -> pd.DataFrame:
     """
     Convert specified date columns in the dataframe to datetime format using the parse_dates
     function. This function will raise an error if any of the specified date columns are not present
@@ -369,7 +393,7 @@ def convert_date_columns_to_datetime(data: pd.DataFrame, date_columns: List[str]
 
 
 def drop_duplicates_on_priority(
-    data: pd.DataFrame, subset: str | List[str], priority_column: str, priority_order: List[str]
+    data: pd.DataFrame, subset: str | list[str], priority_column: str, priority_order: list[str]
 ) -> pd.DataFrame:
     """
     This function will remove duplicate rows from the dataset by keeping the first occurrence of
@@ -431,7 +455,7 @@ def drop_duplicates_on_priority(
 def check_duplicates(
     data: pd.DataFrame,
     duplicate_severity: Literal["ERROR"] | Literal["WARNING"] | Literal["INFO"] = "INFO",
-    subset: Optional[str | List[str]] = None,
+    subset: str | list[str] | None = None,
 ) -> None:
     """
     Function checks for duplicates in the dataset and raises an error, warning or logs an info
@@ -466,7 +490,7 @@ def check_duplicates(
         message += f" with subset columns: {subset}" if subset else ""
         if duplicate_severity == "ERROR":
             raise DuplicateDataError(message=message)
-        elif duplicate_severity == "WARNING":
-            warnings.warn(message, DuplicateDataWarning)
+        if duplicate_severity == "WARNING":
+            warnings.warn(message, DuplicateDataWarning, stacklevel=2)
         else:
             logger.info(message)

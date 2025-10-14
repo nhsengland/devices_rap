@@ -2,9 +2,9 @@
 Tests for devices_rap/data_io/input/data_loader.py
 """
 
+from nhs_herbot.errors import NoDatasetsProvidedError
 import pandas as pd
 import pytest
-from nhs_herbot.errors import NoDatasetsProvidedError
 
 from devices_rap.data_io.input.data_loader import load_devices_datasets
 
@@ -50,7 +50,7 @@ class TestLoadDevicesDatasets:
         mock_pipeline_config.sql_server = mock_sql_server
 
         mock_df = pd.DataFrame({"col1": [1, 2], "col2": [3, 4]})
-        mock_sql_server.load_from_sql_query.return_value = mock_df
+        mock_sql_server.query_from_file.return_value = mock_df
 
         result = load_devices_datasets(mock_pipeline_config)
 

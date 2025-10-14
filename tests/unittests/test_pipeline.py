@@ -25,7 +25,7 @@ class TestAmberReportPipeline:
             },
             "provider_codes_lookup": {
                 "data": pd.DataFrame(
-                    columns=["batch_normalise_column_names.provider_codes_lookup"]
+                    columns=["batch_normalise_column_names.provider_codes_lookup", "org_name"]
                 )
             },
             "device_taxonomy": {
@@ -142,9 +142,7 @@ class TestAmberReportPipeline:
         pipeline.amber_report_pipeline(**amber_report_pipeline_args)
 
         actual = mock_pipeline_functions["cleanse_master_data"].call_args.args[0]
-        expected = self.pipeline_functions["batch_normalise_column_names"]["master_devices"][
-            "data"
-        ]
+        expected = self.pipeline_functions["batch_normalise_column_names"]["master_devices"]["data"]
 
         pd.testing.assert_frame_equal(actual, expected)
 
@@ -276,7 +274,7 @@ class TestAmberReportPipeline:
         pd.testing.assert_frame_equal(actual, expected)
 
     @pytest.mark.parametrize(
-        "call_num, previous_function",
+        ("call_num", "previous_function"),
         [(1, "create_device_summary_table")],
     )
     def test_calls_join_mini_tables_with_correct_args(
@@ -292,15 +290,13 @@ class TestAmberReportPipeline:
 
         pd.testing.assert_frame_equal(actual, expected)
 
-    @pytest.mark.parametrize("call_num, include_exception_notes", [(0, True), (1, False)])
+    @pytest.mark.parametrize(("call_num", "include_exception_notes"), [(0, True), (1, False)])
     @pytest.mark.parametrize(
-        "kwarg, expected_value",
+        ("kwarg", "expected_value"),
         [
             (
                 "provider_codes_lookup",
-                pipeline_functions["batch_normalise_column_names"]["provider_codes_lookup"][
-                    "data"
-                ],
+                pipeline_functions["batch_normalise_column_names"]["provider_codes_lookup"]["data"],
             ),
             (
                 "device_taxonomy",
@@ -326,9 +322,7 @@ class TestAmberReportPipeline:
 
         actual = mock_pipeline_functions["join_mini_tables"].call_args_list[call_num].kwargs[kwarg]
 
-        expected = (
-            include_exception_notes if kwarg == "include_exception_notes" else expected_value
-        )
+        expected = include_exception_notes if kwarg == "include_exception_notes" else expected_value
 
         if isinstance(expected, pd.DataFrame):
             pd.testing.assert_frame_equal(actual, expected)
@@ -336,7 +330,7 @@ class TestAmberReportPipeline:
             assert actual == expected
 
     @pytest.mark.parametrize(
-        "table, expected",
+        ("table", "expected"),
         [
             ("summary", pipeline_functions["join_mini_tables"]),
             ("detailed", pipeline_functions["join_mini_tables"]),

@@ -11,19 +11,19 @@ create_regional_rag_summary_tables_cuts(pivoted_master_data)
     NHS England Region, `nhs_england_region`, and RAG Status, `rag_status`.
 """
 
-from typing import Any, Dict, List
+from typing import Any
 
-import pandas as pd
-import tqdm
 from loguru import logger
 from nhs_herbot.errors import ColumnsNotFoundError
+import pandas as pd
+import tqdm
 
 
 def create_table_cuts(
     data: pd.DataFrame,
-    cut_columns: List[str] | str,
+    cut_columns: list[str] | str,
     drop_cut_columns: bool = False,
-) -> Dict[Any, pd.DataFrame]:
+) -> dict[Any, pd.DataFrame]:
     """
     Create a collection of tables based on the unique values in the cut_columns. The function
     creates a table for each unique value in the cut_columns and separates the data into a
@@ -72,8 +72,8 @@ def create_table_cuts(
 
 
 def create_regional_table_cuts(
-    tables: Dict[str, pd.DataFrame],
-) -> Dict[str, Dict[str, pd.DataFrame]]:
+    tables: dict[str, pd.DataFrame],
+) -> dict[str, dict[str, pd.DataFrame]]:
     """
     Create a collection of Regional RAG summary tables by cutting the provided tables by the
     'Region' column.

@@ -14,20 +14,18 @@ create_device_summary_table(master_devices_data)
 
 """
 
-from typing import List, Optional
-
-import pandas as pd
 from loguru import logger
 from nhs_herbot.errors import ColumnsNotFoundError
 from nhs_herbot.utils import get_datetime_columns
+import pandas as pd
 
 
 def create_pivot_sum_table(
     data: pd.DataFrame,
-    values: Optional[str | List[str]] = None,
-    columns: Optional[str | List[str]] = None,
-    base_index: Optional[List[str]] = None,
-    extended_index: Optional[str | List[str]] = None,
+    values: str | list[str] | None = None,
+    columns: str | list[str] | None = None,
+    base_index: list[str] | None = None,
+    extended_index: str | list[str] | None = None,
 ) -> pd.DataFrame:
     """
     Create a pivot table with the sum of the values for the given columns. The function is
@@ -116,8 +114,8 @@ def create_pivot_sum_table(
 
 def calc_change_from_previous_month_column(
     monthly_summary_table: pd.DataFrame,
-    most_recent_col: Optional[str | pd.Timestamp] = None,
-    second_most_recent_col: Optional[str | pd.Timestamp] = None,
+    most_recent_col: str | pd.Timestamp | None = None,
+    second_most_recent_col: str | pd.Timestamp | None = None,
 ) -> pd.DataFrame:
     """
     Calculate the change from the previous month for the most recent and second most recent columns
@@ -152,9 +150,7 @@ def calc_change_from_previous_month_column(
             monthly_summary_table[most_recent_col], errors="coerce"
         ).fillna(0) - pd.to_numeric(
             monthly_summary_table[second_most_recent_col], errors="coerce"
-        ).fillna(
-            0
-        )
+        ).fillna(0)
     except KeyError as e:
         raise ColumnsNotFoundError(
             dataset_columns=monthly_summary_table.columns,
@@ -191,9 +187,7 @@ def create_device_category_summary_table(
     logger.info(
         "Calculating the change in cost between the latest and second latest activity dates"
     )
-    device_category_summary = calc_change_from_previous_month_column(device_category_summary)
-
-    return device_category_summary
+    return calc_change_from_previous_month_column(device_category_summary)
 
 
 def create_device_summary_table(
@@ -219,9 +213,7 @@ def create_device_summary_table(
     """
     logger.info("Creating the device summary (pivot) table")
 
-    device_summary = create_pivot_sum_table(
+    return create_pivot_sum_table(
         data=master_devices_data,
         extended_index=["cln_manufacturer", "cln_manufacturer_device_name"],
     )
-
-    return device_summary

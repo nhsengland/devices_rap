@@ -3,6 +3,7 @@ Main pipeline functions for the Devices RAP report. The pipeline is responsible 
 raw data and creating the final reports.
 """
 
+from cyclopts import App
 from loguru import logger
 from nhs_herbot.utils import timeit
 
@@ -35,13 +36,16 @@ from devices_rap.summary_tables import (
     create_device_summary_table,
 )
 
+app = App()
+
 
 @timeit
+@app.command()
 def amber_report_pipeline(
     fin_month: FinMonths,
     fin_year: FinYears,
     mode: PipelineMode = "local",
-    outputs: PipelineOutputs = "excel",
+    outputs: PipelineOutputs = "pickle",
     **config_kwargs,
 ) -> None:
     """
@@ -151,11 +155,14 @@ def amber_report_pipeline(
     logger.success("Pipeline complete.")
 
 
+@app.command()
+def null_report_pipeline() -> None:
+    """
+    Pipeline to create the NULL report. This pipeline currently does nothing and serves as a placeholder.
+    """
+    logger.warning("NULL report pipeline is not implemented yet.")
+
+
 if __name__ == "__main__":
-    amber_report_pipeline(
-        fin_month="03",
-        fin_year="2526",
-        use_multiprocessing=True,
-        outputs=["pickle"],
-        mode="remote",
-    )
+    # app()
+    amber_report_pipeline(fin_month="04", fin_year="2526", mode="local", outputs="excel_zip")

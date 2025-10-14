@@ -36,8 +36,10 @@ DATA_COLUMNS: &data_columns
   <<: *base_columns_start
   cln_manufacturer: "Manufacturer"
   cln_manufacturer_device_name: "Manufacturer Device Name"
-  cln_activity_year: "Activity Year"
-  cln_activity_month: "Activity Month"
+  # cln_activity_year: "Activity Year"
+  # cln_activity_month: "Activity Month"
+  der_activity_year: "Activity Year"
+  der_activity_month: "Activity Month"
   devices_ident: "Devices Ident"
   cln_device_insertion_date: "Device Insertion Date"
   cln_purchased_device_contract: "Purchased Device Contract"
@@ -55,7 +57,7 @@ DATA_COLUMNS: &data_columns
   der_subsidiary_device_type: "Subsidiary Device Type"
   der_purchased_device_contract: "Purchased Device Contract"
   der_vat_charged: "VAT Charged"
-  cln_attendance_identifier: "Attendance Identifier"
+  # cln_attendance_identifier: "Attendance Identifier"
 
 STANDARD_SUB_TOTALS: &standard_sub_totals
   - upd_region

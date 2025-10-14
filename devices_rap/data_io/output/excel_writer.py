@@ -2,20 +2,20 @@
 Excel writing functionality for the devices_rap pipeline.
 """
 
-import zipfile
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from typing import Dict, Literal
+from typing import Literal
+import zipfile
 
+from loguru import logger
 import pandas as pd
 import tqdm
-from loguru import logger
 
-FormatsDict = Dict[Literal["header", "total", "default", "cost"], object]
+FormatsDict = dict[Literal["header", "total", "default", "cost"], object]
 
 
 def create_excel_reports(
-    output_workbooks: Dict[str, Dict[str, pd.DataFrame]],
+    output_workbooks: dict[str, dict[str, pd.DataFrame]],
     output_directory: Path,
     use_multiprocessing: bool,
 ):
@@ -67,7 +67,7 @@ def create_excel_reports(
 def process_region(
     output_directory: Path,
     region: str,
-    worksheets: Dict[str, pd.DataFrame],
+    worksheets: dict[str, pd.DataFrame],
     use_multiprocessing: bool,
 ):
     """
@@ -103,7 +103,7 @@ def process_region(
     logger.success(f"Excel report for {region} created successfully.")
 
 
-def create_excel_file(output_file: Path, worksheets: Dict[str, pd.DataFrame], use_multiprocessing):
+def create_excel_file(output_file: Path, worksheets: dict[str, pd.DataFrame], use_multiprocessing):
     """
     Create an Excel file with the given worksheets.
 
@@ -228,7 +228,7 @@ def apply_excel_formatting(writer, data: pd.DataFrame, formats: FormatsDict, she
 
     # Apply formatting for rows with "Total" in the provider code column
     for row_num, (provider_code, region) in enumerate(
-        zip(data["Provider Code"], data["Region"]), start=1
+        zip(data["Provider Code"], data["Region"], strict=False), start=1
     ):  # Start from row 1 (after header)
         if "Total" in str(provider_code) or "Total" in str(region):
             worksheet.set_row(row_num, None, formats["total"])

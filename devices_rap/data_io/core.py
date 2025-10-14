@@ -2,10 +2,10 @@
 Core orchestration functions for data input and output operations.
 """
 
-from typing import Any, Dict
+from typing import Any
 
-import pandas as pd
 from loguru import logger
+import pandas as pd
 
 from devices_rap.config import Config
 from devices_rap.data_io.input import load_devices_datasets
@@ -16,7 +16,7 @@ from devices_rap.data_io.output import (
 )
 
 
-def load_data(pipeline_config: Config) -> Dict[str, Dict[str, Any]]:
+def load_data(pipeline_config: Config) -> dict[str, dict[str, Any]]:
     """
     Load data based on the pipeline configuration.
 
@@ -38,7 +38,7 @@ def load_data(pipeline_config: Config) -> Dict[str, Dict[str, Any]]:
 
 
 def output_data(
-    output_workbooks: Dict[str, Dict[str, pd.DataFrame]],
+    output_workbooks: dict[str, dict[str, pd.DataFrame]],
     pipeline_config: Config,
 ) -> None:
     """
@@ -93,6 +93,5 @@ def output_data(
             )
         else:
             logger.warning(
-                f"{output_format} output is not implemented yet. "
-                f"Skipping {output_format} output."
+                f"{output_format} output is not implemented yet. Skipping {output_format} output."
             )

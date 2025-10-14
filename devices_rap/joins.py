@@ -2,10 +2,10 @@
 Functions for processing the datasets for the pipeline.
 """
 
-import pandas as pd
 from loguru import logger
 from nhs_herbot.errors import ColumnsNotFoundError
 from nhs_herbot.joins import join_datasets
+import pandas as pd
 
 from devices_rap.exception_notes import create_exception_notes
 
@@ -46,9 +46,7 @@ def join_provider_codes_lookup(
         validate="many_to_one",
     )
 
-    merged_master_devices = merged_master_devices.drop(columns=["org_code"])
-
-    return merged_master_devices
+    return merged_master_devices.drop(columns=["org_code"])
 
 
 def join_device_taxonomy(
@@ -87,9 +85,7 @@ def join_device_taxonomy(
         validate="many_to_one",
     )
 
-    merged_master_devices = merged_master_devices.drop(columns=["dev_code"])
-
-    return merged_master_devices
+    return merged_master_devices.drop(columns=["dev_code"])
 
 
 def join_exceptions(
@@ -127,7 +123,9 @@ def join_exceptions(
 
     validate = "many_to_one" if strict_validate else "many_to_many"
 
-    merged_master_devices = join_datasets(
+    assert "provider_code" in exceptions.columns, exceptions.columns
+
+    return join_datasets(
         left=master_devices,
         right=exceptions,
         left_on=["upd_high_level_device_type", "der_provider_code"],
@@ -135,9 +133,7 @@ def join_exceptions(
         validate=validate,
     )
 
-    merged_master_devices = merged_master_devices.drop(columns=["dev_code", "provider_code"])
-
-    return merged_master_devices
+    # merged_master_devices = merged_master_devices.drop(columns=["dev_code", "provider_code"])
 
 
 def join_mini_provider_codes_lookup(
@@ -183,11 +179,9 @@ def join_mini_provider_codes_lookup(
             mini_provider_codes_columns=mini_provider_codes_columns,
         ) from e
 
-    merged_master_devices = join_provider_codes_lookup(
+    return join_provider_codes_lookup(
         master_devices=master_devices, provider_codes_lookup=mini_provider_codes_lookup
     )
-
-    return merged_master_devices
 
 
 def join_mini_device_taxonomy(
@@ -237,11 +231,7 @@ def join_mini_device_taxonomy(
             dataset_columns=device_taxonomy.columns, mini_taxonomy_columns=mini_taxonomy_columns
         ) from e
 
-    merged_master_devices = join_device_taxonomy(
-        master_devices=master_devices, device_taxonomy=mini_device_taxonomy
-    )
-
-    return merged_master_devices
+    return join_device_taxonomy(master_devices=master_devices, device_taxonomy=mini_device_taxonomy)
 
 
 def join_mini_exceptions(
@@ -280,11 +270,7 @@ def join_mini_exceptions(
             dataset_columns=exceptions.columns, mini_exceptions_columns=mini_exceptions_columns
         ) from e
 
-    merged_master_devices = join_exceptions(
-        master_devices=master_devices, exceptions=mini_exceptions
-    )
-
-    return merged_master_devices
+    return join_exceptions(master_devices=master_devices, exceptions=mini_exceptions)
 
 
 def join_mini_tables(
@@ -307,10 +293,8 @@ def join_mini_tables(
     merged_master_devices = join_mini_device_taxonomy(
         master_devices=merged_master_devices, device_taxonomy=device_taxonomy
     )
-    merged_master_devices = join_mini_exceptions(
+    return join_mini_exceptions(
         master_devices=merged_master_devices,
         exceptions=exceptions,
         include_exception_notes=include_exception_notes,
     )
-
-    return merged_master_devices

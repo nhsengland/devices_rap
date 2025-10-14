@@ -1,17 +1,15 @@
 """ """
 
-from typing import Dict
-
-import pandas as pd
-import tqdm
 from loguru import logger
 from nhs_herbot.errors import ColumnsNotFoundError
+import pandas as pd
+import tqdm
 
 tqdm.tqdm.pandas()
 
 
 def column_summary_notes(
-    row, columns_to_summarise: Dict[str, str], match_summaries: Dict[str, str]
+    row, columns_to_summarise: dict[str, str], match_summaries: dict[str, str]
 ) -> pd.Series:
     """
     Generate a summary of the columns in the row that match the given values. The function will

@@ -130,9 +130,7 @@ class TestCleanseMasterData:
         _, mock_convert_values_to, _, _ = mock_called_functions
         clean_data.cleanse_master_data(test_master_df)
         assert mock_convert_values_to.call_count == 2
-        mock_convert_values_to.assert_called_with(
-            "test_cln_activity_year", match=[2425], to=202425
-        )
+        mock_convert_values_to.assert_called_with("test_cln_activity_year", match=[2425], to=202425)
 
     def test_logger_calls(self, test_master_df, mock_called_functions):
         """
@@ -190,7 +188,7 @@ class TestCleanseMasterJoinedDataset:
         assert isinstance(actual, expected_dtype)
 
     @pytest.mark.parametrize(
-        "input_data, expected_upd_region",
+        ("input_data", "expected_upd_region"),
         [
             (("test1", "test2", "test", "test", "test", "test"), "test1"),
             ((None, "test2", "test", "test", "test", "test"), "test2"),
@@ -221,7 +219,7 @@ class TestCleanseMasterJoinedDataset:
         assert list(actual.columns) == expected_columns
 
     @pytest.mark.parametrize(
-        "input_data, expected_upd_region",
+        ("input_data", "expected_upd_region"),
         [
             (("test1", "test2", "test", "test", "test", "test"), "test1"),
             (("&", None, "test", "test", "test", "test"), "and"),
@@ -239,7 +237,7 @@ class TestCleanseMasterJoinedDataset:
         assert actual["upd_region"].values[0] == expected_upd_region
 
     @pytest.mark.parametrize(
-        "input_data, expected_rag_status",
+        ("input_data", "expected_rag_status"),
         [
             (("test", "test", "test", None, "test", "test"), "test"),
             (("test", "test", None, "test", "test", "test"), "NULL"),
@@ -256,7 +254,7 @@ class TestCleanseMasterJoinedDataset:
         assert actual["rag_status"].values[0] == expected_rag_status
 
     @pytest.mark.parametrize(
-        "input_data, expected_data",
+        ("input_data", "expected_data"),
         [
             (
                 ("test", "test", "test", "test", "test", "test"),
@@ -350,7 +348,7 @@ class TestDropDuplicatesOnPriority:
         assert isinstance(actual, expected_dtype)
 
     @pytest.mark.parametrize(
-        "input_data, expected_data",
+        ("input_data", "expected_data"),
         [
             (
                 [
@@ -421,7 +419,7 @@ class TestDropDuplicatesOnPriority:
         pd.testing.assert_frame_equal(actual, expected)
 
     @pytest.mark.parametrize(
-        "kwarg_name, kwarg_value, expected_data",
+        ("kwarg_name", "kwarg_value", "expected_data"),
         (
             [
                 ("subset", "test_column", [("test1", "foo", "AMBER", "bar")]),
@@ -500,7 +498,7 @@ class TestDropDuplicatesOnPriority:
 
     @pytest.mark.parametrize("kwarg_to_check", ["data", "subset", "duplicate_severity"])
     @pytest.mark.parametrize(
-        "call_count, kwargs",
+        ("call_count", "kwargs"),
         [
             (
                 0,
@@ -629,13 +627,13 @@ class TestCleanseExceptions:
         assert mock_drop_duplicates_on_priority.call_count == 1
 
     @pytest.mark.parametrize(
-        "kwarg_name, expected_kwarg_value",
-        (
+        ("kwarg_name", "expected_kwarg_value"),
+        [
             ("data", pd.DataFrame(columns=exceptions_columns, data=[["test1", "test1", "AMBER"]])),
             ("subset", ["provider_code", "dev_code"]),
             ("priority_column", "rag_status"),
             ("priority_order", ["AMBER", "RED", "YELLOW"]),
-        ),
+        ],
     )
     def test_calls_drop_duplicates_on_priority_kwargs(
         self,
@@ -648,9 +646,7 @@ class TestCleanseExceptions:
         Test that the function calls the drop_duplicates_on_priority function with the correct
         kwargs
         """
-        input_df = pd.DataFrame(
-            columns=self.exceptions_columns, data=[["test1", "test1", "AMBER"]]
-        )
+        input_df = pd.DataFrame(columns=self.exceptions_columns, data=[["test1", "test1", "AMBER"]])
         mock_convert_date_columns_to_datetime.return_value = input_df
         clean_data.cleanse_exceptions(input_df)
         actual_kwargs = mock_drop_duplicates_on_priority.call_args.kwargs
@@ -730,6 +726,7 @@ class TestCheckDuplicates:
         mock_warn.assert_called_once_with(
             "Found 2 duplicated rows in the dataset",
             clean_data.DuplicateDataWarning,
+            stacklevel=2,
         )
 
     def test_raises_no_warning(self, mock_warning, no_duplicates_df):
@@ -786,8 +783,8 @@ class TestConvertDateColumnsToDatetime:
         )
 
     @pytest.mark.parametrize(
-        "data_columns, expected_data",
-        (
+        ("data_columns", "expected_data"),
+        [
             (
                 ["date_col1"],
                 {
@@ -805,7 +802,7 @@ class TestConvertDateColumnsToDatetime:
                 ["excel_date_col"],
                 {"excel_date_col": (pd.Timestamp("2023-01-01"), pd.Timestamp("2023-01-02"))},
             ),
-        ),
+        ],
     )
     def test_handles_dates_in_different_formats(self, test_dataframe, data_columns, expected_data):
         """

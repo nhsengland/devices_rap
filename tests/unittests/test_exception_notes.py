@@ -4,9 +4,9 @@ Tests for the devices_rap/exception_notes.py module.
 
 import re
 
+from nhs_herbot.errors import ColumnsNotFoundError
 import pandas as pd
 import pytest
-from nhs_herbot.errors import ColumnsNotFoundError
 
 from devices_rap import exception_notes
 
@@ -181,7 +181,7 @@ class TestCreateExceptionsNotes:
         assert isinstance(actual, pd.DataFrame)
 
     @pytest.mark.parametrize(
-        "drop_columns, expected_columns",
+        ("drop_columns", "expected_columns"),
         [
             (True, ["exception_notes"]),
             (
@@ -203,9 +203,7 @@ class TestCreateExceptionsNotes:
         Tests that the function returns a DataFrame with the correct columns.
         """
 
-        actual = exception_notes.create_exception_notes(
-            input_exceptions, drop_columns=drop_columns
-        )
+        actual = exception_notes.create_exception_notes(input_exceptions, drop_columns=drop_columns)
         assert actual.columns.tolist() == expected_columns
 
     def test_returns_correct_values(self, input_exceptions):

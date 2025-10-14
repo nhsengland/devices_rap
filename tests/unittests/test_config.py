@@ -2,13 +2,13 @@
 Tests for devices_rap.config module.
 """
 
-import sys
 from pathlib import Path
+import sys
 from typing import Literal
 
+from nhs_herbot.errors import LoggedWarning, PathNotFoundError
 import pytest
 import yaml
-from nhs_herbot.errors import LoggedWarning, PathNotFoundError
 
 from devices_rap.config import Config, ConfigError, config_logger, create_directory
 from devices_rap.constants import (
@@ -151,6 +151,7 @@ class TestCreateDirectory:
         mock_warn.assert_called_once_with(
             "No directory paths provided. No directories will be created.",
             LoggedWarning,
+            stacklevel=2,
         )
 
     def test_logger_debug(self, mock_debug, tmp_path):
@@ -208,16 +209,13 @@ class TestConfig:
 
         def mock_find(filename):
             # Return expected paths based on filename
-            if filename == MASTER_DEVICES_CSV_NAME:
+            if filename in (MASTER_DEVICES_CSV_NAME, EXCEPTIONS_CSV_NAME):
                 return Path("mocked_raw_data") / "2425" / "01" / filename
-            elif filename == EXCEPTIONS_CSV_NAME:
-                return Path("mocked_raw_data") / "2425" / "01" / filename
-            elif filename == PROVIDER_CODES_LOOKUP_CSV_NAME:
+            if filename == PROVIDER_CODES_LOOKUP_CSV_NAME:
                 return Path("mocked_raw_data") / filename
-            elif filename == DEVICE_TAXONOMY_CSV_NAME:
+            if filename == DEVICE_TAXONOMY_CSV_NAME:
                 return Path("mocked_raw_data") / "2425" / filename
-            else:
-                return Path("mocked_raw_data") / filename
+            return Path("mocked_raw_data") / filename
 
         return mocker.patch(
             "devices_rap.config.Config._find_csv_file_hierarchical", side_effect=mock_find
@@ -281,7 +279,7 @@ class TestConfig:
         mock_load_amber_report_excel_config.assert_called_once()
 
     @pytest.mark.parametrize(
-        "level, expected",
+        ("level", "expected"),
         [
             ("info", "Loading pipeline configuration..."),
             ("success", "Pipeline configuration loaded successfully."),
@@ -305,7 +303,7 @@ class TestConfig:
         mock_log_levels[level].assert_called_once_with(expected)
 
     @pytest.mark.parametrize(
-        "kwargs_dict, expected_values",
+        ("kwargs_dict", "expected_values"),
         [
             (
                 {"fin_month": "test", "fin_year": "test"},
@@ -420,7 +418,7 @@ class TestConfig:
             assert getattr(config, property_name) is not None
 
         @pytest.mark.parametrize(
-            "property_name, expected_path_tuple",
+            ("property_name", "expected_path_tuple"),
             [
                 ("master_devices_path", ("year", "month", MASTER_DEVICES_CSV_NAME)),
                 ("exceptions_path", ("year", "month", EXCEPTIONS_CSV_NAME)),
@@ -468,9 +466,7 @@ class TestConfig:
             fin_month = "01"
             fin_year = "2425"
             # Test local mode - should not call _check_paths since CSV validation is done in hierarchical search
-            Config(
-                fin_month=fin_month, fin_year=fin_year, raw_data_dir=mock_raw_path, mode="local"
-            )
+            Config(fin_month=fin_month, fin_year=fin_year, raw_data_dir=mock_raw_path, mode="local")
             mock_check_paths.assert_not_called()
 
             # Reset mock and test remote mode
@@ -582,12 +578,8 @@ class TestConfig:
             assert isinstance(exc_info.value, ExceptionGroup)
             assert len(exc_info.value.exceptions) == 2
             assert all(isinstance(e, PathNotFoundError) for e in exc_info.value.exceptions)
-            assert (
-                str(exc_info.value.exceptions[0]) == f"Path not found: {mock_non_existent_path1}"
-            )
-            assert (
-                str(exc_info.value.exceptions[1]) == f"Path not found: {mock_non_existent_path2}"
-            )
+            assert str(exc_info.value.exceptions[0]) == f"Path not found: {mock_non_existent_path1}"
+            assert str(exc_info.value.exceptions[1]) == f"Path not found: {mock_non_existent_path2}"
 
     class TestLoadAmberReportExcelConfig:
         """
@@ -686,7 +678,7 @@ class TestConfig:
             assert config.amber_report_output_instructions == {"test_key": "test_value"}
 
         @pytest.mark.parametrize(
-            "setting, expected_error",
+            ("setting", "expected_error"),
             [
                 (
                     "missing_worksheet_config",
@@ -712,9 +704,7 @@ class TestConfig:
             Test that _load_amber_report_excel_config raises ConfigError for invalid configurations.
             """
             config = test_config
-            self.prep_test_amber_report_excel_config(
-                config.amber_report_excel_config_path, setting
-            )
+            self.prep_test_amber_report_excel_config(config.amber_report_excel_config_path, setting)
 
             with pytest.raises(ConfigError, match=expected_error):
                 config._load_amber_report_excel_config()
@@ -736,7 +726,7 @@ class TestConfig:
             mock_check_paths.assert_called_once_with(config.amber_report_excel_config_path)
 
         @pytest.mark.parametrize(
-            "call_number, expected_log_message",
+            ("call_number", "expected_log_message"),
             [
                 (0, "Loading the Amber Report Excel configuration from: {}"),
                 (1, "Loaded the Amber Report Excel instructions successfully: {}"),

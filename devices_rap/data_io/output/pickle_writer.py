@@ -3,14 +3,13 @@ Pickle writing functionality for the devices_rap pipeline.
 """
 
 from pathlib import Path
-from typing import Dict
 
-import pandas as pd
 from loguru import logger
+import pandas as pd
 
 
 def create_pickle(
-    output_workbooks: Dict[str, Dict[str, pd.DataFrame]],
+    output_workbooks: dict[str, dict[str, pd.DataFrame]],
     output_directory: Path,
     fin_month: str,
     fin_year: str,

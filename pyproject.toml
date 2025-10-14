@@ -85,11 +85,13 @@ extend-select = [
 
 # Ignore some overly strict rules that don't fit our project
 ignore = [
+    "E501",    # Line too long (handled by formatter when possible)
     "PLR0913", # Too many arguments
     "PLR2004", # Magic value used in comparison
     "PLR0915", # Too many statements
     "PLR0912", # Too many branches
     "ARG002",  # Unused method argument
+    "PERF203", # try-except within a loop incurs performance overhead
 ]
 
 [tool.ruff.lint.isort]

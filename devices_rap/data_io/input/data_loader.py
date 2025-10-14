@@ -5,18 +5,18 @@ This module provides a flexible data loading function that can handle both CSV f
 and SQL queries based on the configuration keys present in the dataset configuration.
 """
 
-from typing import Any, Dict
+from typing import Any
 
-import tqdm
 from loguru import logger
 from nhs_herbot.errors import NoDatasetsProvidedError
 from nhs_herbot.load_csv import load_csv_data
+import tqdm
 
 from devices_rap.config import Config
 from devices_rap.data_io.utils import NA_VALUES
 
 
-def load_devices_datasets(pipeline_config: Config) -> Dict[str, Dict[str, Any]]:
+def load_devices_datasets(pipeline_config: Config) -> dict[str, dict[str, Any]]:
     """
     Load device datasets from either CSV files or SQL queries based on configuration.
 

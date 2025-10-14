@@ -19,17 +19,17 @@ create_directory
     Creates directories if they do not already exist.
 """
 
-import os
-import sys
-import warnings
 from datetime import datetime
+import os
 from pathlib import Path
-from typing import Dict, List, Literal
+import sys
+from typing import Literal
+import warnings
 
-import yaml
 from loguru import logger
 from nhs_herbot import LoggedException, LoggedWarning, PathNotFoundError, SQLServer
 from tqdm import tqdm
+import yaml
 
 from devices_rap.constants import (
     AMBER_REPORT_EXCEL_CONFIG_PATH,
@@ -52,7 +52,7 @@ FinMonths = Literal["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", 
 FinYears = Literal["2425", "2526", "2627", "2728", "2829", "2930", "3031", "3132"]
 
 OutputFormats = Literal["excel", "pickle", "csv", "sql", "excel_zip"]
-PipelineOutputs = OutputFormats | List[OutputFormats]
+PipelineOutputs = OutputFormats | list[OutputFormats]
 
 PipelineMode = Literal["local", "remote"]
 
@@ -68,7 +68,8 @@ def config_logger():
     """
     Set up logging configuration for the project using loguru.
     This function configures loguru to log messages to both the console and a file.
-    It also ensures that the log file is created in the 'logs' directory with a timestamped filename.
+    It also ensures that the log file is created in the 'logs' directory with a
+    timestamped filename.
     """
     logger.remove(0)
     logger.add(lambda msg: tqdm.write(msg, end=""), colorize=True)
@@ -80,7 +81,7 @@ def config_logger():
     logger.add(log_file_path)
 
 
-def create_directory(directory_path: Path | List[Path]):
+def create_directory(directory_path: Path | list[Path]):
     """
     Creates directories if they do not already exist.
 
@@ -99,6 +100,7 @@ def create_directory(directory_path: Path | List[Path]):
         warnings.warn(
             "No directory paths provided. No directories will be created.",
             LoggedWarning,
+            stacklevel=2,
         )
 
     if isinstance(directory_path, Path):
@@ -112,6 +114,23 @@ def create_directory(directory_path: Path | List[Path]):
 class Config:
     """
     Configuration class for the project.
+
+    This class manages dataset configurations, paths, and provides a context manager
+    interface for pipeline execution with robust error handling and cleanup.
+
+    The context manager ensures that:
+    - Resources (like SQL connections) are properly cleaned up
+    - Errors are comprehensively logged with context information
+    - Exceptions are allowed to propagate for proper error handling
+    - Cleanup occurs even when exceptions happen during execution
+
+    Examples
+    --------
+    Basic usage as a context manager:
+
+    >>> with Config(fin_month='01', fin_year='2425') as config:
+    ...     # Pipeline operations here
+    ...     datasets = load_data(config)
     """
 
     def __init__(
@@ -186,13 +205,13 @@ class Config:
     def close(self) -> None:
         """
         Closes the SQL Server connection if it exists.
-        This method is called to clean up resources when the Config instance is no longer needed.
         """
         if self.mode == "remote" and self.sql_server:
-            self.sql_server.close()
-            logger.info("SQL Server connection closed.")
-        elif self.mode == "remote":
-            logger.warning("No SQL Server connection to close.")
+            try:
+                self.sql_server.close()
+                logger.info("SQL Server connection closed successfully.")
+            except Exception as e:
+                logger.warning("Error closing SQL Server connection: {}", e)
 
     def __enter__(self):
         """
@@ -205,12 +224,15 @@ class Config:
     def __exit__(self, exc_type, exc_value, traceback):
         """
         Exit the runtime context related to this object.
-        This method is called when the 'with' statement is exited.
-        It calls the close method to clean up resources.
+        Ensures cleanup happens and allows exceptions to propagate.
         """
-        self.close()
-        if exc_type is not None:
-            logger.critical("An error occurred: {}", exc_value)
+        # Always attempt cleanup, even if an exception occurred
+        try:
+            self.close()
+        except Exception as cleanup_error:
+            logger.warning("Error during cleanup: {}", cleanup_error)
+
+        # Don't suppress exceptions - let them propagate naturally
 
     def get(self, key: str):
         """
@@ -344,7 +366,7 @@ class Config:
             f"Could not find {filename} in any of the following locations: {searched_paths}"
         )
 
-    def _load_sql_replacements(self) -> Dict[str, str]:
+    def _load_sql_replacements(self) -> dict[str, str]:
         """
         Load SQL replacement values from environment variables.
 
@@ -392,7 +414,7 @@ class Config:
         return replacements
 
     @staticmethod
-    def _check_paths(paths_to_check: List[Path] | Path) -> None:
+    def _check_paths(paths_to_check: list[Path] | Path) -> None:
         """
         Checks if the specified paths exist. If any of the paths do not exist, an exception is raised.
 
@@ -438,7 +460,7 @@ class Config:
 
         self._check_paths(amber_excel_config_path)
 
-        with open(amber_excel_config_path, "r", encoding="UTF8") as file:
+        with open(amber_excel_config_path, encoding="UTF8") as file:
             logger.debug(
                 "Loading the Amber Report Excel configuration from: {}",
                 amber_excel_config_path,
@@ -492,9 +514,9 @@ class Config:
         """
         logger.info("Connecting to the SQL Server Database")
 
-        server = os.environ.get("server")
-        uid = os.environ.get("uid")
-        database = os.environ.get("database")
+        server = os.environ.get("SERVER")
+        uid = os.environ.get("UID")
+        database = os.environ.get("DATABASE")
 
         if not server or not uid or not database:
             raise ConfigError(
