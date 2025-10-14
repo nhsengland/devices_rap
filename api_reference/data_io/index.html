@@ -12,13 +12,13 @@
         <meta name="author" content="NHS England - Direct Commissioning">
       
       
-        <link rel="canonical" href="https://nhsengland.github.io/devices_rap/api_reference/constants/">
+        <link rel="canonical" href="https://nhsengland.github.io/devices_rap/api_reference/data_io/">
       
       
-        <link rel="prev" href="../config/">
+        <link rel="prev" href="../create_cuts/">
       
       
-        <link rel="next" href="../create_cuts/">
+        <link rel="next" href="input/data_loader/">
       
       
       <link rel="icon" href="../../images/favicon/favicon.ico">
@@ -26,7 +26,7 @@
     
     
       
-        <title>constants - Devices RAP Documentation</title>
+        <title>data_io - Devices RAP Documentation</title>
       
     
     
@@ -90,7 +90,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#constants" class="md-skip">
+        <a href="#data_io" class="md-skip">
           Skip to content
         </a>
       
@@ -146,7 +146,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              constants
+              data_io
             
           </span>
         </div>
@@ -823,32 +823,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    constants
-    
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../constants/" class="md-nav__link">
         
   
   
@@ -859,35 +837,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#devices_rap.constants" class="md-nav__link">
-    <span class="md-ellipsis">
-      constants
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -920,6 +869,8 @@
                 
   
   
+    
+  
   
   
     
@@ -940,15 +891,15 @@
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_2_5" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_2_5" checked>
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../data_io/" class="md-nav__link ">
+            <a href="./" class="md-nav__link md-nav__link--active">
               
   
   
@@ -961,13 +912,13 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_7_2_5" id="__nav_7_2_5_label" tabindex="0">
+              <label class="md-nav__link md-nav__link--active" for="__nav_7_2_5" id="__nav_7_2_5_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_7_2_5_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_7_2_5_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_7_2_5">
             <span class="md-nav__icon md-icon"></span>
             data_io
@@ -1028,7 +979,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../data_io/input/data_loader/" class="md-nav__link">
+      <a href="input/data_loader/" class="md-nav__link">
         
   
   
@@ -1106,7 +1057,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../data_io/output/excel_writer/" class="md-nav__link">
+      <a href="output/excel_writer/" class="md-nav__link">
         
   
   
@@ -1129,7 +1080,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../data_io/output/pickle_writer/" class="md-nav__link">
+      <a href="output/pickle_writer/" class="md-nav__link">
         
   
   
@@ -1316,17 +1267,19 @@
   
 
 
-<h1 id="constants">constants</h1>
+<h1 id="data_io">data_io</h1>
+<p>This section provides an overview of the data input/output utilities used in the Devices RAP pipeline. It includes modules for reading, writing, and processing data in various formats.</p>
 
 
 <div class="doc doc-object doc-module">
 
 
 
-<a id="devices_rap.constants"></a>
+<a id="devices_rap.data_io"></a>
     <div class="doc doc-contents first">
 
-        <p>Configuration file for the project.</p>
+        <p>Unified data input and output module for the devices_rap package.</p>
+<p>This module provides a clean interface for loading and outputting data in various formats.</p>
 
 
 
@@ -1348,13 +1301,360 @@
 
 
 
+<div class="doc doc-object doc-function">
+
+
+<h2 id="devices_rap.data_io.load_data" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">load_data</span><span class="p">(</span><span class="n">pipeline_config</span><span class="p">)</span></code>
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Load data based on the pipeline configuration.</p>
+<p>Uses the hybrid loader that can handle both CSV files and SQL queries
+based on the dataset configuration keys.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>pipeline_config</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="Config (devices_rap.config.Config)" href="../config/#devices_rap.config.Config">Config</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The configuration object containing dataset information.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="dict">dict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The loaded datasets with "data" key containing DataFrames</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="quote">
+              <summary>Source code in <code>devices_rap/data_io/core.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-19">19</a></span>
+<span class="normal"><a href="#__codelineno-0-20">20</a></span>
+<span class="normal"><a href="#__codelineno-0-21">21</a></span>
+<span class="normal"><a href="#__codelineno-0-22">22</a></span>
+<span class="normal"><a href="#__codelineno-0-23">23</a></span>
+<span class="normal"><a href="#__codelineno-0-24">24</a></span>
+<span class="normal"><a href="#__codelineno-0-25">25</a></span>
+<span class="normal"><a href="#__codelineno-0-26">26</a></span>
+<span class="normal"><a href="#__codelineno-0-27">27</a></span>
+<span class="normal"><a href="#__codelineno-0-28">28</a></span>
+<span class="normal"><a href="#__codelineno-0-29">29</a></span>
+<span class="normal"><a href="#__codelineno-0-30">30</a></span>
+<span class="normal"><a href="#__codelineno-0-31">31</a></span>
+<span class="normal"><a href="#__codelineno-0-32">32</a></span>
+<span class="normal"><a href="#__codelineno-0-33">33</a></span>
+<span class="normal"><a href="#__codelineno-0-34">34</a></span>
+<span class="normal"><a href="#__codelineno-0-35">35</a></span>
+<span class="normal"><a href="#__codelineno-0-36">36</a></span>
+<span class="normal"><a href="#__codelineno-0-37">37</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-19" name="__codelineno-0-19"></a><span class="k">def</span><span class="w"> </span><span class="nf">load_data</span><span class="p">(</span><span class="n">pipeline_config</span><span class="p">:</span> <span class="n">Config</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<a id="__codelineno-0-20" name="__codelineno-0-20"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-21" name="__codelineno-0-21"></a><span class="sd">    Load data based on the pipeline configuration.</span>
+<a id="__codelineno-0-22" name="__codelineno-0-22"></a>
+<a id="__codelineno-0-23" name="__codelineno-0-23"></a><span class="sd">    Uses the hybrid loader that can handle both CSV files and SQL queries</span>
+<a id="__codelineno-0-24" name="__codelineno-0-24"></a><span class="sd">    based on the dataset configuration keys.</span>
+<a id="__codelineno-0-25" name="__codelineno-0-25"></a>
+<a id="__codelineno-0-26" name="__codelineno-0-26"></a><span class="sd">    Parameters</span>
+<a id="__codelineno-0-27" name="__codelineno-0-27"></a><span class="sd">    ----------</span>
+<a id="__codelineno-0-28" name="__codelineno-0-28"></a><span class="sd">    pipeline_config : Config</span>
+<a id="__codelineno-0-29" name="__codelineno-0-29"></a><span class="sd">        The configuration object containing dataset information.</span>
+<a id="__codelineno-0-30" name="__codelineno-0-30"></a>
+<a id="__codelineno-0-31" name="__codelineno-0-31"></a><span class="sd">    Returns</span>
+<a id="__codelineno-0-32" name="__codelineno-0-32"></a><span class="sd">    -------</span>
+<a id="__codelineno-0-33" name="__codelineno-0-33"></a><span class="sd">    dict</span>
+<a id="__codelineno-0-34" name="__codelineno-0-34"></a><span class="sd">        The loaded datasets with &quot;data&quot; key containing DataFrames</span>
+<a id="__codelineno-0-35" name="__codelineno-0-35"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-36" name="__codelineno-0-36"></a>    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loading data in </span><span class="si">{</span><span class="n">pipeline_config</span><span class="o">.</span><span class="n">mode</span><span class="si">}</span><span class="s2"> mode&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-37" name="__codelineno-0-37"></a>    <span class="k">return</span> <span class="n">load_devices_datasets</span><span class="p">(</span><span class="n">pipeline_config</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="devices_rap.data_io.output_data" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">output_data</span><span class="p">(</span><span class="n">output_workbooks</span><span class="p">,</span> <span class="n">pipeline_config</span><span class="p">)</span></code>
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Handle the output of processed data from the pipeline. This function will create the Excel
+reports and pickle files based on the processed data for each region. It will check the
+configuration to determine which outputs to create (Excel, pickle, or both) and will create the
+output directory if it does not exist.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>output_workbooks</code>
+            </td>
+            <td>
+                  <code><span title="dict">dict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The processed data for each region</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>pipeline_config</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="Config (devices_rap.config.Config)" href="../config/#devices_rap.config.Config">Config</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The configuration object containing the output directory and other settings</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code>None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="quote">
+              <summary>Source code in <code>devices_rap/data_io/core.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-40">40</a></span>
+<span class="normal"><a href="#__codelineno-0-41">41</a></span>
+<span class="normal"><a href="#__codelineno-0-42">42</a></span>
+<span class="normal"><a href="#__codelineno-0-43">43</a></span>
+<span class="normal"><a href="#__codelineno-0-44">44</a></span>
+<span class="normal"><a href="#__codelineno-0-45">45</a></span>
+<span class="normal"><a href="#__codelineno-0-46">46</a></span>
+<span class="normal"><a href="#__codelineno-0-47">47</a></span>
+<span class="normal"><a href="#__codelineno-0-48">48</a></span>
+<span class="normal"><a href="#__codelineno-0-49">49</a></span>
+<span class="normal"><a href="#__codelineno-0-50">50</a></span>
+<span class="normal"><a href="#__codelineno-0-51">51</a></span>
+<span class="normal"><a href="#__codelineno-0-52">52</a></span>
+<span class="normal"><a href="#__codelineno-0-53">53</a></span>
+<span class="normal"><a href="#__codelineno-0-54">54</a></span>
+<span class="normal"><a href="#__codelineno-0-55">55</a></span>
+<span class="normal"><a href="#__codelineno-0-56">56</a></span>
+<span class="normal"><a href="#__codelineno-0-57">57</a></span>
+<span class="normal"><a href="#__codelineno-0-58">58</a></span>
+<span class="normal"><a href="#__codelineno-0-59">59</a></span>
+<span class="normal"><a href="#__codelineno-0-60">60</a></span>
+<span class="normal"><a href="#__codelineno-0-61">61</a></span>
+<span class="normal"><a href="#__codelineno-0-62">62</a></span>
+<span class="normal"><a href="#__codelineno-0-63">63</a></span>
+<span class="normal"><a href="#__codelineno-0-64">64</a></span>
+<span class="normal"><a href="#__codelineno-0-65">65</a></span>
+<span class="normal"><a href="#__codelineno-0-66">66</a></span>
+<span class="normal"><a href="#__codelineno-0-67">67</a></span>
+<span class="normal"><a href="#__codelineno-0-68">68</a></span>
+<span class="normal"><a href="#__codelineno-0-69">69</a></span>
+<span class="normal"><a href="#__codelineno-0-70">70</a></span>
+<span class="normal"><a href="#__codelineno-0-71">71</a></span>
+<span class="normal"><a href="#__codelineno-0-72">72</a></span>
+<span class="normal"><a href="#__codelineno-0-73">73</a></span>
+<span class="normal"><a href="#__codelineno-0-74">74</a></span>
+<span class="normal"><a href="#__codelineno-0-75">75</a></span>
+<span class="normal"><a href="#__codelineno-0-76">76</a></span>
+<span class="normal"><a href="#__codelineno-0-77">77</a></span>
+<span class="normal"><a href="#__codelineno-0-78">78</a></span>
+<span class="normal"><a href="#__codelineno-0-79">79</a></span>
+<span class="normal"><a href="#__codelineno-0-80">80</a></span>
+<span class="normal"><a href="#__codelineno-0-81">81</a></span>
+<span class="normal"><a href="#__codelineno-0-82">82</a></span>
+<span class="normal"><a href="#__codelineno-0-83">83</a></span>
+<span class="normal"><a href="#__codelineno-0-84">84</a></span>
+<span class="normal"><a href="#__codelineno-0-85">85</a></span>
+<span class="normal"><a href="#__codelineno-0-86">86</a></span>
+<span class="normal"><a href="#__codelineno-0-87">87</a></span>
+<span class="normal"><a href="#__codelineno-0-88">88</a></span>
+<span class="normal"><a href="#__codelineno-0-89">89</a></span>
+<span class="normal"><a href="#__codelineno-0-90">90</a></span>
+<span class="normal"><a href="#__codelineno-0-91">91</a></span>
+<span class="normal"><a href="#__codelineno-0-92">92</a></span>
+<span class="normal"><a href="#__codelineno-0-93">93</a></span>
+<span class="normal"><a href="#__codelineno-0-94">94</a></span>
+<span class="normal"><a href="#__codelineno-0-95">95</a></span>
+<span class="normal"><a href="#__codelineno-0-96">96</a></span>
+<span class="normal"><a href="#__codelineno-0-97">97</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-40" name="__codelineno-0-40"></a><span class="k">def</span><span class="w"> </span><span class="nf">output_data</span><span class="p">(</span>
+<a id="__codelineno-0-41" name="__codelineno-0-41"></a>    <span class="n">output_workbooks</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]],</span>
+<a id="__codelineno-0-42" name="__codelineno-0-42"></a>    <span class="n">pipeline_config</span><span class="p">:</span> <span class="n">Config</span><span class="p">,</span>
+<a id="__codelineno-0-43" name="__codelineno-0-43"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-44" name="__codelineno-0-44"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-45" name="__codelineno-0-45"></a><span class="sd">    Handle the output of processed data from the pipeline. This function will create the Excel</span>
+<a id="__codelineno-0-46" name="__codelineno-0-46"></a><span class="sd">    reports and pickle files based on the processed data for each region. It will check the</span>
+<a id="__codelineno-0-47" name="__codelineno-0-47"></a><span class="sd">    configuration to determine which outputs to create (Excel, pickle, or both) and will create the</span>
+<a id="__codelineno-0-48" name="__codelineno-0-48"></a><span class="sd">    output directory if it does not exist.</span>
+<a id="__codelineno-0-49" name="__codelineno-0-49"></a>
+<a id="__codelineno-0-50" name="__codelineno-0-50"></a><span class="sd">    Parameters</span>
+<a id="__codelineno-0-51" name="__codelineno-0-51"></a><span class="sd">    ----------</span>
+<a id="__codelineno-0-52" name="__codelineno-0-52"></a><span class="sd">    output_workbooks : dict</span>
+<a id="__codelineno-0-53" name="__codelineno-0-53"></a><span class="sd">        The processed data for each region</span>
+<a id="__codelineno-0-54" name="__codelineno-0-54"></a><span class="sd">    pipeline_config : Config</span>
+<a id="__codelineno-0-55" name="__codelineno-0-55"></a><span class="sd">        The configuration object containing the output directory and other settings</span>
+<a id="__codelineno-0-56" name="__codelineno-0-56"></a>
+<a id="__codelineno-0-57" name="__codelineno-0-57"></a><span class="sd">    Returns</span>
+<a id="__codelineno-0-58" name="__codelineno-0-58"></a><span class="sd">    -------</span>
+<a id="__codelineno-0-59" name="__codelineno-0-59"></a><span class="sd">    None</span>
+<a id="__codelineno-0-60" name="__codelineno-0-60"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-61" name="__codelineno-0-61"></a>    <span class="n">outputs</span> <span class="o">=</span> <span class="n">pipeline_config</span><span class="o">.</span><span class="n">outputs</span>
+<a id="__codelineno-0-62" name="__codelineno-0-62"></a>
+<a id="__codelineno-0-63" name="__codelineno-0-63"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">outputs</span><span class="p">:</span>
+<a id="__codelineno-0-64" name="__codelineno-0-64"></a>        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No outputs configured. Skipping output data.&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-65" name="__codelineno-0-65"></a>        <span class="k">return</span>
+<a id="__codelineno-0-66" name="__codelineno-0-66"></a>
+<a id="__codelineno-0-67" name="__codelineno-0-67"></a>    <span class="n">output_directory</span> <span class="o">=</span> <span class="n">pipeline_config</span><span class="o">.</span><span class="n">create_output_directory</span><span class="p">()</span>
+<a id="__codelineno-0-68" name="__codelineno-0-68"></a>
+<a id="__codelineno-0-69" name="__codelineno-0-69"></a>    <span class="k">for</span> <span class="n">output_format</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">:</span>
+<a id="__codelineno-0-70" name="__codelineno-0-70"></a>        <span class="k">if</span> <span class="n">output_format</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;excel&quot;</span><span class="p">):</span>
+<a id="__codelineno-0-71" name="__codelineno-0-71"></a>            <span class="n">use_multiprocessing</span> <span class="o">=</span> <span class="n">pipeline_config</span><span class="o">.</span><span class="n">use_multiprocessing</span>
+<a id="__codelineno-0-72" name="__codelineno-0-72"></a>            <span class="n">create_excel_reports</span><span class="p">(</span>
+<a id="__codelineno-0-73" name="__codelineno-0-73"></a>                <span class="n">output_workbooks</span><span class="o">=</span><span class="n">output_workbooks</span><span class="p">,</span>
+<a id="__codelineno-0-74" name="__codelineno-0-74"></a>                <span class="n">output_directory</span><span class="o">=</span><span class="n">output_directory</span><span class="p">,</span>
+<a id="__codelineno-0-75" name="__codelineno-0-75"></a>                <span class="n">use_multiprocessing</span><span class="o">=</span><span class="n">use_multiprocessing</span><span class="p">,</span>
+<a id="__codelineno-0-76" name="__codelineno-0-76"></a>            <span class="p">)</span>
+<a id="__codelineno-0-77" name="__codelineno-0-77"></a>            <span class="k">if</span> <span class="n">output_format</span> <span class="o">==</span> <span class="s2">&quot;excel_zip&quot;</span><span class="p">:</span>
+<a id="__codelineno-0-78" name="__codelineno-0-78"></a>                <span class="n">fin_month</span> <span class="o">=</span> <span class="n">pipeline_config</span><span class="o">.</span><span class="n">fin_month</span>
+<a id="__codelineno-0-79" name="__codelineno-0-79"></a>                <span class="n">fin_year</span> <span class="o">=</span> <span class="n">pipeline_config</span><span class="o">.</span><span class="n">fin_year</span>
+<a id="__codelineno-0-80" name="__codelineno-0-80"></a>                <span class="n">create_excel_zip_reports</span><span class="p">(</span>
+<a id="__codelineno-0-81" name="__codelineno-0-81"></a>                    <span class="n">output_directory</span><span class="o">=</span><span class="n">output_directory</span><span class="p">,</span>
+<a id="__codelineno-0-82" name="__codelineno-0-82"></a>                    <span class="n">fin_month</span><span class="o">=</span><span class="n">fin_month</span><span class="p">,</span>
+<a id="__codelineno-0-83" name="__codelineno-0-83"></a>                    <span class="n">fin_year</span><span class="o">=</span><span class="n">fin_year</span><span class="p">,</span>
+<a id="__codelineno-0-84" name="__codelineno-0-84"></a>                <span class="p">)</span>
+<a id="__codelineno-0-85" name="__codelineno-0-85"></a>        <span class="k">elif</span> <span class="n">output_format</span> <span class="o">==</span> <span class="s2">&quot;pickle&quot;</span><span class="p">:</span>
+<a id="__codelineno-0-86" name="__codelineno-0-86"></a>            <span class="n">fin_month</span> <span class="o">=</span> <span class="n">pipeline_config</span><span class="o">.</span><span class="n">fin_month</span>
+<a id="__codelineno-0-87" name="__codelineno-0-87"></a>            <span class="n">fin_year</span> <span class="o">=</span> <span class="n">pipeline_config</span><span class="o">.</span><span class="n">fin_year</span>
+<a id="__codelineno-0-88" name="__codelineno-0-88"></a>            <span class="n">create_pickle</span><span class="p">(</span>
+<a id="__codelineno-0-89" name="__codelineno-0-89"></a>                <span class="n">output_workbooks</span><span class="o">=</span><span class="n">output_workbooks</span><span class="p">,</span>
+<a id="__codelineno-0-90" name="__codelineno-0-90"></a>                <span class="n">output_directory</span><span class="o">=</span><span class="n">output_directory</span><span class="p">,</span>
+<a id="__codelineno-0-91" name="__codelineno-0-91"></a>                <span class="n">fin_month</span><span class="o">=</span><span class="n">fin_month</span><span class="p">,</span>
+<a id="__codelineno-0-92" name="__codelineno-0-92"></a>                <span class="n">fin_year</span><span class="o">=</span><span class="n">fin_year</span><span class="p">,</span>
+<a id="__codelineno-0-93" name="__codelineno-0-93"></a>            <span class="p">)</span>
+<a id="__codelineno-0-94" name="__codelineno-0-94"></a>        <span class="k">else</span><span class="p">:</span>
+<a id="__codelineno-0-95" name="__codelineno-0-95"></a>            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+<a id="__codelineno-0-96" name="__codelineno-0-96"></a>                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">output_format</span><span class="si">}</span><span class="s2"> output is not implemented yet. Skipping </span><span class="si">{</span><span class="n">output_format</span><span class="si">}</span><span class="s2"> output.&quot;</span>
+<a id="__codelineno-0-97" name="__codelineno-0-97"></a>            <span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
 
 
   </div>
 
     </div>
 
-</div>
+</div><h2 id="submodules">Submodules</h2>
+<table>
+<thead>
+<tr>
+<th>Submodule</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="input/data_loader/">input/data_loader</a></td>
+<td>Functions for loading input data.</td>
+</tr>
+<tr>
+<td><a href="output/excel_writer/">output/excel_writer</a></td>
+<td>Functions for writing data to Excel files.</td>
+</tr>
+<tr>
+<td><a href="output/pickle_writer/">output/pickle_writer</a></td>
+<td>Functions for writing data to pickle files.</td>
+</tr>
+</tbody>
+</table>
 
 
 
@@ -1403,9 +1703,9 @@
   >
      
     <a
-      href="../config/"
+      href="../create_cuts/"
       class="md-footer__link md-footer__link--prev"
-      aria-label="Previous: config"
+      aria-label="Previous: create_cuts"
       rel="prev"
     >
       <div class="md-footer__button md-icon">
@@ -1414,21 +1714,21 @@
       <div class="md-footer__title">
         <div class="md-ellipsis">
           <span class="md-footer__direction"> Previous </span>
-          config
+          create_cuts
         </div>
       </div>
     </a>
       
     <a
-      href="../create_cuts/"
+      href="input/data_loader/"
       class="md-footer__link md-footer__link--next"
-      aria-label="Next: create_cuts"
+      aria-label="Next: data_loader"
       rel="next"
     >
       <div class="md-footer__title">
         <div class="md-ellipsis">
           <span class="md-footer__direction"> Next </span>
-          create_cuts
+          data_loader
         </div>
       </div>
       <div class="md-footer__button md-icon">
