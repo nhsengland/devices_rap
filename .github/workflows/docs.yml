@@ -26,15 +26,18 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: "Setup Python"
-        uses: actions/setup-python@v4
+      - name: "Install uv"
+        uses: astral-sh/setup-uv@v3
         with:
-          python-version: '3.12'
+          version: "latest"
 
-      - name: "Install Python Packages"
-        run: pip install -r requirements.txt
+      - name: "Setup Python"
+        run: uv python install 3.12
+
+      - name: "Install dependencies"
+        run: uv sync --extra docs
 
       - name: "Run mkdocs to build and deploy website"
         run: |
           cd docs
-          mkdocs gh-deploy --force --clean --verbose
+          uv run mkdocs gh-deploy --force --clean --verbose
