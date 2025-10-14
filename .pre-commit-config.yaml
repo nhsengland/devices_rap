@@ -1,18 +1,20 @@
 repos:
   - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.21.2
+    rev: v8.28.0
     hooks:
       - id: gitleaks
-  - repo: local
-    hooks: 
-      - id: run-make-lint
-        name: run-make-lint
-        entry: make lint
-        language: system
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.13.2
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
   - repo: local
     hooks:
       - id: git-secrets
         name: Git Secrets
-        description: git-secrets scans commits, commit messages, and --no-ff merges to prevent adding secrets into your git repositories.
-        entry: 'nhsd-git-secrets/pre-commit-mac.sh'
-        language: script
+        description: git-secrets scans commits, commit messages, and--no-ff merges to prevent adding secrets into your git repositories.
+        entry: bash
+        args: [nhsd-git-secrets/pre-commit.sh]
+        language: system
+        always_run: true

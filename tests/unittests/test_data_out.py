@@ -1,15 +1,23 @@
 """
-Tests for devices_rap/data_out.py
+Tests for devices_rap/data_io/output modules
 """
 
 import zipfile
-import pytest
-import pandas as pd
 
-from devices_rap import data_out
-from devices_rap.data_out import create_excel_reports, process_region
-from pathlib import Path
-from devices_rap.data_out import create_excel_zip_reports
+import pandas as pd
+import pytest
+
+from devices_rap.data_io.core import output_data
+from devices_rap.data_io.output.excel_writer import (
+    apply_excel_formatting,
+    create_excel_file,
+    create_excel_reports,
+    create_excel_zip_reports,
+    create_formats,
+    process_region,
+    write_worksheet,
+)
+from devices_rap.data_io.output.pickle_writer import create_pickle
 
 # from devices_rap import data_out
 
@@ -19,7 +27,7 @@ pytestmark = pytest.mark.no_data_needed
 
 class TestOutputData:
     """
-    Test class for data_out.output_data
+    Test class for output_data
     """
 
     # Mock pipeline_config fixture
@@ -42,21 +50,21 @@ class TestOutputData:
         """
         Mock the create_excel_reports function.
         """
-        return mocker.patch("devices_rap.data_out.create_excel_reports", return_value=None)
-    
+        return mocker.patch("devices_rap.data_io.core.create_excel_reports", return_value=None)
+
     @pytest.fixture
     def mock_create_excel_zip_reports(self, mocker):
         """
         Mock the create_excel_zip_reports function.
         """
-        return mocker.patch("devices_rap.data_out.create_excel_zip_reports", return_value=None)
+        return mocker.patch("devices_rap.data_io.core.create_excel_zip_reports", return_value=None)
 
     @pytest.fixture
     def mock_create_pickle(self, mocker):
         """
         Mock the create_pickle function.
         """
-        return mocker.patch("devices_rap.data_out.create_pickle", return_value=None)
+        return mocker.patch("devices_rap.data_io.core.create_pickle", return_value=None)
 
     # Test logs warning when pipeline_config.outputs is empty
     def test_output_data_logs_warning_when_outputs_empty(self, mock_pipeline_config, mock_warning):
@@ -64,7 +72,7 @@ class TestOutputData:
         Test that output_data logs a warning when pipeline_config.outputs is empty
         """
         mock_pipeline_config.outputs = []
-        data_out.output_data(
+        output_data(
             output_workbooks={},
             pipeline_config=mock_pipeline_config,
         )
@@ -78,7 +86,7 @@ class TestOutputData:
         Test that output_data does not log a warning when pipeline_config.outputs is not empty
         """
         mock_pipeline_config.outputs = ["excel"]
-        data_out.output_data(
+        output_data(
             output_workbooks={},
             pipeline_config=mock_pipeline_config,
         )
@@ -86,7 +94,7 @@ class TestOutputData:
 
     # Test calls implemented output functions based on pipeline_config.outputs
     @pytest.mark.parametrize(
-        "outputs, expected_calls",
+        ("outputs", "expected_calls"),
         [
             (["excel"], ["create_excel_reports"]),
             (["pickle"], ["create_pickle"]),
@@ -108,7 +116,7 @@ class TestOutputData:
         """
         mock_pipeline_config.outputs = outputs
 
-        data_out.output_data(
+        output_data(
             output_workbooks={},
             pipeline_config=mock_pipeline_config,
         )
@@ -133,7 +141,7 @@ class TestOutputData:
         """
         mock_pipeline_config.outputs = [output]
 
-        data_out.output_data(
+        output_data(
             output_workbooks={},
             pipeline_config=mock_pipeline_config,
         )
@@ -150,7 +158,9 @@ class TestCreateExcelReports:
 
     @pytest.fixture
     def mock_process_region(self, mocker):
-        return mocker.patch("devices_rap.data_out.process_region", return_value=None)
+        return mocker.patch(
+            "devices_rap.data_io.output.excel_writer.process_region", return_value=None
+        )
 
     @pytest.fixture
     def mock_output_directory(self, tmp_path):
@@ -168,7 +178,7 @@ class TestCreateExcelReports:
 
     @pytest.mark.parametrize("use_multiprocessing", [True, False])
     @pytest.mark.parametrize(
-        "output_workbooks, call_count", [({}, 0), ({"region1": {"sheet1": pd.DataFrame()}}, 1)]
+        ("output_workbooks", "call_count"), [({}, 0), ({"region1": {"sheet1": pd.DataFrame()}}, 1)]
     )
     def test_create_excel_reports_calls_process_region(
         self,
@@ -191,7 +201,7 @@ class TestCreateExcelReports:
 
     @pytest.mark.parametrize("use_multiprocessing", [True, False])
     @pytest.mark.parametrize(
-        "kwarg, expected_value",
+        ("kwarg", "expected_value"),
         [
             ("output_directory", None),
             ("region", "region1"),
@@ -234,7 +244,7 @@ class TestCreateExcelReports:
             assert actual == expected_value
 
     @pytest.mark.parametrize(
-        "log_type, expected_message",
+        ("log_type", "expected_message"),
         [("info", "Creating excel reports"), ("success", "Excel reports created successfully.")],
     )
     def test_log_called(
@@ -273,7 +283,7 @@ class TestProcessRegion:
 
     @pytest.fixture
     def mock_create_excel_file(self, mocker):
-        return mocker.patch("devices_rap.data_out.create_excel_file")
+        return mocker.patch("devices_rap.data_io.output.excel_writer.create_excel_file")
 
     def test_calls_create_excel_file_once(self, output_directory, mock_create_excel_file):
         """
@@ -292,7 +302,7 @@ class TestProcessRegion:
         assert mock_create_excel_file.call_count == 1
 
     @pytest.mark.parametrize(
-        "kwarg, expected_value",
+        ("kwarg", "expected_value"),
         [
             ("output_file", "REGION1_RAG_STATUS_REPORT.xlsx"),
             ("worksheets", {"sheet1": pd.DataFrame()}),
@@ -415,7 +425,7 @@ class TestProcessRegion:
 
 class TestCreateExcelFile:
     """
-    Test class for data_out.create_excel_file
+    Test class for create_excel_file
     """
 
     @pytest.fixture
@@ -424,11 +434,15 @@ class TestCreateExcelFile:
 
     @pytest.fixture
     def mock_create_formats(self, mocker):
-        return mocker.patch("devices_rap.data_out.create_formats", return_value="formats")
+        return mocker.patch(
+            "devices_rap.data_io.output.excel_writer.create_formats", return_value="formats"
+        )
 
     @pytest.fixture
     def mock_write_worksheet(self, mocker):
-        return mocker.patch("devices_rap.data_out.write_worksheet", return_value=None)
+        return mocker.patch(
+            "devices_rap.data_io.output.excel_writer.write_worksheet", return_value=None
+        )
 
     @pytest.mark.parametrize("use_multiprocessing", [True, False])
     def test_calls_write_worksheet(
@@ -443,12 +457,12 @@ class TestCreateExcelFile:
         Test that create_excel_file calls write_worksheet
         """
         worksheets = {"sheet1": pd.DataFrame()}
-        data_out.create_excel_file(output_file, worksheets, use_multiprocessing)
+        create_excel_file(output_file, worksheets, use_multiprocessing)
         assert mock_write_worksheet.call_count == 1
 
     @pytest.mark.parametrize("use_multiprocessing", [True, False])
     @pytest.mark.parametrize(
-        "kwarg, expected_value",
+        ("kwarg", "expected_value"),
         [
             ("writer", None),
             ("sheet_name", "sheet1"),
@@ -471,7 +485,7 @@ class TestCreateExcelFile:
         Test that create_excel_file calls write_worksheet with the correct arguments
         """
         worksheets = {"sheet1": pd.DataFrame()}
-        data_out.create_excel_file(output_file, worksheets, use_multiprocessing)
+        create_excel_file(output_file, worksheets, use_multiprocessing)
         actual = mock_write_worksheet.call_args[1][kwarg]
 
         if kwarg == "writer":
@@ -490,7 +504,7 @@ class TestCreateExcelFile:
         Test that create_excel_file calls create_formats once
         """
         worksheets = {"sheet1": pd.DataFrame()}
-        data_out.create_excel_file(output_file, worksheets, False)
+        create_excel_file(output_file, worksheets, False)
         assert mock_create_formats.call_count == 1
 
     def test_logs_debug(
@@ -500,28 +514,28 @@ class TestCreateExcelFile:
         Test that create_excel_file logs a debug message
         """
         worksheets = {"sheet1": pd.DataFrame()}
-        data_out.create_excel_file(output_file, worksheets, False)
+        create_excel_file(output_file, worksheets, False)
         mock_debug = mock_log_levels["debug"]
         mock_debug.assert_called_once_with(f"Creating the Excel file: {output_file}")
 
 
 class TestCreateFormats:
     """
-    Test class for data_out.create_formats
+    Test class for create_formats
     """
 
     @pytest.fixture
     def mock_workbook(self, mocker):
         mock = mocker.MagicMock()
         # add_format returns a new MagicMock for each call
-        mock.add_format.side_effect = lambda config=None: mocker.MagicMock()
+        mock.add_format.side_effect = lambda _=None: mocker.MagicMock()
         return mock
 
     def test_returns_dict_with_expected_keys(self, mock_workbook):
         """
         Test that create_formats returns a dict with the correct keys
         """
-        formats = data_out.create_formats(mock_workbook)
+        formats = create_formats(mock_workbook)
         assert set(formats.keys()) == {"default", "cost", "header", "total"}
 
     def test_add_format_called_with_correct_configs(self, mocker, mock_workbook):
@@ -548,7 +562,7 @@ class TestCreateFormats:
             ),
         ]
         # Call function
-        data_out.create_formats(mock_workbook)
+        create_formats(mock_workbook)
         # The first call is for "default" (empty dict), which should call add_format() with no args
         assert mock_workbook.add_format.call_args_list[0][0] == ()
         # The next calls are for "cost", "header", "total" in order
@@ -562,7 +576,7 @@ class TestCreateFormats:
         # Prepare unique mocks for each call
         format_mocks = [mocker.MagicMock(name=f"format_{k}") for k in range(4)]
         mock_workbook.add_format.side_effect = format_mocks
-        formats = data_out.create_formats(mock_workbook)
+        formats = create_formats(mock_workbook)
         # Should return the mocks in the order: default, cost, header, total
         assert list(formats.values()) == format_mocks
 
@@ -570,14 +584,14 @@ class TestCreateFormats:
         """
         Test that add_format is called with no arguments for the 'default' format
         """
-        data_out.create_formats(mock_workbook)
+        create_formats(mock_workbook)
         # The first call is for 'default'
         assert mock_workbook.add_format.call_args_list[0][0] == ()
 
 
 class TestWriteWorksheet:
     """
-    Test class for data_out.write_worksheet
+    Test class for write_worksheet
     """
 
     @pytest.fixture
@@ -586,7 +600,9 @@ class TestWriteWorksheet:
 
     @pytest.fixture
     def mock_apply_excel_formatting(self, mocker):
-        return mocker.patch("devices_rap.data_out.apply_excel_formatting", return_value=None)
+        return mocker.patch(
+            "devices_rap.data_io.output.excel_writer.apply_excel_formatting", return_value=None
+        )
 
     @pytest.fixture
     def mock_writer(self, mocker):
@@ -610,14 +626,14 @@ class TestWriteWorksheet:
         Test that write_worksheet calls to_excel
         """
 
-        data_out.write_worksheet(
+        write_worksheet(
             **default_args,
         )
 
         assert mock_to_excel.call_count == 1
 
     @pytest.mark.parametrize(
-        "kwarg, expected_value",
+        ("kwarg", "expected_value"),
         [
             ("excel_writer", None),
             ("sheet_name", "sheet1"),
@@ -638,7 +654,7 @@ class TestWriteWorksheet:
         """
         Test that write_worksheet calls to_excel with the correct arguments
         """
-        data_out.write_worksheet(
+        write_worksheet(
             **default_args,
         )
         actual = mock_to_excel.call_args[1][kwarg]
@@ -655,14 +671,14 @@ class TestWriteWorksheet:
         Test that write_worksheet calls the write method
         """
 
-        data_out.write_worksheet(
+        write_worksheet(
             **default_args,
         )
 
         assert mock_apply_excel_formatting.call_count == 1
 
     @pytest.mark.parametrize(
-        "kwarg, expected_value",
+        ("kwarg", "expected_value"),
         [
             ("writer", None),
             ("data", pd.DataFrame(columns=["col1", "col2"], data=[["val1", "val2"]])),
@@ -682,7 +698,7 @@ class TestWriteWorksheet:
         """
         Test that write_worksheet calls the write method with the correct arguments
         """
-        data_out.write_worksheet(
+        write_worksheet(
             **default_args,
         )
         actual = mock_apply_excel_formatting.call_args[1][kwarg]
@@ -697,7 +713,7 @@ class TestWriteWorksheet:
 
 class TestApplyExcelFormatting:
     """
-    Test class for data_out.apply_excel_formatting
+    Test class for apply_excel_formatting
     """
 
     @pytest.fixture
@@ -705,8 +721,7 @@ class TestApplyExcelFormatting:
         """
         Create a mock worksheet with the required methods.
         """
-        ws = mocker.MagicMock()
-        return ws
+        return mocker.MagicMock()
 
     @pytest.fixture
     def mock_writer(self, mocker, mock_worksheet):
@@ -740,14 +755,13 @@ class TestApplyExcelFormatting:
                 "C": [5.0, 6.0, 7.0],
             }
         )
-        data = data.astype({"A": "float64", "B": "int64", "C": "float32"})
-        return data
+        return data.astype({"A": "float64", "B": "int64", "C": "float32"})
 
     def test_writes_headers_with_format(self, mock_writer, test_formats, test_data):
         """
         Ensure "Provider Code" and "Region" are always present
         """
-        data_out.apply_excel_formatting(mock_writer, test_data, test_formats, "Sheet1")
+        apply_excel_formatting(mock_writer, test_data, test_formats, "Sheet1")
         ws = mock_writer.sheets["Sheet1"]
         assert ws.write.call_count == len(test_data.columns)
         for col_num, value in enumerate(test_data.columns.values):
@@ -757,12 +771,12 @@ class TestApplyExcelFormatting:
         """
         Ensure that autofilter is set for the header row
         """
-        data_out.apply_excel_formatting(mock_writer, test_data, test_formats, "Sheet1")
+        apply_excel_formatting(mock_writer, test_data, test_formats, "Sheet1")
         ws = mock_writer.sheets["Sheet1"]
         ws.autofilter.assert_called_once_with(0, 0, test_data.shape[0], test_data.shape[1] - 1)
 
     @pytest.mark.parametrize(
-        "row_idx, col_name, value, should_format",
+        ("row_idx", "col_name", "value", "should_format"),
         [
             (2, "Provider Code", "Total123", True),  # Row 2, Provider Code is "Total123"
             (3, "Region", "Total456", True),  # Row 3, Region is "Total456"
@@ -776,7 +790,7 @@ class TestApplyExcelFormatting:
         """
         Ensure that the total row formatting is applied correctly
         """
-        data_out.apply_excel_formatting(mock_writer, test_data, test_formats, "Sheet1")
+        apply_excel_formatting(mock_writer, test_data, test_formats, "Sheet1")
         ws = mock_writer.sheets["Sheet1"]
         calls = [call[0][0] for call in ws.set_row.call_args_list]
         if should_format:
@@ -786,7 +800,7 @@ class TestApplyExcelFormatting:
             assert row_idx not in calls
 
     @pytest.mark.parametrize(
-        "col_idx, col_name, should_format",
+        ("col_idx", "col_name", "should_format"),
         [
             (0, "Provider Code", False),
             (1, "Region", False),
@@ -801,7 +815,7 @@ class TestApplyExcelFormatting:
         """
         Ensure that the cost column formatting is applied correctly
         """
-        data_out.apply_excel_formatting(mock_writer, test_data, test_formats, "Sheet1")
+        apply_excel_formatting(mock_writer, test_data, test_formats, "Sheet1")
         ws = mock_writer.sheets["Sheet1"]
         if should_format:
             ws.set_column.assert_any_call(col_idx, col_idx, None, test_formats["cost"])
@@ -810,14 +824,14 @@ class TestApplyExcelFormatting:
             assert col_idx not in col_args
 
     def test_calls_autofit(self, mock_writer, test_formats, test_data):
-        data_out.apply_excel_formatting(mock_writer, test_data, test_formats, "Sheet1")
+        apply_excel_formatting(mock_writer, test_data, test_formats, "Sheet1")
         ws = mock_writer.sheets["Sheet1"]
         ws.autofit.assert_called_once_with()
 
 
 class TestCreatePickle:
     """
-    Test class for data_out.create_pickle
+    Test class for create_pickle
     """
 
     @pytest.fixture
@@ -839,7 +853,7 @@ class TestCreatePickle:
         }
 
     @pytest.mark.parametrize(
-        "call_count, expected_message",
+        ("call_count", "expected_message"),
         [
             (0, "Creating pickle file"),
             (1, "Creating pickle file for all regions for test_month test_year"),
@@ -849,7 +863,7 @@ class TestCreatePickle:
         """
         Test that create_pickle logs the correct info message
         """
-        data_out.create_pickle(**default_args)
+        create_pickle(**default_args)
         mock_info = mock_log_levels["info"]
 
         assert mock_info.call_args_list[call_count][0][0] == expected_message
@@ -863,10 +877,8 @@ class TestCreatePickle:
         output_file = tmp_path / "test_year_test_month_amber_report_all_regions.pkl"
 
         output_file.touch()  # Create the file to simulate it already existing
-        data_out.create_pickle(**default_args)
-        mock_warning.assert_called_once_with(
-            f"Overwriting the existing pickle file: {output_file}"
-        )
+        create_pickle(**default_args)
+        mock_warning.assert_called_once_with(f"Overwriting the existing pickle file: {output_file}")
 
     def test_unlinks_file_if_already_exists(
         self, mock_log_levels, default_args, tmp_path, mock_to_pickle, mocker
@@ -878,7 +890,7 @@ class TestCreatePickle:
         output_file = tmp_path / "test_year_test_month_amber_report_all_regions.pkl"
         output_file.touch()
 
-        data_out.create_pickle(**default_args)
+        create_pickle(**default_args)
 
         mock_unlink.assert_called_once()
 
@@ -886,7 +898,7 @@ class TestCreatePickle:
         """
         Test that create_pickle calls to_pickle with the correct arguments
         """
-        data_out.create_pickle(**default_args)
+        create_pickle(**default_args)
 
         mock_to_pickle.assert_called_once()
 
@@ -899,7 +911,7 @@ class TestCreatePickle:
         """
         Test that create_pickle logs a success message
         """
-        data_out.create_pickle(**default_args)
+        create_pickle(**default_args)
 
         mock_success = mock_log_levels["success"]
         expected_message = (
@@ -910,7 +922,7 @@ class TestCreatePickle:
 
 class TestCreateExcelZipReports:
     """
-    Test class for data_out.create_excel_zip_reports
+    Test class for create_excel_zip_reports
     """
 
     @pytest.fixture
@@ -919,7 +931,7 @@ class TestCreateExcelZipReports:
 
     @pytest.fixture
     def mock_tqdm(self, mocker):
-        return mocker.patch("tqdm.tqdm", side_effect=lambda x, **kwargs: x)
+        return mocker.patch("tqdm.tqdm", side_effect=lambda x, **_: x)
 
     @pytest.fixture
     def output_directory(self, tmp_path):
@@ -942,9 +954,7 @@ class TestCreateExcelZipReports:
         """
         Test that logger.info and logger.success are called with correct messages
         """
-        data_out.create_excel_zip_reports(
-            output_directory=output_directory, fin_month="01", fin_year="2023"
-        )
+        create_excel_zip_reports(output_directory=output_directory, fin_month="01", fin_year="2023")
         mock_info = mock_log_levels["info"]
         mock_success = mock_log_levels["success"]
         assert mock_info.call_args_list[0][0][0] == "Creating zip file for Excel reports"
@@ -959,22 +969,24 @@ class TestCreateExcelZipReports:
         Test that all Excel files are added to the zip archive
         """
         zip_mock = mock_zipfile.return_value.__enter__.return_value
-        data_out.create_excel_zip_reports(
-            output_directory=output_directory, fin_month="01", fin_year="2023"
-        )
+        create_excel_zip_reports(output_directory=output_directory, fin_month="01", fin_year="2023")
         # Should call write for each excel file
-        written_files = [call.kwargs.get("arcname") or call.args[1] for call in zip_mock.write.call_args_list]
+        written_files = [
+            call.kwargs.get("arcname") or call.args[1] for call in zip_mock.write.call_args_list
+        ]
         expected_files = [f.name for f in excel_files]
         assert set(written_files) == set(expected_files)
 
-    def test_output_file_is_named_correctly(self, output_directory, excel_files, mock_zipfile, mock_tqdm):
+    def test_output_file_is_named_correctly(
+        self, output_directory, excel_files, mock_zipfile, mock_tqdm
+    ):
         """
         Test that the output zip file is named as expected
         """
         fin_month = "01"
         fin_year = "2023"
         expected_zip = output_directory / f"{fin_year}_M{fin_month}_AMBER_REPORTS_ALL_REGIONS.zip"
-        data_out.create_excel_zip_reports(
+        create_excel_zip_reports(
             output_directory=output_directory, fin_month=fin_month, fin_year=fin_year
         )
         mock_zipfile.assert_called_once_with(expected_zip, "w", zipfile.ZIP_DEFLATED)
@@ -990,7 +1002,7 @@ class TestCreateExcelZipReports:
         output_file = output_directory / f"{fin_year}_M{fin_month}_AMBER_REPORTS_ALL_REGIONS.zip"
         output_file.touch()
         mock_unlink = mocker.patch("pathlib.Path.unlink")
-        data_out.create_excel_zip_reports(
+        create_excel_zip_reports(
             output_directory=output_directory, fin_month=fin_month, fin_year=fin_year
         )
         mock_log_levels["warning"].assert_called_once_with(
@@ -1009,7 +1021,7 @@ class TestCreateExcelZipReports:
         output_file = output_directory / f"{fin_year}_M{fin_month}_AMBER_REPORTS_ALL_REGIONS.zip"
         if output_file.exists():
             output_file.unlink()
-        data_out.create_excel_zip_reports(
+        create_excel_zip_reports(
             output_directory=output_directory, fin_month=fin_month, fin_year=fin_year
         )
         # The second info call is for creating the zip file

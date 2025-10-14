@@ -2,13 +2,12 @@
 Tests for devices_rap/joins.py
 """
 
-import pandas as pd
-import pytest
 from loguru import logger
 from nhs_herbot.errors import ColumnsNotFoundError
+import pandas as pd
+import pytest
 
 from devices_rap import joins
-
 
 pytestmark = pytest.mark.no_data_needed
 
@@ -29,8 +28,8 @@ class TestJoinWrapperFunctions:
     ]
 
     @pytest.mark.parametrize(
-        "func, drop_columns",
-        zip(functions, [["org_code"], ["dev_code"], ["dev_code", "provider_code"]]),
+        ("func", "drop_columns"),
+        zip(functions, [["org_code"], ["dev_code"], ["dev_code", "provider_code"]], strict=False),
     )
     def test_returns_dataframe(self, mocker, func, drop_columns):
         """
@@ -39,7 +38,22 @@ class TestJoinWrapperFunctions:
         mocker.patch(
             "devices_rap.joins.join_datasets", return_value=pd.DataFrame(columns=drop_columns)
         )
-        actual = func(pd.DataFrame(), pd.DataFrame())
+
+        # Create appropriate test DataFrames with required columns for each function
+        if func.__name__ == "join_provider_codes_lookup":
+            master_df = pd.DataFrame(columns=["upd_high_level_device_type"])
+            lookup_df = pd.DataFrame(columns=["org_code"])
+        elif func.__name__ == "join_device_taxonomy":
+            master_df = pd.DataFrame(columns=["upd_high_level_device_type"])
+            lookup_df = pd.DataFrame(columns=["dev_code"])
+        elif func.__name__ == "join_exceptions":
+            master_df = pd.DataFrame(columns=["upd_high_level_device_type", "der_provider_code"])
+            lookup_df = pd.DataFrame(columns=["dev_code", "provider_code"])
+        else:
+            master_df = pd.DataFrame()
+            lookup_df = pd.DataFrame()
+
+        actual = func(master_df, lookup_df)
         assert isinstance(actual, pd.DataFrame)
 
     expected_messages = [
@@ -48,7 +62,9 @@ class TestJoinWrapperFunctions:
         "Joining the exceptions table onto the master_devices table",
     ]
 
-    @pytest.mark.parametrize("func, expected_message", zip(functions, expected_messages))
+    @pytest.mark.parametrize(
+        ("func", "expected_message"), zip(functions, expected_messages, strict=False)
+    )
     def test_logging(self, mocker, func, expected_message):
         """
         Test that the function logs the correct message.
@@ -56,7 +72,21 @@ class TestJoinWrapperFunctions:
         mock_logger = mocker.spy(logger, "info")
         mocker.patch("devices_rap.joins.join_datasets")
 
-        func(pd.DataFrame(), pd.DataFrame())
+        # Provide proper DataFrames with required columns for each function
+        if func.__name__ == "join_provider_codes_lookup":
+            master_df = pd.DataFrame(columns=["der_provider_code"])
+            lookup_df = pd.DataFrame(columns=["org_code"])
+        elif func.__name__ == "join_device_taxonomy":
+            master_df = pd.DataFrame(columns=["upd_high_level_device_type"])
+            lookup_df = pd.DataFrame(columns=["dev_code"])
+        elif func.__name__ == "join_exceptions":
+            master_df = pd.DataFrame(columns=["upd_high_level_device_type", "der_provider_code"])
+            lookup_df = pd.DataFrame(columns=["dev_code", "provider_code"])
+        else:
+            master_df = pd.DataFrame()
+            lookup_df = pd.DataFrame()
+
+        func(master_df, lookup_df)
 
         mock_logger.assert_called_once_with(expected_message)
 
@@ -67,35 +97,59 @@ class TestJoinWrapperFunctions:
         """
         mock_join_datasets = mocker.patch("devices_rap.joins.join_datasets")
 
-        func(pd.DataFrame(), pd.DataFrame())
+        # Provide proper DataFrames with required columns for each function
+        if func.__name__ == "join_provider_codes_lookup":
+            master_df = pd.DataFrame(columns=["der_provider_code"])
+            lookup_df = pd.DataFrame(columns=["org_code"])
+        elif func.__name__ == "join_device_taxonomy":
+            master_df = pd.DataFrame(columns=["upd_high_level_device_type"])
+            lookup_df = pd.DataFrame(columns=["dev_code"])
+        elif func.__name__ == "join_exceptions":
+            master_df = pd.DataFrame(columns=["upd_high_level_device_type", "der_provider_code"])
+            lookup_df = pd.DataFrame(columns=["dev_code", "provider_code"])
+        else:
+            master_df = pd.DataFrame()
+            lookup_df = pd.DataFrame()
+
+        func(master_df, lookup_df)
 
         mock_join_datasets.assert_called_once()
 
     expected_kwargs = [
         {
-            "left": pd.DataFrame({"left": [1, 2, 3]}),
-            "right": pd.DataFrame({"right": [1, 2, 3]}),
+            "left": pd.DataFrame({"left": [1, 2, 3], "der_provider_code": [1, 2, 3]}),
+            "right": pd.DataFrame({"right": [1, 2, 3], "org_code": [1, 2, 3]}),
             "left_on": "der_provider_code",
             "right_on": "org_code",
             "validate": "many_to_one",
         },
         {
-            "left": pd.DataFrame({"left": [1, 2, 3]}),
-            "right": pd.DataFrame({"right": [1, 2, 3]}),
+            "left": pd.DataFrame({"left": [1, 2, 3], "upd_high_level_device_type": [1, 2, 3]}),
+            "right": pd.DataFrame({"right": [1, 2, 3], "dev_code": [1, 2, 3]}),
             "left_on": "upd_high_level_device_type",
             "right_on": "dev_code",
             "validate": "many_to_one",
         },
         {
-            "left": pd.DataFrame({"left": [1, 2, 3]}),
-            "right": pd.DataFrame({"right": [1, 2, 3]}),
+            "left": pd.DataFrame(
+                {
+                    "left": [1, 2, 3],
+                    "upd_high_level_device_type": [1, 2, 3],
+                    "der_provider_code": [1, 2, 3],
+                }
+            ),
+            "right": pd.DataFrame(
+                {"right": [1, 2, 3], "dev_code": [1, 2, 3], "provider_code": [1, 2, 3]}
+            ),
             "left_on": ["upd_high_level_device_type", "der_provider_code"],
             "right_on": ["dev_code", "provider_code"],
             "validate": "many_to_many",
         },
     ]
 
-    @pytest.mark.parametrize("func, expected_kwargs", zip(functions, expected_kwargs))
+    @pytest.mark.parametrize(
+        ("func", "expected_kwargs"), zip(functions, expected_kwargs, strict=False)
+    )
     @pytest.mark.parametrize(
         "kwarg",
         [
@@ -112,7 +166,11 @@ class TestJoinWrapperFunctions:
         """
         mock_join_datasets = mocker.patch("devices_rap.joins.join_datasets")
 
-        func(pd.DataFrame({"left": [1, 2, 3]}), pd.DataFrame({"right": [1, 2, 3]}))
+        # Use the DataFrames from expected_kwargs which now include the required columns
+        left_df = expected_kwargs["left"]
+        right_df = expected_kwargs["right"]
+
+        func(left_df, right_df)
 
         actual = mock_join_datasets.call_args.kwargs[kwarg]
         expected = expected_kwargs[kwarg]
@@ -131,8 +189,14 @@ class TestJoinWrapperFunctions:
         mock_join_datasets = mocker.patch("devices_rap.joins.join_datasets")
 
         joins.join_exceptions(
-            pd.DataFrame({"left": [1, 2, 3]}),
-            pd.DataFrame({"right": [1, 2, 3]}),
+            pd.DataFrame(
+                {
+                    "left": [1, 2, 3],
+                    "upd_high_level_device_type": [1, 2, 3],
+                    "der_provider_code": [1, 2, 3],
+                }
+            ),
+            pd.DataFrame({"right": [1, 2, 3], "dev_code": [1, 2, 3], "provider_code": [1, 2, 3]}),
             strict_validate=True,
         )
 
@@ -173,9 +237,7 @@ class TestJoinMiniProviderCodesLookup:
         """
         mocker.patch(
             "devices_rap.joins.join_provider_codes_lookup",
-            return_value=pd.DataFrame(
-                columns=["der_provider_code", "current_name_in_proper_case"]
-            ),
+            return_value=pd.DataFrame(columns=["der_provider_code", "current_name_in_proper_case"]),
         )
         actual = joins.join_mini_provider_codes_lookup(master_devices, provider_codes_lookup)
         assert isinstance(actual, pd.DataFrame)
@@ -328,10 +390,7 @@ class TestJoinMiniDeviceTaxonomy:
             joins.join_mini_device_taxonomy(master_devices, device_taxonomy)
 
     def test_correct_columns_passed_to_join_device_taxonomy(
-        self, 
-        master_devices, 
-        device_taxonomy, 
-        mocker
+        self, master_devices, device_taxonomy, mocker
     ):
         """
         Test that the correct columns are passed to join_device_taxonomy.
@@ -542,8 +601,7 @@ class TestJoinMiniTables:
             "devices_rap.joins.join_mini_device_taxonomy",
             "devices_rap.joins.join_mini_exceptions",
         ]
-        mocks = (mocker.patch(func, return_value=empty_df) for func in called_functioned)
-        return mocks
+        return (mocker.patch(func, return_value=empty_df) for func in called_functioned)
 
     def test_returns_dataframe(
         self,

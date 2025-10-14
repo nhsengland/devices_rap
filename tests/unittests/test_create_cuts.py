@@ -2,13 +2,14 @@
 Tests for devices_rap/create_cuts.py
 """
 
-import sys
 import re
-import pytest
+import sys
+
+from nhs_herbot.errors import ColumnsNotFoundError
 import pandas as pd
+import pytest
 
 from devices_rap import create_cuts
-from nhs_herbot.errors import ColumnsNotFoundError
 
 if sys.version_info < (3, 11):
     from exceptiongroup import ExceptionGroup  # type: ignore
@@ -60,7 +61,7 @@ class TestCreateTableCuts:
         assert all(isinstance(value, pd.DataFrame) for value in result.values())
 
     @pytest.mark.parametrize(
-        "cut_columns, expected",
+        ("cut_columns", "expected"),
         [
             (
                 "A",
@@ -189,7 +190,7 @@ class TestCreateTableCuts:
             raise ExceptionGroup("Test failures", failures)
 
     @pytest.mark.parametrize(
-        "cut_columns, expected_message",
+        ("cut_columns", "expected_message"),
         [
             ("E", "Columns were not found in the dataset. MISSING COLUMNS: CUT_COLUMNS: ['E']"),
             (
@@ -217,7 +218,7 @@ class TestCreateTableCuts:
         mock_error.assert_called_once_with(expected_message)
 
     @pytest.mark.parametrize(
-        "input_cut_columns, expected_message",
+        ("input_cut_columns", "expected_message"),
         [
             (
                 "A",
@@ -326,7 +327,7 @@ class TestCreateRegionalTableCuts:
             assert all(isinstance(df, pd.DataFrame) for df in region_tables.values())
 
     @pytest.mark.parametrize(
-        "region, table_type, expected_df",
+        ("region", "table_type", "expected_df"),
         [
             (
                 "North",

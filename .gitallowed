@@ -7,3 +7,5 @@
 .*assembly: AssemblyVersion*
 .*assembly: AssemblyFileVersion*
 .*Version=*
+*uv.lock*
+*.gitallowed*

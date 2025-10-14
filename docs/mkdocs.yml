@@ -1,4 +1,122 @@
-site_name: devices_rap
-# 
+site_name: Devices RAP Documentation
+site_description: NHS England Direct Commissioning - Devices RAP
 site_author: NHS England - Direct Commissioning
-# 
+site_url: https://nhsengland.github.io/devices_rap
+repo_url: https://github.com/nhsengland/devices_rap
+repo_name: devices_rap
+edit_uri: edit/main/docs/content/
+docs_dir: content
+
+theme:
+  name: material
+  language: en
+  custom_dir: overrides
+  palette:
+    scheme: default
+    primary: indigo
+  font:
+    text: Roboto
+  logo: images/logo/nhs-blue-on-white.jpg
+  favicon: images/favicon/favicon.ico
+  features:
+    - search.share
+    - content.code.annotate
+    - content.tabs.link
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.indexes
+    - navigation.path
+    - navigation.top
+    - toc.integrate
+  icon:
+    admonition:
+      <type>: material/alert
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: numpy
+            members_order: source
+            show_source: true
+            show_bases: true
+            extra:
+              show_inheritance: true
+
+nav:
+  - Home: index.md
+  - User Guide:
+    - user_guide/index.md
+    - User: user_guide/user.md
+    - Developer: user_guide/developer.md
+  - Usage: usage.md
+  - Amber Report Excel Output: worksheet_output_documentation.md
+  - Data Dictionary: data_dictionary.md
+  - Process Map: amber_report_process_map.md
+  - API Reference: 
+    - api_reference/index.md
+    - Modules:
+      - clean_data: api_reference/clean_data.md
+      - config: api_reference/config.md
+      - constants: api_reference/constants.md
+      - create_cuts: api_reference/create_cuts.md
+      - data_io:
+        - api_reference/data_io/index.md
+        - input:
+          - api_reference/data_io/input/data_loader.md
+        - output:
+          - api_reference/data_io/output/excel_writer.md
+          - api_reference/data_io/output/pickle_writer.md
+      - exception_notes: api_reference/exception_notes.md
+      - interpret_output_instructions: api_reference/interpret_output_instructions.md
+      - joins: api_reference/joins.md
+      - pipeline: api_reference/pipeline.md
+      - summary_tables: api_reference/summary_tables.md
+
+extra_css:
+  - stylesheets/nhs_style.css
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/nhsengland/devices_rap
+    - icon: fontawesome/solid/envelope
+      link: mailto:datascience@nhs.net
+  generator: false
+
+copyright: Copyright &copy; 2025 Crown Copyright (NHS England)
+
+markdown_extensions:
+  - tables
+  - attr_list
+  - pymdownx.emoji
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - admonition
+  - pymdownx.details
+  - pymdownx.mark
+  - md_in_html
+  - footnotes
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.critic
+  - pymdownx.caret
+  - pymdownx.keys
+  - pymdownx.tilde
+
+extra_javascript:
+  - javascripts/mermaid.mjs
+
+watch:
+  - overrides

@@ -2,11 +2,10 @@
 Functions for cleaning and cleansing datasets
 """
 
+import re
+from typing import Any, Literal
 import warnings
-from typing import Any, Dict, List, Literal, Optional
 
-import pandas as pd
-import tqdm
 from loguru import logger
 from nhs_herbot.errors import (
     ColumnsNotFoundError,
@@ -23,11 +22,13 @@ from nhs_herbot.utils import (
     parse_dates,
     sort_by_priority,
 )
+import pandas as pd
+import tqdm
 
 from devices_rap.constants import RAG_PRIORITIES
 
 
-def batch_normalise_column_names(datasets: Dict[str, Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
+def batch_normalise_column_names(datasets: dict[str, dict[str, Any]]) -> dict[str, dict[str, Any]]:
     """
     Normalise the column names for all datasets in the provided dictionary
 
@@ -46,12 +47,12 @@ def batch_normalise_column_names(datasets: Dict[str, Dict[str, Any]]) -> Dict[st
 
     dataset_items = tqdm.tqdm(datasets.items(), desc="Normalising column names")
 
-    for name, df in dataset_items:
+    for name, _ in dataset_items:
         logger.info(f"Normalising column names for the {name} dataset")
         try:
-            df = datasets[name]["data"]
-            assert isinstance(df, pd.DataFrame)
-            datasets[name]["data"] = normalise_column_names(df)
+            dataset_df = datasets[name]["data"]
+            assert isinstance(dataset_df, pd.DataFrame)
+            datasets[name]["data"] = normalise_column_names(dataset_df)
         except (KeyError, AssertionError) as e:
             raise NoDataProvidedError(f"No data provided for the {name} dataset.") from e
 
@@ -61,9 +62,10 @@ def batch_normalise_column_names(datasets: Dict[str, Dict[str, Any]]) -> Dict[st
 def cleanse_master_data(master_df: pd.DataFrame) -> pd.DataFrame:
     """
     Clean the master dataset ready for processing. This function will:
-    - Convert high level device type values
-    - Convert activity year values without century
-    - Convert activity date values to datetime
+
+    * Convert high level device type values
+    * Convert activity year values without century
+    * Convert activity date values to datetime
 
     Parameters
     ----------
@@ -90,15 +92,44 @@ def cleanse_master_data(master_df: pd.DataFrame) -> pd.DataFrame:
         logger.info("Converting high level device type values")
         master_df["upd_high_level_device_type"] = master_df[
             "der_high_level_device_type"
-        ].progress_apply(convert_values_to)
+        ].progress_apply(convert_values_to, match=["DEV34", "DEV35"], to="DEV02")
 
         logger.info("Converting activity year values without century")
-        master_df["upd_activity_year"] = master_df["cln_activity_year"].progress_apply(
-            convert_values_to, match=[2425], to=202425
+        if "cln_activity_year" in master_df.columns:
+            master_df["upd_activity_year"] = master_df["cln_activity_year"].progress_apply(
+                convert_values_to, match=[2425], to=202425
+            )
+        else:
+            logger.info(
+                "Deriving activity year from der_activity_year where cln_activity_year is missing"
+            )
+
+            def _der_year_to_upd(val):
+                if pd.isna(val):
+                    return val
+                s = str(val).strip()
+                # Handle "24/25" format
+                if "/" in s and len(s) == 5:
+                    year1, year2 = s.split("/")
+                    return int(f"20{year1}{year2}")
+                # Handle numeric values
+                digits = re.sub(r"\D", "", s)
+                return int(digits) if digits else None
+
+            master_df["upd_activity_year"] = master_df["der_activity_year"].apply(_der_year_to_upd)
+
+        activity_month_column = (
+            "cln_activity_month"
+            if "cln_activity_month" in master_df.columns
+            else "der_activity_month"
         )
 
         logger.info("Converting activity date values to datetime")
-        master_df["activity_date"] = convert_fin_dates_vectorised(master_df)
+        master_df["activity_date"] = convert_fin_dates_vectorised(
+            master_df,
+            fin_month_col=activity_month_column,
+            fin_year_col="upd_activity_year",
+        )
 
         logger.info(
             "Converting total cost values to numeric, removing commas and converting to float"
@@ -116,18 +147,19 @@ def cleanse_master_data(master_df: pd.DataFrame) -> pd.DataFrame:
 def cleanse_master_joined_dataset(master_joined_df: pd.DataFrame) -> pd.DataFrame:
     """
     Clean the joined dataset ready for pivoting. This function will:
-    - Consolidate region columns into a single column, 'upd_region'
-    - Fix inconsistent 'upd_region' values by replacing '&' with 'and'
-    - Fill missing 'rag_status' values with 'RED' where 'upd_high_level_device_type' is missing
-    - Fill missing values with 'NULL' in the columns:
-        - rag_status
-        - upd_high_level_device
-        - cln_manufacturer
-        - cln_manufacturer_device_name
+
+    * Consolidate region columns into a single column, 'upd_region'
+    * Fix inconsistent 'upd_region' values by replacing '&' with 'and'
+    * Fill missing 'rag_status' values with 'RED' where 'upd_high_level_device_type' is missing
+    * Fill missing values with 'NULL' in the columns:
+        * rag_status
+        * upd_high_level_device
+        * cln_manufacturer
+        * cln_manufacturer_device_name
 
     Parameters
     ----------
-    master_df : pd.DataFrame
+    master_joined_df : pd.DataFrame
         The joined dataset to be cleaned. Must contain the following columns:
         - region
         - nhs_england_region
@@ -195,7 +227,7 @@ def cleanse_master_joined_dataset(master_joined_df: pd.DataFrame) -> pd.DataFram
 
 
 def cleanse_exceptions(
-    exceptions_df: pd.DataFrame, rag_priorities: Optional[List[str]] = None
+    exceptions_df: pd.DataFrame, rag_priorities: list[str] | None = None
 ) -> pd.DataFrame:
     """
     Clean the exceptions dataset ready for processing.
@@ -205,9 +237,10 @@ def cleanse_exceptions(
     combination with the highest RAG status as defined the rag_priorities variable.
 
     The rag_priorities variable is a list of RAG status priorities, with the default being:
-    - "AMBER"
-    - "RED"
-    - "YELLOW"
+
+    * "AMBER"
+    * "RED"
+    * "YELLOW"
 
     If the dataset contains additional RAG statuses, they will be added to the end of the list in
     alphabetical order.
@@ -216,9 +249,11 @@ def cleanse_exceptions(
     ----------
     exceptions_df : pd.DataFrame
         The exceptions dataset to be cleaned. Must contain the following columns:
-        - provider_code
-        - dev_code
-        - rag_status
+
+        * provider_code
+        * dev_code
+        * rag_status
+
     rag_priorities : List[str], optional
         The list of RAG status priorities, by default RAG_PRIORITIES
 
@@ -243,14 +278,12 @@ def cleanse_exceptions(
     )
 
     logger.info("Resolving duplicates in the exceptions dataset.")
-    exceptions_df = drop_duplicates_on_priority(
+    return drop_duplicates_on_priority(
         data=exceptions_df,
         subset=["provider_code", "dev_code"],
         priority_column="rag_status",
         priority_order=rag_priorities,
     )
-
-    return exceptions_df
 
 
 def cleanse_device_taxonomy(device_taxonomy: pd.DataFrame) -> pd.DataFrame:
@@ -302,7 +335,29 @@ def cleanse_device_taxonomy(device_taxonomy: pd.DataFrame) -> pd.DataFrame:
     return device_taxonomy
 
 
-def convert_date_columns_to_datetime(data: pd.DataFrame, date_columns: List[str]) -> pd.DataFrame:
+def cleanse_provider_codes_lookup(provider_codes_lookup: pd.DataFrame) -> pd.DataFrame:
+    """
+    Cleanses the provider codes lookup DataFrame by ensuring the 'current_name_in_proper_case'
+    column is present and formatted correctly. If the column does not exist, it will be created
+    by converting the 'Org_Name' column to title case, replacing 'Nhs' with 'NHS'.
+    """
+    try:
+        if "current_name_in_proper_case" not in provider_codes_lookup.columns:
+            provider_codes_lookup["current_name_in_proper_case"] = (
+                provider_codes_lookup["org_name"]
+                .str.title()
+                .str.replace(r"\bNhs\b", "NHS", regex=True)
+            )
+    except KeyError as e:
+        raise ColumnsNotFoundError(
+            dataset_columns=provider_codes_lookup.columns,
+            clean_columns=["org_name"],
+        ) from e
+
+    return provider_codes_lookup
+
+
+def convert_date_columns_to_datetime(data: pd.DataFrame, date_columns: list[str]) -> pd.DataFrame:
     """
     Convert specified date columns in the dataframe to datetime format using the parse_dates
     function. This function will raise an error if any of the specified date columns are not present
@@ -310,7 +365,7 @@ def convert_date_columns_to_datetime(data: pd.DataFrame, date_columns: List[str]
 
     Parameters
     ----------
-    df : pd.DataFrame
+    data : pd.DataFrame
         The dataframe containing the date columns to be converted.
     date_columns : List[str]
         A list of column names to be converted to datetime.
@@ -338,7 +393,7 @@ def convert_date_columns_to_datetime(data: pd.DataFrame, date_columns: List[str]
 
 
 def drop_duplicates_on_priority(
-    data: pd.DataFrame, subset: str | List[str], priority_column: str, priority_order: List[str]
+    data: pd.DataFrame, subset: str | list[str], priority_column: str, priority_order: list[str]
 ) -> pd.DataFrame:
     """
     This function will remove duplicate rows from the dataset by keeping the first occurrence of
@@ -400,7 +455,7 @@ def drop_duplicates_on_priority(
 def check_duplicates(
     data: pd.DataFrame,
     duplicate_severity: Literal["ERROR"] | Literal["WARNING"] | Literal["INFO"] = "INFO",
-    subset: Optional[str | List[str]] = None,
+    subset: str | list[str] | None = None,
 ) -> None:
     """
     Function checks for duplicates in the dataset and raises an error, warning or logs an info
@@ -435,7 +490,7 @@ def check_duplicates(
         message += f" with subset columns: {subset}" if subset else ""
         if duplicate_severity == "ERROR":
             raise DuplicateDataError(message=message)
-        elif duplicate_severity == "WARNING":
-            warnings.warn(message, DuplicateDataWarning)
+        if duplicate_severity == "WARNING":
+            warnings.warn(message, DuplicateDataWarning, stacklevel=2)
         else:
             logger.info(message)

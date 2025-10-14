@@ -33,15 +33,13 @@ DETAILED_COLUMNS: &detailed_columns
   datetime_columns: *default_datetime_column_format
 
 DATA_COLUMNS: &data_columns
-  upd_region: "Region"
-  der_provider_code: "Provider Code"
-  current_name_in_proper_case: "Provider Name"
-  upd_high_level_device_type: "High Level Device Type"
-  description_in_title_case: "Device Category"
+  <<: *base_columns_start
   cln_manufacturer: "Manufacturer"
   cln_manufacturer_device_name: "Manufacturer Device Name"
-  cln_activity_year: "Activity Year"
-  cln_activity_month: "Activity Month"
+  # cln_activity_year: "Activity Year"
+  # cln_activity_month: "Activity Month"
+  der_activity_year: "Activity Year"
+  der_activity_month: "Activity Month"
   devices_ident: "Devices Ident"
   cln_device_insertion_date: "Device Insertion Date"
   cln_purchased_device_contract: "Purchased Device Contract"
@@ -59,7 +57,7 @@ DATA_COLUMNS: &data_columns
   der_subsidiary_device_type: "Subsidiary Device Type"
   der_purchased_device_contract: "Purchased Device Contract"
   der_vat_charged: "VAT Charged"
-  cln_attendance_identifier: "Attendance Identifier"
+  # cln_attendance_identifier: "Attendance Identifier"
 
 STANDARD_SUB_TOTALS: &standard_sub_totals
   - upd_region
@@ -77,7 +75,6 @@ WORKSHEET_CONFIG:
     columns: *amber_summary_columns
     filters:
       rag_status: ["AMBER"]
-      # upd_high_level_device_type: *migrated_device_types
       upd_migrated_categories: True
     sub-totals: *standard_sub_totals
     sort_columns: *standard_sort_columns

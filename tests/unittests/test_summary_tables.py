@@ -4,12 +4,11 @@ Tests for devices_rap/summary_tables.py
 
 import re
 
+from nhs_herbot.errors import ColumnsNotFoundError
 import pandas as pd
 import pytest
 
 from devices_rap import summary_tables
-from nhs_herbot.errors import ColumnsNotFoundError
-
 
 pytestmark = pytest.mark.no_data_needed
 
@@ -30,7 +29,7 @@ def mock_join_mini_tables(mocker, empty_df):
     return mocker.patch("devices_rap.summary_tables.join_mini_tables", return_value=empty_df)
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_calc_change_from_previous_month_column(mocker, empty_df):
     """
     Mock the calc_change_from_previous_month_column function
@@ -54,7 +53,7 @@ class TestCreatePivotSumTable:
         assert isinstance(result, pd.DataFrame)
 
     @pytest.mark.parametrize(
-        "kwarg, expected",
+        ("kwarg", "expected"),
         [
             ("data", pd.DataFrame()),
             ("values", "cln_total_cost"),
@@ -88,7 +87,7 @@ class TestCreatePivotSumTable:
             assert actual == expected
 
     @pytest.mark.parametrize(
-        "kwarg, input_value, actual_kwarg, expected",
+        ("kwarg", "input_value", "actual_kwarg", "expected"),
         [
             ("values", ["test"], "values", ["test"]),
             ("columns", ["test"], "columns", ["test"]),
@@ -119,9 +118,7 @@ class TestCreatePivotSumTable:
             ),
         ],
     )
-    def test_non_default_values(
-        self, mocker, empty_df, kwarg, input_value, actual_kwarg, expected
-    ):
+    def test_non_default_values(self, mocker, empty_df, kwarg, input_value, actual_kwarg, expected):
         """
         Test that the function can handle non-default values
         """
@@ -133,7 +130,7 @@ class TestCreatePivotSumTable:
         assert actual == expected
 
     @pytest.mark.parametrize(
-        "input_data, expected",
+        ("input_data", "expected"),
         [
             (
                 [("test", "test", "test", "test", "test", 1)],
@@ -230,7 +227,7 @@ class TestCreatePivotSumTable:
         pd.testing.assert_frame_equal(actual, expected)
 
     @pytest.mark.parametrize(
-        "input_columns, expected_message",
+        ("input_columns", "expected_message"),
         [
             (
                 ["cln_total_cost", "activity_date"],
@@ -272,9 +269,7 @@ class TestCreatePivotSumTable:
             ),
         ],
     )
-    def test_columns_not_found_error_raised(
-        self, mock_log_levels, input_columns, expected_message
-    ):
+    def test_columns_not_found_error_raised(self, mock_log_levels, input_columns, expected_message):
         """
         Test that the ColumnsNotFoundError is raised when the columns are not found in the dataset
         """
@@ -289,7 +284,7 @@ class TestCreatePivotSumTable:
         mock_error.assert_called_once_with(expected_message)
 
     @pytest.mark.parametrize(
-        "input_args, expected_message",
+        ("input_args", "expected_message"),
         [
             (
                 {},
@@ -324,7 +319,7 @@ class TestCalcChangeFromPreviousMonthColumn:
     Tests for the summary_tables.calc_change_from_previous_month_column function
     """
 
-    @pytest.fixture()
+    @pytest.fixture
     def monthly_summary_table(self) -> pd.DataFrame:
         """
         Returns a dataframe with datetime columns and some data
@@ -334,8 +329,7 @@ class TestCalcChangeFromPreviousMonthColumn:
             pd.Timestamp("2023-02-01"): [110, 210, 310],
             pd.Timestamp("2023-03-01"): [120, 220, 320],
         }
-        df = pd.DataFrame(data)
-        return df
+        return pd.DataFrame(data)
 
     def test_default_columns(self, monthly_summary_table):
         """

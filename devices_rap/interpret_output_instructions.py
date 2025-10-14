@@ -37,19 +37,19 @@ interpret_output_instructions(
 
 """
 
-from typing import Dict, List, Literal, Optional, Tuple
+from typing import Literal
 
-import pandas as pd
-import tqdm
 from loguru import logger
 from nhs_herbot.errors import ColumnsNotFoundError, DataSetNotFoundError
 from nhs_herbot.utils import get_datetime_columns
+import pandas as pd
+import tqdm
 
 from devices_rap.config import Config
 
 
 def filter_data(
-    worksheet_data: pd.DataFrame, worksheet_filters: Dict[str, list | Dict[Literal["not"], list]]
+    worksheet_data: pd.DataFrame, worksheet_filters: dict[str, list | dict[Literal["not"], list]]
 ) -> pd.DataFrame:
     """
     Filter the worksheet data based on the provided filters. The function will filter the data
@@ -101,15 +101,15 @@ def filter_data(
 
 def add_subtotals(
     worksheet_data: pd.DataFrame,
-    subtotal_columns: List[str],
-    sort_columns: Optional[List[str]] = None,
+    subtotal_columns: list[str],
+    sort_columns: list[str] | None = None,
 ) -> pd.DataFrame:
     """
     Adds subtotal rows to a pivoted DataFrame based on specified columns.
 
     Parameters
     ----------
-    pivoted_data : pd.DataFrame
+    worksheet_data : pd.DataFrame
         The pivoted DataFrame to which subtotals will be added.
     subtotal_columns : List[str]
         List of columns to group by and add subtotals for.
@@ -155,8 +155,8 @@ def add_subtotals(
 
 
 def handle_datetime_columns(
-    worksheet_data: pd.DataFrame, worksheet_columns: Dict[str, str | None]
-) -> Tuple[pd.DataFrame, Dict[str, str]]:
+    worksheet_data: pd.DataFrame, worksheet_columns: dict[str, str | None]
+) -> tuple[pd.DataFrame, dict[str, str]]:
     """
     Handle the datetime columns in the worksheet data. The function will check if the datetime
     columns are present in the column_order list and if so, replace the "datetime_columns" element
@@ -180,7 +180,7 @@ def handle_datetime_columns(
     return worksheet_data, altered_worksheet_columns
 
 
-def order_columns(worksheet_data: pd.DataFrame, worksheet_columns: Dict[str, str]) -> pd.DataFrame:
+def order_columns(worksheet_data: pd.DataFrame, worksheet_columns: dict[str, str]) -> pd.DataFrame:
     """
     Order the columns in the worksheet data based on the provided column order. The function will
     reindex the columns in the worksheet data based on the order provided in the worksheet_columns
@@ -214,9 +214,7 @@ def order_columns(worksheet_data: pd.DataFrame, worksheet_columns: Dict[str, str
     return ordered_worksheet_data
 
 
-def rename_columns(
-    worksheet_data: pd.DataFrame, worksheet_columns: Dict[str, str]
-) -> pd.DataFrame:
+def rename_columns(worksheet_data: pd.DataFrame, worksheet_columns: dict[str, str]) -> pd.DataFrame:
     """
     Rename the columns in the worksheet data based on the provided column mapping. Acts as a wrapper
     around the DataFrame.rename method but with error handling to raise a ColumnsNotFoundError if
@@ -254,11 +252,10 @@ def round_data(worksheet_data: pd.DataFrame, decimals: int) -> pd.DataFrame:
     Wrapper around the DataFrame.round method to round the data in the worksheet to the specified
     number of decimal places.
     """
-    rounded_worksheet_data = worksheet_data.round(decimals)
-    return rounded_worksheet_data
+    return worksheet_data.round(decimals)
 
 
-def process_worksheet(worksheet_config: Dict, datasets: Dict[str, pd.DataFrame]) -> pd.DataFrame:
+def process_worksheet(worksheet_config: dict, datasets: dict[str, pd.DataFrame]) -> pd.DataFrame:
     """
     Process the worksheet data based on the provided configuration. The function will filter the data
     based on the provided filters, handle the datetime columns, order the columns, rename the columns,
@@ -313,16 +310,14 @@ def process_worksheet(worksheet_config: Dict, datasets: Dict[str, pd.DataFrame])
     )
 
     decimals = worksheet_config.get("round_to", 0)
-    final_worksheet_data = round_data(worksheet_data=renamed_worksheet_data, decimals=decimals)
-
-    return final_worksheet_data
+    return round_data(worksheet_data=renamed_worksheet_data, decimals=decimals)
 
 
 def process_region(
     region: str,
-    datasets: Dict[str, pd.DataFrame],
-    instructions: Dict[str, Dict],
-) -> Dict[str, pd.DataFrame]:
+    datasets: dict[str, pd.DataFrame],
+    instructions: dict[str, dict],
+) -> dict[str, pd.DataFrame]:
     """
     Process the output instructions for the specified region. The function will process each worksheet
     in the instructions and return a dictionary of the processed worksheets with the worksheet name as
@@ -341,8 +336,8 @@ def process_region(
 
 
 def interpret_output_instructions(
-    pipeline_config: Config, region_cuts: Dict[str, Dict[str, pd.DataFrame]]
-) -> Dict[str, Dict[str, pd.DataFrame]]:
+    pipeline_config: Config, region_cuts: dict[str, dict[str, pd.DataFrame]]
+) -> dict[str, dict[str, pd.DataFrame]]:
     """
     Interpret the output instructions for each region. The function will process the output instructions
     for each region and return a dictionary of the processed worksheets with the region name as the key

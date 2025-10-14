@@ -2,11 +2,11 @@
 This module contains fixtures that are used by the test modules in the tests/ directory.
 """
 
-from typing import Any, Dict, Literal
+from typing import Any, Literal
 import warnings
+
 import pandas as pd
 import pytest
-from uuid import uuid4
 
 
 @pytest.fixture(autouse=True)
@@ -14,21 +14,15 @@ def mock_logger(mocker):
     """
     Fixture to mock the loguru.logger object
     """
-    return mocker.patch(
-        "loguru.logger", side_effect=lambda *args, **kwargs: print("Logger called")
-    )
+    return mocker.patch("loguru.logger", side_effect=lambda *_, **__: print("Logger called"))
 
 
 warnings.filterwarnings("ignore", category=DeprecationWarning, message=".*platformdirs.*")
 
 Logger = Any
 
-MockLoggerDict = Dict[
-    Literal["info"]
-    | Literal["error"]
-    | Literal["warning"]
-    | Literal["success"]
-    | Literal["debug"],
+MockLoggerDict = dict[
+    Literal["info"] | Literal["error"] | Literal["warning"] | Literal["success"] | Literal["debug"],
     Logger,
 ]
 

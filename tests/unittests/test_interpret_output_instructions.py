@@ -3,11 +3,12 @@ Tests for the interpret_output_instructions module.
 """
 
 import re
-import pytest
+
+from nhs_herbot.errors import ColumnsNotFoundError, DataSetNotFoundError
 import pandas as pd
+import pytest
 
 from devices_rap import interpret_output_instructions as instructions
-from nhs_herbot.errors import ColumnsNotFoundError, DataSetNotFoundError
 
 
 class TestFilterData:
@@ -117,7 +118,7 @@ class TestAddSubtotals:
         assert result.empty
 
     @pytest.mark.parametrize(
-        "subtotal_columns, expected_data",
+        ("subtotal_columns", "expected_data"),
         [
             (
                 ["column1"],
@@ -468,7 +469,7 @@ class TestRoundData:
         assert result.empty
 
     @pytest.mark.parametrize(
-        "decimals, expected_data",
+        ("decimals", "expected_data"),
         [
             (0, [[1, 2], [3, 4]]),
             (1, [[1.0, 2.0], [3.0, 4.0]]),
@@ -770,7 +771,7 @@ class TestProcessWorksheet:
     # }
 
     @pytest.mark.parametrize(
-        "function, kwarg, expected",
+        ("function", "kwarg", "expected"),
         [
             (
                 "filter_data",
@@ -1019,8 +1020,8 @@ class TestProcessRegion:
         mock_process_worksheet.assert_not_called()
 
     @pytest.mark.parametrize(
-        "call_no, message",
-        (
+        ("call_no", "message"),
+        [
             (
                 0,
                 "Interpreting output instructions for the test region",
@@ -1029,7 +1030,7 @@ class TestProcessRegion:
                 1,
                 "Processing the test worksheet for the test region",
             ),
-        ),
+        ],
     )
     def test_loggers(self, mock_info, mock_process_worksheet, call_no, message):
         """

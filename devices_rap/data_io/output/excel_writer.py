@@ -1,84 +1,21 @@
 """
-Functionality that handle the output of processed data from the pipeline.
+Excel writing functionality for the devices_rap pipeline.
 """
 
-import zipfile
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from typing import Dict, Literal
+from typing import Literal
+import zipfile
 
+from loguru import logger
 import pandas as pd
 import tqdm
-from loguru import logger
 
-from devices_rap.config import Config
-
-FormatsDict = Dict[Literal["header", "total", "default", "cost"], object]
-
-
-def output_data(
-    output_workbooks: Dict[str, Dict[str, pd.DataFrame]],
-    pipeline_config: Config,
-) -> None:
-    """
-    Handle the output of processed data from the pipeline. This function will create the Excel
-    reports and pickle files based on the processed data for each region. It will check the
-    configuration to determine which outputs to create (Excel, pickle, or both) and will create the
-    output directory if it does not exist.
-
-    Parameters
-    ----------
-    output_workbooks : dict
-        The processed data for each region
-    pipeline_config : Config
-        The configuration object containing the output directory and other settings
-
-    Returns
-    -------
-    None
-    """
-    outputs = pipeline_config.outputs
-
-    if not outputs:
-        logger.warning("No outputs configured. Skipping output data.")
-        return
-
-    output_directory = pipeline_config.create_output_directory()
-
-    for output_format in outputs:
-        if output_format.startswith("excel"):
-            use_multiprocessing = pipeline_config.use_multiprocessing
-            create_excel_reports(
-                output_workbooks=output_workbooks,
-                output_directory=output_directory,
-                use_multiprocessing=use_multiprocessing,
-            )
-            if output_format == "excel_zip":
-                fin_month = pipeline_config.fin_month
-                fin_year = pipeline_config.fin_year
-                create_excel_zip_reports(
-                    output_directory=output_directory,
-                    fin_month=fin_month,
-                    fin_year=fin_year,
-                )
-        elif output_format == "pickle":
-            fin_month = pipeline_config.fin_month
-            fin_year = pipeline_config.fin_year
-            create_pickle(
-                output_workbooks=output_workbooks,
-                output_directory=output_directory,
-                fin_month=fin_month,
-                fin_year=fin_year,
-            )
-        else:
-            logger.warning(
-                f"{output_format} output is not implemented yet. "
-                f"Skipping {output_format} output."
-            )
+FormatsDict = dict[Literal["header", "total", "default", "cost"], object]
 
 
 def create_excel_reports(
-    output_workbooks: Dict[str, Dict[str, pd.DataFrame]],
+    output_workbooks: dict[str, dict[str, pd.DataFrame]],
     output_directory: Path,
     use_multiprocessing: bool,
 ):
@@ -130,7 +67,7 @@ def create_excel_reports(
 def process_region(
     output_directory: Path,
     region: str,
-    worksheets: Dict[str, pd.DataFrame],
+    worksheets: dict[str, pd.DataFrame],
     use_multiprocessing: bool,
 ):
     """
@@ -166,7 +103,7 @@ def process_region(
     logger.success(f"Excel report for {region} created successfully.")
 
 
-def create_excel_file(output_file: Path, worksheets: Dict[str, pd.DataFrame], use_multiprocessing):
+def create_excel_file(output_file: Path, worksheets: dict[str, pd.DataFrame], use_multiprocessing):
     """
     Create an Excel file with the given worksheets.
 
@@ -176,6 +113,8 @@ def create_excel_file(output_file: Path, worksheets: Dict[str, pd.DataFrame], us
         The path to save the Excel file to
     worksheets : dict
         The worksheets to include in the Excel file
+    use_multiprocessing : bool
+        Whether to use multiprocessing for writing the Excel file
 
     Returns
     -------
@@ -289,7 +228,7 @@ def apply_excel_formatting(writer, data: pd.DataFrame, formats: FormatsDict, she
 
     # Apply formatting for rows with "Total" in the provider code column
     for row_num, (provider_code, region) in enumerate(
-        zip(data["Provider Code"], data["Region"]), start=1
+        zip(data["Provider Code"], data["Region"], strict=False), start=1
     ):  # Start from row 1 (after header)
         if "Total" in str(provider_code) or "Total" in str(region):
             worksheet.set_row(row_num, None, formats["total"])
@@ -354,46 +293,6 @@ def write_worksheet(
     )
 
     logger.debug(f"Worksheet {sheet_name} written to the Excel file: {output_file}")
-
-
-def create_pickle(
-    output_workbooks: Dict[str, Dict[str, pd.DataFrame]],
-    output_directory: Path,
-    fin_month: str,
-    fin_year: str,
-):
-    """
-    Create a pickle file containing the processed data for all regions. The pickle file will be saved
-    in the output directory with a name that includes the financial year and month.
-
-    Parameters
-    ----------
-    output_workbooks : dict
-        The processed data for each region
-    output_directory : Path
-        The path to save the pickle file to
-    fin_month : str
-        The financial month for which the data is being processed
-    fin_year : str
-        The financial year for which the data is being processed
-
-    Returns
-    -------
-    None
-    """
-    logger.info("Creating pickle file")
-
-    output_file = output_directory / f"{fin_year}_{fin_month}_amber_report_all_regions.pkl"
-    if output_file.exists():
-        logger.warning(f"Overwriting the existing pickle file: {output_file}")
-        output_file.unlink()
-    else:
-        logger.info(f"Creating pickle file for all regions for {fin_month} {fin_year}")
-
-    with open(output_file, "wb") as f:
-        pd.to_pickle(output_workbooks, f)
-
-    logger.success(f"Pickle file for all regions for {fin_month} {fin_year} created successfully.")
 
 
 def create_excel_zip_reports(

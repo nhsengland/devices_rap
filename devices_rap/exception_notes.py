@@ -1,17 +1,15 @@
 """ """
 
-from typing import Dict
-
-import pandas as pd
-import tqdm
 from loguru import logger
 from nhs_herbot.errors import ColumnsNotFoundError
+import pandas as pd
+import tqdm
 
 tqdm.tqdm.pandas()
 
 
 def column_summary_notes(
-    row, columns_to_summarise: Dict[str, str], match_summaries: Dict[str, str]
+    row, columns_to_summarise: dict[str, str], match_summaries: dict[str, str]
 ) -> pd.Series:
     """
     Generate a summary of the columns in the row that match the given values. The function will
@@ -73,6 +71,7 @@ def create_exception_notes(exceptions: pd.DataFrame, drop_columns: bool = True) 
     Function to create a summary of the exception columns in the exceptions DataFrame. The function
     is a wrapper apply function that calls the column_summary_notes function to generate the
     `exception_notes` column, where the `columns_to_summarise` is defined as:
+    ```python
     {
         "exception_status_legacy_list": "Legacy List",
         "exception_status_planned_migration": "Planned Migration",
@@ -81,11 +80,14 @@ def create_exception_notes(exceptions: pd.DataFrame, drop_columns: bool = True) 
         "exception_status_hcted_category": "Hcted Category",
         "exception_status_stock_<180_days": "Stock <180 Days",
     }
+    ```
     and the `match_summaries` is defined as:
+    ```python
     {
         "Exceptions": "Y",
         "Ceased": "Ceased",
     }
+    ```
 
     Parameters
     ----------
