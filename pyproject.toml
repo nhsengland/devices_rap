@@ -5,91 +5,99 @@ build-backend = "flit_core.buildapi"
 [project]
 name = "devices_rap"
 version = "0.0.1"
-description = "A short description of the project."
+description = "A pipeline for processing NHS Direct Commissioning devices data and generating amber status reports."
 authors = [
-  { name = "Joseph Wilson" },
+  { name = "Joseph Wilson", email = "joseph.wilson8@nhs.net" },
   { name = "NHS England - Direct Commissioning" },
 ]
 license = { file = "LICENSE" }
 readme = "README.md"
 classifiers = [
-    "Development Status :: 3 - Alpha",
-    # "Development Status :: 4 - Beta",
-    # "Development Status :: 5 - Production/Stable",
+    "Development Status :: 5 - Production/Stable",
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License"
 ]
 requires-python = ">=3.10"
 dependencies = [
-    # Core data processing libraries (production)
-    "numpy>=2.2.6",
-    "pandas>=2.3.1",
-    "scikit-learn",
-    
-    # Visualization and reporting (production)
-    "matplotlib>=3.10.5",
-    "seaborn>=0.13.2", 
-    "xlsxwriter",
-    
-    # Utility libraries (production)
-    "loguru",
-    "python-dotenv",
-    "tqdm",
-    "typer",
-    
-    # External NHS package
+    "pandas>=2.0.0",
+    "numpy>=1.24.0",
+    "scikit-learn>=1.3.0",
+    "matplotlib>=3.7.0",
+    "seaborn>=0.12.0",
+    "xlsxwriter>=3.0.0",
+    "loguru>=0.7.0",
+    "python-dotenv>=1.0.0",
+    "tqdm>=4.65.0",
+    "pyyaml>=6.0.0",
+    "cyclopts>=3.23.0",
     "nhs-herbot @ git+https://github.com/nhsengland/nhs_herbot.git@2025.08.12",
 ]
 
+[project.scripts]
+devices_rap = "devices_rap.pipeline:app"
+
 [project.optional-dependencies]
-# Development tools: testing, linting, formatting
 dev = [
-    "black",
-    "exceptiongroup", 
-    "flake8",
-    "isort",
-    "pre-commit",
-    "pytest",
-    "pytest-cov",
-    "pytest-mock",
-    "pytest-xdist",
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-mock>=3.0.0",
+    "pytest-xdist>=3.0.0",
+    "ruff>=0.1.0",
+    "pre-commit>=4.3.0",
 ]
-
-# Documentation tools
 docs = [
-    "mkdocs",
-    "mkdocs-material",
-    "mkdocstrings[python]",
-    "pymdown-extensions",
+    "mkdocs>=1.5.0",
+    "mkdocs-material>=9.0.0",
+    "mkdocstrings>=0.24.0",
+    "mkdocstrings-python>=1.8.0",
+    "pymdown-extensions>=10.0.0",
 ]
-
-# Interactive development tools
 jupyter = [
-    "ipykernel>=6.30.1",
-    "ipython",
-    "jupyter>=1.1.1", 
-    "jupyterlab",
-    "notebook",
+    "ipykernel>=6.25.0",
+    "ipython>=8.14.0",
+    "jupyter>=1.0.0", 
+    "jupyterlab>=4.0.0",
+    "notebook>=7.0.0",
 ]
-
-# Utility dependency (needed for some dev workflows)
-utils = [
-    "pip",
-]
-
-[tool.black]
-line-length = 99
-include = '\.pyi?$'
-exclude = '''
-/(
-    \.git
-  | \.venv
-)/
-'''
 
 [tool.ruff]
-lint.isort.known-first-party = ["devices_rap"]
-lint.isort.force-sort-within-sections = true
+line-length = 100
+src = ["devices_rap"]
+include = ["pyproject.toml", "devices_rap/**/*.py", "tests/**/*.py"]
+
+[tool.ruff.lint]
+extend-select = [
+    "I",   # isort
+    "F",   # Pyflakes
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "SIM", # flake8-simplify
+    "C4",  # flake8-comprehensions
+    "PIE", # flake8-pie
+    "RET", # flake8-return
+    "PT",  # flake8-pytest-style
+    "ARG", # flake8-unused-arguments
+    "PL",  # Pylint
+    "PERF", # Perflint
+]
+
+# Ignore some overly strict rules that don't fit our project
+ignore = [
+    "PLR0913", # Too many arguments
+    "PLR2004", # Magic value used in comparison
+    "PLR0915", # Too many statements
+    "PLR0912", # Too many branches
+    "ARG002",  # Unused method argument
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["devices_rap"]
+force-sort-within-sections = true
+
+[tool.ruff.format]
+quote-style = "double"
 
 [tool.pytest.ini_options]
 markers = [
@@ -99,8 +107,33 @@ markers = [
 ]
 
 [tool.coverage.run]
+source = ["devices_rap"]
+branch = true
 omit = [
-    "*/tests/*",
+    "tests/*",
+    "*/tests/*", 
+    "*/__pycache__/*",
+    "*/venv/*",
+    "*/.venv/*",
     "*/__init__.py",
     "*/_version.py",
 ]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]
+show_missing = true
+skip_covered = false
+
+[tool.coverage.html]
+directory = "htmlcov"

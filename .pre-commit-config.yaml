@@ -3,20 +3,12 @@ repos:
     rev: v8.28.0
     hooks:
       - id: gitleaks
-  - repo: https://github.com/psf/black
-    rev: 25.1.0
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.13.2
     hooks:
-      - id: black
-        args: [--config=pyproject.toml]
-  - repo: https://github.com/pycqa/isort
-    rev: 6.0.1
-    hooks:
-      - id: isort
-        args: [--profile=black]
-  - repo: https://github.com/pycqa/flake8
-    rev: 7.3.0
-    hooks:
-      - id: flake8
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
   - repo: local
     hooks:
       - id: git-secrets

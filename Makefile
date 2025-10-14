@@ -218,51 +218,48 @@ docs-serve: check-dev-env
 
 ## Generate API docs and serve locally
 .PHONY: docs
-docs: docs-generate docs-serve
+docs: docs-serve
 
 #################################################################################
 # PROJECT RULES                                                                 #
 #################################################################################
 
+
+
 ## Run pipeline in local mode
 .PHONY: run-pipeline-local
 run-pipeline-local: install
+
+ifeq ($(fin_month),)
+	@echo "Error: fin_month is required. Usage: make run-pipeline-local fin_month=01 fin_year=2526"; exit 1
+endif
+ifeq ($(fin_year),)
+	@echo "Error: fin_year is required. Usage: make run-pipeline-local fin_month=01 fin_year=2526"; exit 1
+endif
 	@echo "Running pipeline in local mode..."
-	$(PYTHON_INTERPRETER) -m $(PROJECT_NAME).pipeline --mode local
+	$(PYTHON_INTERPRETER) -m $(PROJECT_NAME).pipeline --mode local --fin-month $(fin_month) --fin-year $(fin_year)
 
 ## Run pipeline in remote mode
 .PHONY: run-pipeline-remote
 run-pipeline-remote: install
+
+ifeq ($(fin_month),)
+	@echo "Error: fin_month is required. Usage: make run-pipeline-remote fin_month=01 fin_year=2526"; exit 1
+endif
+ifeq ($(fin_year),)
+	@echo "Error: fin_year is required. Usage: make run-pipeline-remote fin_month=01 fin_year=2526"; exit 1
+endif
 	@echo "Running pipeline in remote mode..."
-	$(PYTHON_INTERPRETER) -m $(PROJECT_NAME).pipeline --mode remote
+	$(PYTHON_INTERPRETER) -m $(PROJECT_NAME).pipeline --mode remote --fin-month $(fin_month) --fin-year $(fin_year)
 
-## Run pipeline (default mode)
+.PHONY: run-pipeline
+run-pipeline: install
+	$(PYTHON_INTERPRETER) -m $(PROJECT_NAME).pipeline $(ARGS)
+
 .PHONY: run
-run: run-pipeline-local
+run: run-pipeline
 
-## Run all tests
-.PHONY: test
-test: check-dev-env
-	@echo "Running all tests..."
-	$(PYTHON_INTERPRETER) -m pytest tests/ -v
 
-## Run unit tests only
-.PHONY: test-unit
-test-unit: check-dev-env
-	@echo "Running unit tests..."
-	$(PYTHON_INTERPRETER) -m pytest tests/unittests/ -v
-
-## Alias for test-unit (backward compatibility)
-.PHONY: unittest
-unittest: test-unit
-
-## Run end-to-end tests only
-.PHONY: test-e2e
-test-e2e: check-dev-env
-	@echo "Running e2e tests..."
-	$(PYTHON_INTERPRETER) -m pytest tests/e2e_tests/ -v
-
-## Alias for test-e2e (backward compatibility)
 .PHONY: e2e
 e2e: test-e2e
 
