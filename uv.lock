@@ -789,7 +789,7 @@ requires-dist = [
     { name = "nhs-herbot", git = "https://github.com/nhsengland/nhs_herbot.git?rev=2025.08.12" },
     { name = "notebook", marker = "extra == 'jupyter'", specifier = ">=7.0.0" },
     { name = "numpy", specifier = ">=1.24.0" },
-    { name = "pandas", specifier = ">=2.0.0" },
+    { name = "pandas", specifier = "<=3.0.0" },
     { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=4.3.0" },
     { name = "pymdown-extensions", marker = "extra == 'docs'", specifier = ">=10.0.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.0.0" },

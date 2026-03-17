@@ -165,4 +165,4 @@ def null_report_pipeline() -> None:
 
 if __name__ == "__main__":
     # app()
-    amber_report_pipeline(fin_month="04", fin_year="2526", mode="local", outputs="excel_zip")
+    amber_report_pipeline(fin_month="10", fin_year="2526", mode="local", outputs="excel_zip")
