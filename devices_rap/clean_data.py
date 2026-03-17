@@ -99,6 +99,9 @@ def cleanse_master_data(master_df: pd.DataFrame) -> pd.DataFrame:
             master_df["upd_activity_year"] = master_df["cln_activity_year"].progress_apply(
                 convert_values_to, match=[2425], to=202425
             )
+            master_df["upd_activity_year"] = master_df["upd_activity_year"].progress_apply(
+                convert_values_to, match=[202527], to=202526
+            )
         else:
             logger.info(
                 "Deriving activity year from der_activity_year where cln_activity_year is missing"
@@ -125,6 +128,10 @@ def cleanse_master_data(master_df: pd.DataFrame) -> pd.DataFrame:
         )
 
         logger.info("Converting activity date values to datetime")
+        master_df[activity_month_column] = pd.to_numeric(
+            master_df[activity_month_column], errors="coerce"
+        )
+        master_df = master_df.dropna(subset=[activity_month_column, "upd_activity_year"])
         master_df["activity_date"] = convert_fin_dates_vectorised(
             master_df,
             fin_month_col=activity_month_column,
