@@ -50,7 +50,7 @@ docs = [
     "mkdocs-material>=9.0.0",
     "mkdocstrings>=0.24.0",
     "mkdocstrings-python>=1.8.0",
-    "pymdown-extensions>=10.0.0",
+    "pymdown-extensions>=10.21.3",
 ]
 jupyter = [
     "ipykernel>=6.25.0",
